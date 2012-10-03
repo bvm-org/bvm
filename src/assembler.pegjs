@@ -144,8 +144,9 @@ Statement
 
   / Push
   / Pop
-  / Duplicate
+  / Load
   / Store
+  / Duplicate
 
   / Add
   / Subtract
@@ -188,12 +189,14 @@ Segment "segment"
     }
 
 SegmentDeclare "segment declaration"
-  = "seg"i __ name:QuotedStringLiteral? __
-    arity:UnsignedInteger declaredVars:(__ UnsignedInteger)? {
+  = "seg"i
+    name:(__ QuotedStringLiteral)?
+    arity:(__ UnsignedInteger)?
+    declaredVars:(__ UnsignedInteger)? {
       return {
         type: "SEGMENT",
-        name: name ? name : undefined,
-        arity: arity,
+        name: name[1] ? name[1] : undefined,
+        arity: arity[1] ? arity[1] : 0,
         declared: declaredVars[1] ? declaredVars[1] : undefined,
         line: line, column: column
       };
@@ -252,6 +255,15 @@ Store "store"
   = "store"i __ address:AddressTuple {
       return {
         type: "STORE",
+        address: address,
+        line: line, column: column
+      };
+    }
+
+Load "load"
+  = "load"i __ address:AddressTuple {
+      return {
+        type: "LOAD",
         address: address,
         line: line, column: column
       };

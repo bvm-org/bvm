@@ -119,6 +119,10 @@ provide the frame for the args. Indeed, that LSP could be the general
 mech so that (0,0) refers to the first arg to the current segment and
 scope-local tmps are at (1,N).
 
+The problem with this is that it means you have to explicitly
+duplicate everything if you're just passing through to another
+segment.
+
 
 Closure Capture
 ===============
@@ -225,3 +229,54 @@ version has the implicit invocation of the continuation with the
 result of the subfunction, for example.
 
 TODO: look up how scheme does this.
+
+
+Misc. Notes to Tidy up properly later
+=====================================
+
+Pizza can be eaten several different ways: http://imgur.com/a/9fJLP
+
+Segment entry will provide IRWs pointing at the args to the segment
+
+The actual args will not be popped as part of segment entry/exit
+
+"Load" will follow IRWs to an actual value.
+
+Need to figure out if we want Load to be provided with an address as
+part of the instruction, or to construct the address on the stack;
+Burroughs does "name call" to build an IRW on the stack from the
+instruction (this is essentially just "push this stack-address"), and
+does "value call" to duplicate an actual value with the address
+provided from the instruction ("dereference"). It then has "load"
+which will dereference an address on the stack.
+
+It's not actually clear (yet) why these are needed - what ops can you
+actually do on stack-addresses other than load? Curiously, "store" has
+both stack-address and value on the stack and uses them. There seems
+to be no form in which the stack address is provided by the
+instruction. Note that this is in common with the JVM, though of
+course there we're actually talking about the heap, not the stack.
+
+It's also not clear yet whether we would want to allow a dereference
+of a ptr to a ptr to a ... to ever yield the intermediate ptr. My
+impression is that the burroughs doesn't allow this to be yielded - it
+does full ptr chasing, but I might be wrong on this. Certainly it does
+the full chase when trying to find a PCW/SCW.
+
+I can appreciate the need for ptr arith on heap ptrs, but I'm less
+sure about stack ptrs... Ultimately I suppose there's no sense in
+distinguishing between the two. I suspect that ultimately we're just
+going to need a general pair of "&" and "->" operators.
+
+Things to remember about the JVM: it's call-by-value unless the value
+is a ptr to the heap. So this is why method invocation clears the
+calling stack of the args: if they're ptrs to the heap then you've
+just got to dup them from higher up in the stack and then you can
+still do call-by-ref via the stack. If they're primitives then as it's
+call-by-name you lose the args but you get the result returned.
+
+Also, JVM has various forms of type checking built in so you can't(?)
+violate the type sigs.
+
+For the fib example, need to work out returning values and the tail
+calls...
