@@ -231,6 +231,88 @@ result of the subfunction, for example.
 TODO: look up how scheme does this.
 
 
+Instruction Set
+===============
+
+Push Name (PUSHN)
+  push onto the stack the address couplet in the instruction
+  (i.e. build an IRW)
+
+Push Value (PUSHV)
+  push onto the stack the value at the address couplet in the
+  instruction (functionally equivalent to PUSHN followed by LOADV
+
+Load (LOAD)
+  top of stack must be an IRW, SIRW or heap pointer. Replace the top
+  of stack with the contents found by dereferencing the operand.
+
+Load Value (LOADV)
+  top of stack must be an IRW, SIRW or heap pointer. Replace the top
+  of stack with the contents found by dereferencing the operand. If
+  the top of the stack is still an IRW, SIRW or heap pointer,
+  repeat. I.e. this is the transitive closure of LOAD, stopping when
+  the value is not any form of pointer or reference.
+
+Duplicate (DUP)
+  Duplicate the top item on the stack. TBD: should this instruction
+  indicate a number too, of items to duplicate?
+
+Push (PUSH)
+  Push a literal value supplied following the instruction onto the
+  stack.
+
+Pop (POP)
+  Pop and discard from the stack. TBD: should this instruction
+  indicate a number too, of items to pop?
+
+Store (STORE)
+  Top of stack is the content to store, item below that is the address
+  (IRW, SIRW or heap pointer) to store it at.
+
+Enter (ENTER)
+  Top of stack is an IRW or SIRW that points at a SCW of the segment
+  to enter. The segment's own SD indicates the arity of the
+  segment. That number of items must exist in the current activation
+  frame following the IRW at the top. Those items are provided as the
+  arguments to the segment to be entered and are lost from the current
+  activation frame. After the segment returns, the number of items the
+  segment returned will be at the top of the stack of the caller.
+
+Return (RETURN)
+  Contains an integer of the number of items to return from the stack
+  to the stack of the parent activation frame. Exits the current
+  segment and restores control to the calling segment.
+
+Link (LINK)
+  Followed by a string indicating the name of the library to attempt
+  to link to. That library, if it can be found and is a code file,
+  will be parsed; its top-level segments will add SCW's to the current
+  stack, and various dictionaries will be added to to enable
+  resolution of exported segments. TBD: This may not actually be an
+  instruction: it's worth noting that the JVM has no such instruction
+  and that 'import's are dealt with by the class loader.
+
+Resolve (RESOLVE)
+  Followed by two strings indicating the library name and segment name
+  within to resolve. If they can be found then place an IRW pointing
+  to the relevant SCW on the stack.
+
+TODO:
+  Rework Link and Resolve. Firstly in light of the constant-pool in
+  the Java Class File format which looks to be a better design which
+  would substantially reduce expensive duplication, but also in light
+  of the fact this mechanism would only allow external segments, and
+  not constants to be referenced. The latter can be worked around as
+  you could always have an external segment that just returns an IRW
+  to a var, but still, the inconsistency is troubling. Also, the only
+  way that this work-around can work is if you can have file-global
+  vars, which you currently can't do. So that needs fixing.
+
+  It then appears that segments having names is daft except in the
+  special case of the segment being file-global. So that probably
+  means those names should be dealt with in a different way.
+
+
 Misc. Notes to Tidy up properly later
 =====================================
 
