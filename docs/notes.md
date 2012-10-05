@@ -10,24 +10,24 @@ Code file contains:
    example.
 2. Declaration of space for file-level "global" variables
 3. One or more procedures:
-   -. A procedure is just (a particular form of?) a Segment Descriptor
+   - A procedure is just (a particular form of?) a Segment Descriptor
       (SD).
-   -. Segments are lexically scoped.
-   -. Segments can be used for code blocks rather than just
+   - Segments are lexically scoped.
+   - Segments can be used for code blocks rather than just
       procedures/functions/methods.
-   -. A Segment Descriptor (SD):
-      #. MAY define a name for the segment if it's an exported
+   - A Segment Descriptor (SD):
+      * MAY define a name for the segment if it's an exported
          segment;
-      #. MUST define number of arguments to the segment;
-      #. MUST define the maximum number of local vars required by the
+      * MUST define number of arguments to the segment;
+      * MUST define the maximum number of local vars required by the
          segment;
-      #. MUST define the lexical scope level (LSL) of the segment;
-      #. The code of the segment follows the above four entries;
-      #. TBD: MUST contain the length of the segment - would make
+      * MUST define the lexical scope level (LSL) of the segment;
+      * The code of the segment follows the above four entries;
+      * TBD: MUST contain the length of the segment - would make
          parsing the code file much faster?
-   -. A segment ends when an MSCW is encountered. TBD: what the
+   - A segment ends when an MSCW is encountered. TBD: what the
       content of the MSCW is!
-   -. It is legal to encounter "sub" (i.e. at a greater LSL) SDs
+   - It is legal to encounter "sub" (i.e. at a greater LSL) SDs
       anywhere within a segment body.
 
 "Loading" a file is no different to just running a segment: the file
@@ -228,48 +228,48 @@ chain must be broken - though not entirely necessarily - the haskell
 version has the implicit invocation of the continuation with the
 result of the subfunction, for example.
 
-TODO: look up how scheme does this.
+- TODO: look up how scheme does this.
 
 
 Instruction Set
 ===============
 
-Push Name (PUSHN)
+- **Push Name (PUSHN)**  
   push onto the stack the address couplet in the instruction
   (i.e. build an IRW)
 
-Push Value (PUSHV)
+- **Push Value (PUSHV)**  
   push onto the stack the value at the address couplet in the
   instruction (functionally equivalent to PUSHN followed by LOADV
 
-Load (LOAD)
+- **Load (LOAD)**  
   top of stack must be an IRW, SIRW or heap pointer. Replace the top
   of stack with the contents found by dereferencing the operand.
 
-Load Value (LOADV)
+- **Load Value (LOADV)**  
   top of stack must be an IRW, SIRW or heap pointer. Replace the top
   of stack with the contents found by dereferencing the operand. If
   the top of the stack is still an IRW, SIRW or heap pointer,
   repeat. I.e. this is the transitive closure of LOAD, stopping when
   the value is not any form of pointer or reference.
 
-Duplicate (DUP)
+- **Duplicate (DUP)**  
   Duplicate the top item on the stack. TBD: should this instruction
   indicate a number too, of items to duplicate?
 
-Push (PUSH)
+- **Push (PUSH)**  
   Push a literal value supplied following the instruction onto the
   stack.
 
-Pop (POP)
+- **Pop (POP)**  
   Pop and discard from the stack. TBD: should this instruction
   indicate a number too, of items to pop?
 
-Store (STORE)
+- **Store (STORE)**  
   Top of stack is the content to store, item below that is the address
   (IRW, SIRW or heap pointer) to store it at.
 
-Enter (ENTER)
+- **Enter (ENTER)**  
   Top of stack is an IRW or SIRW that points at a SCW of the segment
   to enter. The segment's own SD indicates the arity of the
   segment. That number of items must exist in the current activation
@@ -278,12 +278,12 @@ Enter (ENTER)
   activation frame. After the segment returns, the number of items the
   segment returned will be at the top of the stack of the caller.
 
-Return (RETURN)
+- **Return (RETURN)**  
   Contains an integer of the number of items to return from the stack
   to the stack of the parent activation frame. Exits the current
   segment and restores control to the calling segment.
 
-Link (LINK)
+- **Link (LINK)**  
   Followed by a string indicating the name of the library to attempt
   to link to. That library, if it can be found and is a code file,
   will be parsed; its top-level segments will add SCW's to the current
@@ -292,12 +292,13 @@ Link (LINK)
   instruction: it's worth noting that the JVM has no such instruction
   and that 'import's are dealt with by the class loader.
 
-Resolve (RESOLVE)
+- **Resolve (RESOLVE)**  
   Followed by two strings indicating the library name and segment name
   within to resolve. If they can be found then place an IRW pointing
   to the relevant SCW on the stack.
 
-TODO:
+TODO
+----
   Rework Link and Resolve. Firstly in light of the constant-pool in
   the Java Class File format which looks to be a better design which
   would substantially reduce expensive duplication, but also in light
@@ -316,15 +317,15 @@ TODO:
 Misc. Notes to Tidy up properly later
 =====================================
 
-Pizza can be eaten several different ways: http://imgur.com/a/9fJLP
+- Pizza can be eaten several different ways: http://imgur.com/a/9fJLP
 
-Segment entry will provide IRWs pointing at the args to the segment
+- Segment entry will provide IRWs pointing at the args to the segment
 
-The actual args will not be popped as part of segment entry/exit
+- The actual args will not be popped as part of segment entry/exit
 
-"Load" will follow IRWs to an actual value.
+- "Load" will follow IRWs to an actual value.
 
-Need to figure out if we want Load to be provided with an address as
+- Need to figure out if we want Load to be provided with an address as
 part of the instruction, or to construct the address on the stack;
 Burroughs does "name call" to build an IRW on the stack from the
 instruction (this is essentially just "push this stack-address"), and
@@ -332,33 +333,33 @@ does "value call" to duplicate an actual value with the address
 provided from the instruction ("dereference"). It then has "load"
 which will dereference an address on the stack.
 
-It's not actually clear (yet) why these are needed - what ops can you
-actually do on stack-addresses other than load? Curiously, "store" has
-both stack-address and value on the stack and uses them. There seems
-to be no form in which the stack address is provided by the
+- It's not actually clear (yet) why these are needed - what ops can
+you actually do on stack-addresses other than load? Curiously, "store"
+has both stack-address and value on the stack and uses them. There
+seems to be no form in which the stack address is provided by the
 instruction. Note that this is in common with the JVM, though of
 course there we're actually talking about the heap, not the stack.
 
-It's also not clear yet whether we would want to allow a dereference
+- It's also not clear yet whether we would want to allow a dereference
 of a ptr to a ptr to a ... to ever yield the intermediate ptr. My
 impression is that the burroughs doesn't allow this to be yielded - it
 does full ptr chasing, but I might be wrong on this. Certainly it does
 the full chase when trying to find a PCW/SCW.
 
-I can appreciate the need for ptr arith on heap ptrs, but I'm less
+- I can appreciate the need for ptr arith on heap ptrs, but I'm less
 sure about stack ptrs... Ultimately I suppose there's no sense in
 distinguishing between the two. I suspect that ultimately we're just
 going to need a general pair of "&" and "->" operators.
 
-Things to remember about the JVM: it's call-by-value unless the value
-is a ptr to the heap. So this is why method invocation clears the
-calling stack of the args: if they're ptrs to the heap then you've
+- Things to remember about the JVM: it's call-by-value unless the
+value is a ptr to the heap. So this is why method invocation clears
+the calling stack of the args: if they're ptrs to the heap then you've
 just got to dup them from higher up in the stack and then you can
 still do call-by-ref via the stack. If they're primitives then as it's
 call-by-name you lose the args but you get the result returned.
 
-Also, JVM has various forms of type checking built in so you can't(?)
-violate the type sigs.
+- Also, JVM has various forms of type checking built in so you
+can't(?)  violate the type sigs.
 
-For the fib example, need to work out returning values and the tail
+- For the fib example, need to work out returning values and the tail
 calls...
