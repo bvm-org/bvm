@@ -252,11 +252,11 @@ Instruction Set
 ===============
 
 - **Push Name (PUSHN)**  
-  Push onto the stack the address couplet in the instruction
-  (i.e. build an IRW)
+  Push onto the stack the address tuple in the instruction (i.e. build
+  an IRW)
 
 - **Push Value (PUSHV)**  
-  Push onto the stack the value at the address couplet in the
+  Push onto the stack the value at the address tuple in the
   instruction (functionally equivalent to PUSHN followed by LOADV
 
 - **Load (LOAD)**  

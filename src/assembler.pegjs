@@ -138,9 +138,9 @@ Statement
 
   / PushName
   / PushValue
-  / Load
-  / LoadValue
   / LoadConstant
+  / LoadValue
+  / Load
   / Duplicate
   / Pop
   / Store
@@ -225,7 +225,9 @@ LoadConstant "load constant"
   = "loadc"i __ value:((SignedNumericLiteral (_ NumericWidthIndicator)?) / QuotedStringLiteral) {
       return {
         type: "LOADC",
-        value: value, // FIX ME
+        value: Array.isArray(value) ?
+               {type: 'number', value: value[0], width: value[1][1]} :
+               {type: 'string', value: value},
         line: line, column: column
       };
     }
@@ -307,7 +309,7 @@ Increment "increment"
   = "inc"i { return { type: "INCREMENT", line: line, column: column }; }
 
 Compare "compare"
-  = "cmp"i _ st:("eq" / "lt" / "lte" / "gt" / "gte") {
+  = "cmp"i _ st:("eq" / "lte" / "lt" / "gte" / "gt") {
       return {
         type: "COMPARE", subtype: st,
         line: line, column: column
@@ -315,21 +317,19 @@ Compare "compare"
     }
 
 IfZero "ifzero"
-  = "ifzero"i __ t:AddressTuple f:(__ AddressTuple)? {
+  = "ifzero"i __ t:AddressTuple {
       return {
         type: "IFZERO",
         true: t,
-        false: f ? f[1] : undefined,
         line: line, column: column
       };
     }
 
 IfNotZero "ifnotzero"
-  = "ifnotzero"i __ t:AddressTuple f:(__ AddressTuple)? {
+  = "ifnotzero"i __ t:AddressTuple {
       return {
         type: "IFZERO",
         true: t,
-        false: f ? f[1] : undefined,
         line: line, column: column
       };
     }

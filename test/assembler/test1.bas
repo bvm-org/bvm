@@ -1,45 +1,11 @@
-link "some path to some library or something"
-
-seg "myFunction" 0 3 // declare exported function with 0 args that explicitly declares space for 3 local vars.
-  seg "add" 2
-    dup (1,0)
-    dup (1,1)
-    add
-    return 1
-  end
-  push -1.34e-12
-  push -0xa3
-  enter (0x0,1)
-  dup (0,0)
-  store (2,1)
-  return 0x0
-end
+loadc "some path to some library or something"
+link
 
 seg "fib" 1
-  seg 3 0      // Step function
-    load (0)   // [N,...
-    dec        // [N-1,...
-    load (2)   // [Y,N-1,...
-    load (2)   // [Y,Y,N-1,...
-    load (1)   // [X,Y,Y,N-1,...
-    add        // [X+Y,Y,N-1,...
-    store (2)  // [Y,N-1,...
-    store (1)  // [N-1,...
-    store (0)  // [,...
-    enter (1, 1)
-  end
-  seg 3 0      // Loop function
-    load (0)   // [N,...
-    ifnotzero (1, 0)
-  end
-  load (0)     // [N,...
-  push 0       // [0,N,...
-  push 1       // [1,0,N,...
-  enter (1)    // [Y,X,N,...
-  pop 1        // [X,N,...
-  return 1
+  
+  loadc 0 ui32
+  cmp lte
+  ifnotzero (1,1)
+  loadc 1 ui32
+  return
 end
-
-enter (0)
-resolve "foo" "bar"
-enter (1)
