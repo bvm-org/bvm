@@ -120,8 +120,8 @@ SignedNumericLiteral
       return (sign && sign === "-") ? - num : num;
     }
 
-NumericTypeIndicator
-  = 'i'i / 'l'i / 'f'i / 'd'i
+NumericWidthIndicator
+  = 'i16' / 'i32'/ 'i64' / 'ui16' / 'ui32'/ 'ui64' / 'f32' / 'f64'
 
 QuotedStringLiteral "string"
   = parts:('"' QuotedStringCharacters? '"' ) { return parts[1]; }
@@ -136,17 +136,20 @@ QuotedStringCharacter
 Statement
   = Segment
 
-  / Link
-  / Resolve
+  / PushName
+  / PushValue
+  / Load
+  / LoadValue
+  / LoadConstant
+  / Duplicate
+  / Pop
+  / Store
 
   / Enter
   / Return
 
-  / Push
-  / Pop
-  / Load
-  / Store
-  / Duplicate
+  / Link
+  / Resolve
 
   / Add
   / Subtract
@@ -158,25 +161,6 @@ Statement
   / Compare
   / IfZero
   / IfNotZero
-
-Link "link"
-  = "link"i __ library:QuotedStringLiteral {
-      return {
-        type: "LINK",
-        library: library,
-        line: line, column: column
-      };
-    }
-
-Resolve "resolve"
-  = "resolve"i __ library:QuotedStringLiteral _ segment:QuotedStringLiteral {
-      return {
-        type: "RESOLVE",
-        library: library,
-        segment: segment,
-        line: line, column: column
-      };
-    }
 
 Segment "segment"
   = segment:SegmentDeclare _slc LineTerminatorSequence ___
@@ -191,13 +175,11 @@ Segment "segment"
 SegmentDeclare "segment declaration"
   = "seg"i
     name:(__ QuotedStringLiteral)?
-    arity:(__ UnsignedInteger)?
-    declaredVars:(__ UnsignedInteger)? {
+    arity:(__ UnsignedInteger)? {
       return {
         type: "SEGMENT",
         name: name[1] ? name[1] : undefined,
         arity: arity[1] ? arity[1] : 0,
-        declared: declaredVars[1] ? declaredVars[1] : undefined,
         line: line, column: column
       };
     }
@@ -205,30 +187,54 @@ SegmentDeclare "segment declaration"
 SegmentEnd "segment end"
   = "end"i { return { type: "END", line: line, column: column }; }
 
-Enter "enter"
-  = "enter"i __ address:AddressTuple {
+PushName "push name"
+  = "pushn"i __ address:AddressTuple {
       return {
-        type: "ENTER",
+        type: "PUSHN",
         address: address,
         line: line, column: column
       };
     }
 
-Return "return"
-  = "return"i __ arity:UnsignedInteger {
+PushValue "push value"
+  = "pushv"i __ address:AddressTuple {
       return {
-        type: "RETURN",
-        arity: arity,
+        type: "PUSHV",
+        address: address,
         line: line, column: column
       };
     }
 
-Push "push"
-  = "push"i __ number:SignedNumericLiteral _ type:NumericTypeIndicator? {
+Load "load"
+  = "load"i {
       return {
-        type: "PUSH",
-        number: number,
-        numberType: type ? type : 'i',
+        type: "LOAD",
+        line: line, column: column
+      };
+    }
+
+LoadValue "load value"
+  = "loadv"i {
+      return {
+        type: "LOADV",
+        line: line, column: column
+      };
+    }
+
+LoadConstant "load constant"
+  = "loadc"i __ value:((SignedNumericLiteral (_ NumericWidthIndicator)?) / QuotedStringLiteral) {
+      return {
+        type: "LOADC",
+        value: value, // FIX ME
+        line: line, column: column
+      };
+    }
+
+Duplicate "duplicate"
+  = "dup"i __ num:UnsignedInteger {
+      return {
+        type: "DUPLICATE",
+        number: num,
         line: line, column: column
       };
     }
@@ -242,29 +248,42 @@ Pop "pop"
       };
     }
 
-Duplicate "duplicate"
-  = "dup"i __ address:AddressTuple {
-      return {
-        type: "DUPLICATE",
-        address: address,
-        line: line, column: column
-      };
-    }
-
 Store "store"
-  = "store"i __ address:AddressTuple {
+  = "store"i {
       return {
         type: "STORE",
-        address: address,
         line: line, column: column
       };
     }
 
-Load "load"
-  = "load"i __ address:AddressTuple {
+Enter "enter"
+  = "enter"i {
       return {
-        type: "LOAD",
-        address: address,
+        type: "ENTER",
+        line: line, column: column
+      };
+    }
+
+Return "return"
+  = "return"i {
+      return {
+        type: "RETURN",
+        line: line, column: column
+      };
+    }
+
+Link "link"
+  = "link"i {
+      return {
+        type: "LINK",
+        line: line, column: column
+      };
+    }
+
+Resolve "resolve"
+  = "resolve"i {
+      return {
+        type: "RESOLVE",
         line: line, column: column
       };
     }
