@@ -6,9 +6,17 @@ Byte code reflects lexical structure and is in Polish notation form
 
 Code file contains:
 
-1. Header (details tbd): may indicate foreign dependencies, for
-   example.
-2. Declaration of space for file-level "global" variables
+1. Header  
+  This includes a file-level constant declaration table which contains
+  entries for constants used in the file. This includes entries for
+  strings which refer to external segments. This table also includes
+  entries for any named and exported top-level segments and variables
+  - really just entries for the corresponding LSL-0 stack entries post
+  file parsing (or something).
+2. Declaration of space for file-level "global" variables. Not
+  actually sure if this is generally at all necessary: you could just
+  do repeated literal pushes (or even have some sort of repeated
+  literal push?).
 3. One or more procedures:
    - A procedure is just (a particular form of?) a Segment Descriptor
       (SD).
@@ -29,6 +37,15 @@ Code file contains:
       content of the MSCW is!
    - It is legal to encounter "sub" (i.e. at a greater LSL) SDs
       anywhere within a segment body.
+4. Would there actually be any difficulty with treating everything
+  past the header as a segment to run anyway? It would undoubtedly
+  need its own activation frame anyway. You'd certainly want to stuff
+  out and suspend the entire constructed stack (or something similar -
+  maybe it's more a case of suspending the calling stack and resuming
+  that *on top* of the callee's stack - this is more a CPS/CallCC
+  construction. Also of note here, should LINK actually return
+  anything? If LINK really is considered an opcode then the next para
+  is wrong.
 
 "Loading" a file is no different to just running a segment: the file
 is considered to be a segment though it's very likely that other than
