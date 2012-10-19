@@ -9,23 +9,24 @@
             var vcpu, ops;
             vcpu = adornRegistersAndHelpers();
             ops = adornOps(vcpu);
-            return function (segment, index) {
-                var op;
-                vcpu.cs = nuStack(undefined, undefined, segment, index);
+            return function (init) {
+                var segment = nuSegment(init, 0, undefined), op;
+                vcpu.cs = nuStack(undefined, undefined, segment, 0);
                 vcpu.lsps[0] = vcpu.cs;
                 vcpu.lsps.length = 1;
-                while (true) {
+                while (true) { // TODO: we currently just crash when we run out of ops!
                     op = vcpu.cs.ip.fetch();
                     if (op === 'SEG_END') {
                         vcpu.deferred -= 1;
-                    } else if (op === 'SEG_START') {
-                        vcpu.deferred += 1;
                     }
                     if (vcpu.deferred > 0) {
-                        ops.PUSH(op);
+                        vcpu.cs.push(op);
                     } else {
-                        if (ops[op.name]) {
-                            ops[op.name].apply(ops, op.immediateArgs);
+                        if (ops[op]) {
+                            ops[op]();
+                            if (op === 'SEG_START') {
+                                vcpu.deferred += 1;
+                            }
                         } else {
                             ops['UNKNOWN'](op);
                         }
@@ -45,15 +46,32 @@
                     dereferenceScope: {value: function (ls) {
                         return lsps[lsps.length - ls - 1];
                     }},
-                    enter: {value: function (segment) {
-                        var stack = nuStack([], this.cs, segment, 0),
-                            idx;
+                    setStackAndLSPs: {value: function (stack) {
+                        var idx;
                         this.lsps.length = 1 + stack.lsl;
                         this.lsps[stack.lsl] = stack;
                         for (idx = stack.lsl - 1; idx >= 0; idx -= 1) {
                             this.lsps[idx] = this.lsps[idx + 1].lps;
                         }
                         this.cs = stack;
+                        return undefined;
+                    }},
+                    enter: {value: function (segment, argsAry) {
+                        if (! argsAry) {
+                            argsAry = [];
+                        }
+                        this.setStackAndLSPs(nuStack(argsAry, this.cs, segment, 0));
+                        return undefined;
+                    }},
+                    exit: {value: function (resultsAry) {
+                        var idx;
+                        this.setStackAndLSPs(this.cs.dps);
+                        if (resultsAry) {
+                            for (idx = 0; idx < resultsAry.length; idx += 1) {
+                                this.cs.push(resultsAry[idx]);
+                            }
+                        }
+                        return undefined;
                     }}
                 });
         }
@@ -65,8 +83,8 @@
             return Object.create(
                 {},
                 {
-                    PUSH: {value: function (literal) {
-                        vcpu.cs.push(literal);
+                    PUSH: {value: function () {
+                        vcpu.cs.push(vcpu.cs.ip.fetch());
                         return undefined;
                     }},
                     POP: {value: function () {
@@ -175,7 +193,7 @@
                         if (mark === -1) {
                             throw "INVALID OPERAND (ARRAY_END)"; // TODO interrupt handler
                         } else {
-                            removed = vcpu.cs.clear((len - mark) - 1);
+                            removed = vcpu.cs.clear(mark);
                             removed.shift(); // drop the initial mark
                             vcpu.cs.push(nuArray(removed));
                             return undefined;
@@ -191,7 +209,7 @@
                         if (mark === -1) {
                             throw "INVALID OPERAND (DICT_END)"; // TODO interrupt handler
                         } else {
-                            removed = vcpu.cs.clear((len - mark) - 1);
+                            removed = vcpu.cs.clear(mark);
                             removed.shift(); // drop the initial mark
                             if (removed.length % 2 !== 0) {
                                 throw "INVALID OPERAND (DICT_END)"; // TODO interrupt handler
@@ -212,15 +230,57 @@
                     }},
                     SEG_END: {value: function () {
                         var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
-                            removed;
+                            removed, arity;
                         if (mark === -1) {
                             throw "INVALID OPERAND (SEG_END)"; // TODO interrupt handler
                         } else {
-                            removed = vcpu.cs.clear((len - mark) - 1);
+                            removed = vcpu.cs.clear(mark);
                             removed.shift(); // drop the initial mark
-                            vcpu.cs.push(nuSegment(removed, vcpu.cs));
+                            arity = removed.shift();
+                            vcpu.cs.push(nuSegment(removed, arity, vcpu.cs));
                             return undefined;
                         }
+                    }},
+                    EXEC: {value: function () {
+                        var len = vcpu.cs.length(), segment, removed;
+                        if (len === 0) {
+                            throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
+                        } else {
+                            segment = vcpu.cs.pop();
+                            len -= 1;
+                            if (isSegment(segment)) {
+                                if (len < segment.arity) {
+                                    throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
+                                } else {
+                                    removed = vcpu.cs.clear(len - segment.arity);
+                                    vcpu.enter(segment, removed);
+                                    return undefined;
+                                }
+                            } else {
+                                vcpu.cs.push(segment);
+                                return undefined;
+                            }
+                        }
+                    }},
+                    EXIT: {value: function () {
+                        var len = vcpu.cs.length(), resultCount, removed;
+                        if (len === 0) {
+                            throw "INVALID OPERAND (EXIT)"; // TODO interrupt handler
+                        } else {
+                            resultCount = vcpu.cs.pop();
+                            len -= 1;
+                            if (len < resultCount) {
+                                throw "INVALID OPERAND (EXIT)"; // TODO interrupt handler
+                            } else {
+                                removed = vcpu.cs.clear(len - resultCount);
+                                vcpu.exit(removed);
+                                return undefined;
+                            }
+                        }
+                    }},
+                    LOG: {value: function () {
+                        console.log(vcpu.cs.pop());
+                        return undefined;
                     }},
                     UNKNOWN: {value: function (op) {
                         var thing;
@@ -232,10 +292,9 @@
                             vcpu.cs.push(op);
                             return undefined;
                         }
+                        vcpu.cs.push(thing);
                         if (isSegment(thing)) {
-                            vcpu.enter(thing);
-                        } else {
-                            vcpu.cs.push(thing);
+                            this.EXEC();
                         }
                         return undefined;
                     }}
@@ -272,17 +331,23 @@
                 });
         }
 
-        function nuSegment (array, stack) {
-            array = nuArray(array);
-            return adornSegmentFields(array, stack);
+        function nuSegment (array, arity, stackOfCurrentLexicalScope) {
+            return adornSegmentFields(nuArray(array), arity, stackOfCurrentLexicalScope);
         }
 
-        function adornSegmentFields (segment, stack) {
+        function adornSegmentFields (segment, arity, stackOfCurrentLexicalScope) {
             return Object.create(
                 segment,
                 {
-                    ls: {value: stack}
+                    ls: {value: stackOfCurrentLexicalScope},
+                    arity: {value: arity}
                 });
+        }
+
+        function isSegment (thing) {
+            return thing &&
+                'ls' in thing &&
+                'arity' in thing;
         }
 
         // segment here is the new segment being entered.
@@ -293,13 +358,15 @@
             }
             if (segment) {
                 stack.lsp = segment.ls;
-                stack.lsl = segment.ls.lsl + 1;
+                if (stack.lsp) {
+                    stack.lsl = segment.ls.lsl + 1;
+                }
                 stack.ip = nuIP(segment, index);
             }
             return stack;
         }
 
-        function adornStackHeader (stack) {
+        function adornStackHeader (stack, arity) {
             return Object.create(
                 stack,
                 {
@@ -312,12 +379,6 @@
                     ip: {value: undefined,
                          writable: true}
                 });
-        }
-
-        function isSegment (thing) {
-            return 'dps' in thing &&
-                'lps' in thing &&
-                'lsl' in thing;
         }
 
         function nuArray (array) {
@@ -391,11 +452,13 @@
         }
 
         function isAtomString (thing) {
-            return typeof thing === 'string';
+            return thing &&
+                typeof thing === 'string';
         }
 
         function isAddressCouplet (thing) {
-            return typeof thing === 'object' &&
+            return thing &&
+                typeof thing === 'object' &&
                 'lsl' in thing &&
                 'index' in thing;
         }
