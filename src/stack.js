@@ -43,8 +43,8 @@
                     lsps: {value: []},
                     cd: {value: nuDict(), writable: true},
                     cs: {value: undefined, writable: true},
-                    dereferenceScope: {value: function (ls) {
-                        return lsps[lsps.length - ls - 1];
+                    dereferenceScope: {value: function (lsl) {
+                        return this.lsps[this.lsps.length - lsl - 1];
                     }},
                     setStackAndLSPs: {value: function (stack) {
                         var idx;
@@ -357,8 +357,8 @@
                 stack.dps = oldStack;
             }
             if (segment) {
-                stack.lsp = segment.ls;
-                if (stack.lsp) {
+                stack.lps = segment.ls;
+                if (stack.lps) {
                     stack.lsl = segment.ls.lsl + 1;
                 }
                 stack.ip = nuIP(segment, index);
@@ -398,11 +398,19 @@
                         return array.length;
                     }},
                     index: {value: function (idx) {
-                        return array[idx];
+                        if (idx < 0 || array.length <= idx) {
+                            throw "ILLEGAL STACK ADDRESS";
+                        } else {
+                            return array[idx];
+                        }
                     }},
                     store: {value: function (idx, val) {
-                        array[idx] = val;
-                        return undefined;
+                        if (idx < 0 || array.length <= idx) {
+                            throw "ILLEGAL STACK ADDRESS";
+                        } else {
+                            array[idx] = val;
+                            return undefined;
+                        }
                     }},
                     clear: {value: function (from) {
                         if (! from) {
