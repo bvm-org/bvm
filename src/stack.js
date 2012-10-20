@@ -340,7 +340,10 @@
                 segment,
                 {
                     ls: {value: stackOfCurrentLexicalScope},
-                    arity: {value: arity}
+                    arity: {value: arity},
+                    nuIP: {value: function (index) {
+                        return nuIP(this, index);
+                    }}
                 });
         }
 
@@ -361,7 +364,7 @@
                 if (stack.lps) {
                     stack.lsl = segment.ls.lsl + 1;
                 }
-                stack.ip = nuIP(segment, index);
+                stack.ip = segment.nuIP(index);
             }
             return stack;
         }
