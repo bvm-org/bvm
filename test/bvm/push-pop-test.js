@@ -7,62 +7,62 @@
             fail = buster.assertions.fail,
             assert = buster.assertions.assert,
             refute = buster.assertions.refute,
-            runCPU = require('./runCPU');
+            runner = require('./cpuRunner');
 
         buster.testRunner.timeout = 10000; // 10 seconds
 
         buster.testCase('push-pop', {
 
             'can push one': function (done) {
-                runCPU(['PUSH', 'hello',
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
-                            {contents: ['hello']}))],
-                       done);
+                var cpu = runner(done);
+                cpu.setCode(['PUSH', 'hello',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello']}))]).run();
             },
 
             'can push two': function (done) {
-                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye',
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
-                            {contents: ['hello', 'goodbye']}))],
-                       done);
+                var cpu = runner(done);
+                cpu.setCode(['PUSH', 'hello', 'PUSH', 'goodbye',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 'goodbye']}))]).run();
             },
 
             'can push three': function (done) {
-                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye', 'PUSH', 7,
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
-                            {contents: ['hello', 'goodbye', 7]}))],
-                       done);
+                var cpu = runner(done);
+                cpu.setCode(['PUSH', 'hello', 'PUSH', 'goodbye', 'PUSH', 7,
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 'goodbye', 7]}))]).run();
             },
 
             'can push implicit': function (done) {
-                runCPU([2, 'PUSH', 'goodbye', 7,
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
-                            {contents: [2, 'goodbye', 7]}))],
-                       done);
+                var cpu = runner(done);
+                cpu.setCode([2, 'PUSH', 'goodbye', 7,
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [2, 'goodbye', 7]}))]).run();
             },
 
             'can push and pop one': function (done) {
-                runCPU(['PUSH', 'hello',
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff({contents: ['hello']})),
-                        'POP',
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff())],
-                       done);
+                var cpu = runner(done);
+                cpu.setCode(['PUSH', 'hello',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff({contents: ['hello']})),
+                             'POP',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff())]).run();
             },
 
             'can push and pop three': function (done) {
-                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye', 17,
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
-                            {contents: ['hello', 'goodbye', 17]})),
-                        'POP',
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
-                            {contents: ['hello', 'goodbye']})),
-                        'POP',
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
-                            {contents: ['hello']})),
-                        'POP',
-                        runCPU.breakpoint(runCPU.baseStackConfigDiff())],
-                       done);
-            },
+                var cpu = runner(done);
+                cpu.setCode(['PUSH', 'hello', 'PUSH', 'goodbye', 17,
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 'goodbye', 17]})),
+                             'POP',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 'goodbye']})),
+                             'POP',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello']})),
+                             'POP',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff())]).run();
+            }
 
         });
 

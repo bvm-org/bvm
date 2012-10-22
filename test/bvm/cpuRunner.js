@@ -5,12 +5,12 @@
 
         var bvm = require('../../index'),
             buster = require('buster'),
-            breakpoint = 'BREAKPOINT', configurations = [],
+            breakpoint = 'BREAKPOINT',
             baseStackConfig = {dps: undefined,
                                lps: undefined,
                                lsl: 0,
                                contents: []},
-            runCPU;
+            runnerBase, result;
 
         buster.assertions.add('stackConfiguration', {
             assert: function (stack, expectedStack) {
@@ -32,28 +32,44 @@
             expectation: 'toBeStackMatching'
         });
 
-        runCPU = function runCPU(code, done) {
-            var configs = configurations.splice(0);
-            try {
-                var cpu = bvm.bvm(bvm.segmentTypes.json(code));
-                if (configs.length !== 0) {
-                    cpu.installOp(breakpoint,
-                                  function (vcpu, ops) {
-                                      assert.stackConfiguration(vcpu.cs, configs.shift());
-                                      if (! configs.length) { done(); }
-                                  });
+        runnerBase = {
+            run: function () {
+                try {
+                    var cpu = bvm.bvm(bvm.segmentTypes.json(this.code));
+                    if (this.breakpoints.length !== 0) {
+                        cpu.installOp(
+                            breakpoint,
+                            function (vcpu, ops) {
+                                assert.stackConfiguration(vcpu.cs, this.breakpoints.shift());
+                                if (! this.breakpoints.length) { this.done(); }
+                            }.bind(this));
+                    }
+                    cpu.boot();
+                    return undefined;
+                } catch (e) {
+                    return e;
                 }
-                cpu.boot();
-                return undefined;
-            } catch (e) {
-                return e;
+            },
+            setCode: function (code) {
+                this.code = code;
+                return this;
+            },
+            addBreakPoint: function (config) {
+                this.breakpoints.push(config);
+                return breakpoint;
             }
         };
-        runCPU.breakpoint = function (config) {
-            configurations.push(config);
-            return breakpoint;
+
+        result = function (done) {
+            return Object.create(
+                runnerBase,
+                {
+                    breakpoints: {value: []},
+                    done: {value: done}
+                });
         };
-        runCPU.baseStackConfigDiff = function (diff) {
+
+        result.baseStackConfigDiff = function (diff) {
             var obj = Object.create(baseStackConfig);
             if (diff) {
                 Object.keys(diff).forEach(function (key) {
@@ -63,7 +79,6 @@
             return obj;
         };
 
-        return runCPU;
-
+        return result;
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));
