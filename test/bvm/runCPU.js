@@ -4,7 +4,13 @@
         'use strict';
 
         var bvm = require('../../index'),
-            buster = require('buster');
+            buster = require('buster'),
+            breakpoint = 'BREAKPOINT', configurations = [],
+            baseStackConfig = {dps: undefined,
+                               lps: undefined,
+                               lsl: 0,
+                               contents: []},
+            runCPU;
 
         buster.assertions.add('stackConfiguration', {
             assert: function (stack, expectedStack) {
@@ -26,17 +32,15 @@
             expectation: 'toBeStackMatching'
         });
 
-        return function runCPU(code, testcaseCallback, done) {
+        runCPU = function runCPU(code, done) {
+            var configs = configurations.splice(0);
             try {
                 var cpu = bvm.bvm(bvm.segmentTypes.json(code));
-                if (testcaseCallback) {
-                    cpu.installOp('TESTCASE', Array.isArray(testcaseCallback) ?
+                if (configs.length !== 0) {
+                    cpu.installOp(breakpoint,
                                   function (vcpu, ops) {
-                                      assert.stackConfiguration(vcpu.cs, testcaseCallback.shift());
-                                      if (! testcaseCallback.length) { done(); }
-                                  } :
-                                  function (vcpu, ops) {
-                                      testcaseCallback(vcpu, ops);
+                                      assert.stackConfiguration(vcpu.cs, configs.shift());
+                                      if (! configs.length) { done(); }
                                   });
                 }
                 cpu.boot();
@@ -45,6 +49,21 @@
                 return e;
             }
         };
+        runCPU.breakpoint = function (config) {
+            configurations.push(config);
+            return breakpoint;
+        };
+        runCPU.baseStackConfigDiff = function (diff) {
+            var obj = Object.create(baseStackConfig);
+            if (diff) {
+                Object.keys(diff).forEach(function (key) {
+                    obj[key] = diff[key];
+                });
+            }
+            return obj;
+        };
+
+        return runCPU;
 
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));

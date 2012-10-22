@@ -14,75 +14,54 @@
         buster.testCase('push-pop', {
 
             'can push one': function (done) {
-                runCPU(['PUSH', 'hello', 'TESTCASE'],
-                       [{contents: ['hello'],
-                         dps: undefined,
-                         lps: undefined,
-                         lsl: 0}], done);
+                runCPU(['PUSH', 'hello',
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
+                            {contents: ['hello']}))],
+                       done);
             },
 
             'can push two': function (done) {
-                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye', 'TESTCASE'],
-                       [{contents: ['hello', 'goodbye'],
-                         dps: undefined,
-                         lps: undefined,
-                         lsl: 0}], done);
+                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye',
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
+                            {contents: ['hello', 'goodbye']}))],
+                       done);
             },
 
             'can push three': function (done) {
-                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye', 'PUSH', 7, 'TESTCASE'],
-                       [{contents: ['hello', 'goodbye', 7],
-                         dps: undefined,
-                         lps: undefined,
-                         lsl: 0}], done);
+                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye', 'PUSH', 7,
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
+                            {contents: ['hello', 'goodbye', 7]}))],
+                       done);
             },
 
             'can push implicit': function (done) {
-                runCPU([2, 'PUSH', 'goodbye', 7, 'TESTCASE'],
-                       [{contents: [2, 'goodbye', 7],
-                         dps: undefined,
-                         lps: undefined,
-                         lsl: 0}], done);
+                runCPU([2, 'PUSH', 'goodbye', 7,
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
+                            {contents: [2, 'goodbye', 7]}))],
+                       done);
             },
 
             'can push and pop one': function (done) {
-                var configurations = [
-                    {contents: ['hello'],
-                     dps: undefined,
-                     lps: undefined,
-                     lsl: 0},
-                    {contents: [],
-                     dps: undefined,
-                     lps: undefined,
-                     lsl: 0}
-                ];
-                runCPU(['PUSH', 'hello', 'TESTCASE', 'POP', 'TESTCASE'],
-                       configurations, done);
+                runCPU(['PUSH', 'hello',
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff({contents: ['hello']})),
+                        'POP',
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff())],
+                       done);
             },
 
             'can push and pop three': function (done) {
-                var configurations = [
-                    {contents: ['hello', 'goodbye', 17],
-                     dps: undefined,
-                     lps: undefined,
-                     lsl: 0},
-                    {contents: ['hello', 'goodbye'],
-                     dps: undefined,
-                     lps: undefined,
-                     lsl: 0},
-                    {contents: ['hello'],
-                     dps: undefined,
-                     lps: undefined,
-                     lsl: 0},
-                    {contents: [],
-                     dps: undefined,
-                     lps: undefined,
-                     lsl: 0}
-                ];
-                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye', 17, 'TESTCASE',
-                        'POP', 'TESTCASE',
-                        'POP', 'TESTCASE',
-                        'POP', 'TESTCASE'], configurations, done);
+                runCPU(['PUSH', 'hello', 'PUSH', 'goodbye', 17,
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
+                            {contents: ['hello', 'goodbye', 17]})),
+                        'POP',
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
+                            {contents: ['hello', 'goodbye']})),
+                        'POP',
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff(
+                            {contents: ['hello']})),
+                        'POP',
+                        runCPU.breakpoint(runCPU.baseStackConfigDiff())],
+                       done);
             },
 
         });
