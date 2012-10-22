@@ -62,6 +62,51 @@
                                  {contents: ['hello']})),
                              'POP',
                              cpu.addBreakPoint(runner.baseStackConfigDiff())]).run();
+            },
+
+            'duplicate': function (done) {
+                var cpu = runner(done);
+                cpu.setCode([3, 8,
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [3, 8]})),
+                             'DUPLICATE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [3, 8, 8]})),
+                             'DUPLICATE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [3, 8, 8, 8]}))]).run();
+            },
+
+            'count': function (done) {
+                var cpu = runner(done);
+                cpu.setCode(['COUNT',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [0]})),
+                             'COUNT',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [0, 1]})),
+                             'COUNT',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [0, 1, 2]}))]).run();
+            },
+
+            'exchange': function (done) {
+                var cpu = runner(done);
+                cpu.setCode([5, 'PUSH', 'hello',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [5, 'hello']})),
+                             'EXCHANGE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 5]})),
+                             3489,
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 5, 3489]})),
+                             'EXCHANGE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 3489, 5]})),
+                             'EXCHANGE', 'EXCHANGE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['hello', 3489, 5]}))]).run();
             }
 
         });
