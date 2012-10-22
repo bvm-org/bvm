@@ -4,13 +4,15 @@
         'use strict';
 
         var types = require('./types');
+        var nuArray = require('./array');
+        var segmentTypes = require('./segment');
 
         return function nuVCPU () {
             var vcpu, ops;
             vcpu = adornRegistersAndHelpers();
             ops = adornOps(vcpu);
-            return function (init) {
-                var segment = nuSegment(init, 0, undefined), op;
+            return function (segment) {
+                var op;
                 vcpu.cs = nuStack(undefined, undefined, segment, 0);
                 vcpu.lsps[0] = vcpu.cs;
                 vcpu.lsps.length = 1;
@@ -47,11 +49,13 @@
                         return this.lsps[this.lsps.length - lsl - 1];
                     }},
                     setStackAndLSPs: {value: function (stack) {
-                        var idx;
-                        this.lsps.length = 1 + stack.lsl;
-                        this.lsps[stack.lsl] = stack;
-                        for (idx = stack.lsl - 1; idx >= 0; idx -= 1) {
-                            this.lsps[idx] = this.lsps[idx + 1].lps;
+                        var maxidx = stack.lsl, idx, lps;
+                        this.lsps.length = 1 + maxidx;
+                        this.lsps[maxidx] = stack;
+                        lps = stack.lps;
+                        for (idx = maxidx - 1; idx >= 0 && this.lsps[idx] !== lps; idx -= 1) {
+                            this.lsps[idx] = lps;
+                            lps = lps.lps;
                         }
                         this.cs = stack;
                         return undefined;
@@ -237,7 +241,7 @@
                             removed = vcpu.cs.clear(mark);
                             removed.shift(); // drop the initial mark
                             arity = removed.shift();
-                            vcpu.cs.push(nuSegment(removed, arity, vcpu.cs));
+                            vcpu.cs.push(vcpu.cs.nuSegment(removed, arity, vcpu.cs));
                             return undefined;
                         }
                     }},
@@ -248,7 +252,7 @@
                         } else {
                             segment = vcpu.cs.pop();
                             len -= 1;
-                            if (isSegment(segment)) {
+                            if (segmentTypes.isSegment(segment)) {
                                 if (len < segment.arity) {
                                     throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
                                 } else {
@@ -293,64 +297,12 @@
                             return undefined;
                         }
                         vcpu.cs.push(thing);
-                        if (isSegment(thing)) {
+                        if (segmentTypes.isSegment(thing)) {
                             this.EXEC();
                         }
                         return undefined;
                     }}
                 });
-        }
-
-        function nuIP (segment, index) {
-            if (! index) {
-                index = 0;
-            }
-            var ip = Object.create(
-                {},
-                {
-                    segment: {value: segment},
-                    index: {value: index, writable: true}
-                });
-            return adornIPHelpers(ip);
-        }
-
-        function adornIPHelpers (ip) {
-            return Object.create(
-                {},
-                {
-                    fetch: {value: function () {
-                        var op;
-                        if (ip.index >= ip.segment.length()) {
-                            throw "HALT: EXHAUSTED SEGMENT";
-                        } else {
-                            op = ip.segment.index(ip.index);
-                            ip.index += 1;
-                            return op;
-                        }
-                    }}
-                });
-        }
-
-        function nuSegment (array, arity, stackOfCurrentLexicalScope) {
-            return adornSegmentFields(nuArray(array), arity, stackOfCurrentLexicalScope);
-        }
-
-        function adornSegmentFields (segment, arity, stackOfCurrentLexicalScope) {
-            return Object.create(
-                segment,
-                {
-                    ls: {value: stackOfCurrentLexicalScope},
-                    arity: {value: arity},
-                    nuIP: {value: function (index) {
-                        return nuIP(this, index);
-                    }}
-                });
-        }
-
-        function isSegment (thing) {
-            return thing &&
-                'ls' in thing &&
-                'arity' in thing;
         }
 
         // segment here is the new segment being entered.
@@ -359,13 +311,12 @@
             if (oldStack) {
                 stack.dps = oldStack;
             }
-            if (segment) {
-                stack.lps = segment.ls;
-                if (stack.lps) {
-                    stack.lsl = segment.ls.lsl + 1;
-                }
-                stack.ip = segment.nuIP(index);
+            stack.lps = segment.ls;
+            if (stack.lps) {
+                stack.lsl = segment.ls.lsl + 1;
             }
+            stack.ip = segment.nuIP(index);
+            stack.nuSegment = segment.nuSegment;
             return stack;
         }
 
@@ -380,48 +331,9 @@
                     lsl: {value: 0,
                           writable: true},
                     ip: {value: undefined,
-                         writable: true}
-                });
-        }
-
-        function nuArray (array) {
-            if (! array) {
-                array = [];
-            }
-            return adornArrayOps(array);
-        }
-
-        function adornArrayOps (array) {
-            return Object.create(
-                {},
-                {
-                    push: {value: array.push.bind(array)},
-                    pop: {value: array.pop.bind(array)},
-                    length: {value: function () {
-                        return array.length;
-                    }},
-                    index: {value: function (idx) {
-                        if (idx < 0 || array.length <= idx) {
-                            throw "ILLEGAL STACK ADDRESS";
-                        } else {
-                            return array[idx];
-                        }
-                    }},
-                    store: {value: function (idx, val) {
-                        if (idx < 0 || array.length <= idx) {
-                            throw "ILLEGAL STACK ADDRESS";
-                        } else {
-                            array[idx] = val;
-                            return undefined;
-                        }
-                    }},
-                    clear: {value: function (from) {
-                        if (! from) {
-                            from = 0;
-                        }
-                        return array.splice(from, array.length - from);
-                    }},
-                    lastIndexOf: {value: array.lastIndexOf.bind(array)}
+                         writable: true},
+                    nuSegment: {value: undefined,
+                                writable: true}
                 });
         }
 
