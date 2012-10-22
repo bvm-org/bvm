@@ -42,8 +42,63 @@
                     COUNT: {value: function () {
                         vcpu.cs.push(vcpu.cs.length());
                         return undefined;
+                    }},
+                    COPY: {value: function () {
+                        var len = vcpu.cs.length(), count, idx;
+                        if (len > 0) {
+                            count = vcpu.cs.pop();
+                            len -= 1;
+                            if (len >= count) {
+                                for (idx = len - count; idx < len; idx += 1) {
+                                    vcpu.cs.push(vcpu.cs.index(idx));
+                                }
+                                return undefined;
+                            } else {
+                                throw "NOT ENOUGH OPERANDS (COPY)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (COPY)"; // TODO interrupt handler
+                        }
+                    }},
+                    INDEX: {value: function () {
+                        var len = vcpu.cs.length(), idx;
+                        if (len > 0) {
+                            idx = vcpu.cs.pop();
+                            len -= 1;
+                            if (len > idx) {
+                                vcpu.cs.push(vcpu.cs.index(len - idx - 1));
+                                return undefined;
+                            } else {
+                                throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler
+                        }
+                    }},
+                    ROLL: {value: function () {
+                        var len = vcpu.cs.length(), shift, count, removed, split;
+                        if (len > 1) {
+                            shift = vcpu.cs.pop();
+                            count = vcpu.cs.pop();
+                            len -= 2;
+                            if (len > count) {
+                                removed = vcpu.cs.clear(len - count);
+                                if (shift > 0) {
+                                    shift = - (shift % count);
+                                } else if (shift < 0) {
+                                    shift = Math.abs(shift) % count;
+                                }
+                                removed.splice(shift).concat(removed).forEach(function (elem) {
+                                    vcpu.cs.push(elem);
+                                });
+                                return undefined;
+                            } else {
+                                throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
+                        }
                     }}
-                    // TODO: COPY, ROLL, INDEX
                 });
             return undefined;
         };

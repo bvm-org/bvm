@@ -11,7 +11,7 @@
 
         buster.testRunner.timeout = 10000; // 10 seconds
 
-        buster.testCase('push-pop', {
+        buster.testCase('basic stack ops', {
 
             'can push one': function (done) {
                 var cpu = runner(done);
@@ -107,6 +107,67 @@
                              'EXCHANGE', 'EXCHANGE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello', 3489, 5]}))]).run();
+            },
+
+            'copy': function (done) {
+                var cpu = runner(done);
+                cpu.setCode([5, 'PUSH', 'hello', 1, 'COPY',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [5, 'hello', 'hello']})),
+                             3, 'COPY',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [5, 'hello', 'hello', 5, 'hello', 'hello']})),
+                             7, 2, 'COPY',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [5, 'hello', 'hello', 5, 'hello', 'hello', 7, 'hello', 7]}))
+                            ]).run();
+            },
+
+            'index': function (done) {
+                var cpu = runner(done);
+                cpu.setCode([5, 0, 'INDEX',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [5, 5]})),
+                             3, 2, 0, 'INDEX',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [5, 5, 3, 2, 2]})),
+                             2, 'INDEX',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [5, 5, 3, 2, 2, 3]}))
+                            ]).run();
+            },
+
+            'roll': function (done) {
+                var cpu = runner(done);
+                cpu.setCode(['PUSH', 'a', 'PUSH', 'b', 'PUSH', 'c', 'PUSH', 'd',
+                             3, 0, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'b', 'c', 'd']})),
+                             3, 1, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'd', 'b', 'c']})),
+                             3, 1, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'c', 'd', 'b']})),
+                             3, 4, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'b', 'c', 'd']})),
+                             3, -1, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'c', 'd', 'b']})),
+                             3, -1, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'd', 'b', 'c']})),
+                             3, -7, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'b', 'c', 'd']})),
+                             3, 9, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'b', 'c', 'd']})),
+                             3, -27, 'ROLL',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: ['a', 'b', 'c', 'd']})),
+                            ]).run();
             }
 
         });

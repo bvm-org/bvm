@@ -48,6 +48,10 @@
                             throw "NOT ENOUGH OPERANDS (STORE)"; // TODO interrupt handler
                         }
                     }},
+                    ADDRESS: {value: function () { // TODO not entirely sure if this is needed.
+                        vcpu.cs.push({lsl: vcpu.cs.lsl, index: vcpu.cs.length()})
+                        return undefined;
+                    }},
                     UNKNOWN: {value: function (op) {
                         var thing;
                         if (isAddressCouplet(op)) {
