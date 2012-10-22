@@ -9,34 +9,44 @@
         var fs = require('fs');
         var path = require('path');
 
-        return function nuVCPU () {
-            var vcpu, ops;
-            vcpu = adornRegistersAndHelpers();
-            ops = adornOps(vcpu);
-            return function (segment) {
-                var op;
-                vcpu.cs = nuStack(undefined, undefined, segment, 0);
-                vcpu.lsps[0] = vcpu.cs;
-                vcpu.lsps.length = 1;
-                while (true) { // TODO: we currently just crash when we run out of ops!
-                    op = vcpu.cs.ip.fetch();
-                    if (op === 'SEG_END') {
-                        vcpu.deferred -= 1;
-                    }
-                    if (vcpu.deferred > 0) {
-                        vcpu.cs.push(op);
-                    } else {
-                        if (ops[op]) {
-                            ops[op]();
-                            if (op === 'SEG_START') {
-                                vcpu.deferred += 1;
+        return function nuVCPU (segment) {
+            var vcpu = adornRegistersAndHelpers(),
+                ops = adornOps(vcpu);
+            return Object.create(
+                {},
+                {
+                    boot: {value: function () {
+                        var op;
+                        vcpu.cs = nuStack(undefined, undefined, segment, 0);
+                        vcpu.lsps[0] = vcpu.cs;
+                        vcpu.lsps.length = 1;
+                        while (true) { // TODO: we currently just crash when we run out of ops!
+                            op = vcpu.cs.ip.fetch();
+                            if (op === 'SEG_END') {
+                                vcpu.deferred -= 1;
                             }
-                        } else {
-                            ops['UNKNOWN'](op);
+                            if (vcpu.deferred > 0) {
+                                vcpu.cs.push(op);
+                            } else {
+                                if (ops[op]) {
+                                    ops[op]();
+                                    if (op === 'SEG_START') {
+                                        vcpu.deferred += 1;
+                                    }
+                                } else {
+                                    ops['UNKNOWN'](op);
+                                }
+                            }
                         }
-                    }
-                }
-            };
+                    }},
+
+                    // means to install hooks for use by testing.
+                    installOp: {value: function (name, fun) {
+                        ops[name] = function () {
+                            fun(vcpu, ops);
+                        };
+                    }}
+            });
         };
 
         function adornRegistersAndHelpers () {
@@ -48,7 +58,7 @@
                     cd: {value: nuDict(), writable: true},
                     cs: {value: undefined, writable: true},
                     dereferenceScope: {value: function (lsl) {
-                        return this.lsps[this.lsps.length - lsl - 1];
+                        return this.lsps[lsl];
                     }},
                     setStackAndLSPs: {value: function (stack) {
                         var maxidx = stack.lsl, idx, lps;

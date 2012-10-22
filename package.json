@@ -1,0 +1,23 @@
+{
+    "private": true,
+    "name": "bvm",
+    "author": "Matthew Sackman",
+    "version": "0.0.1",
+    "description": "The BVM",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/five-eleven/bvm.git"
+    },
+    "main": "index",
+    "dependencies": {
+        "pegjs": ""
+    },
+    "devDependencies": {
+        "buster": ""
+    },
+    "scripts": {
+        "pretest": "pegjs --cache --track-line-and-column src/assembler.pegjs src/assembler-parser.js",
+        "test": "buster test --environment node --reporter specification"
+    }
+
+}
