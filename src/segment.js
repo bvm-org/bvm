@@ -8,7 +8,7 @@
 
         (function jsonSegment () {
 
-            segmentTypes.json = function (array, arity, stackOfCurrentLexicalScope) {
+            segmentTypes.json = function nuSegment (array, arity, stackOfCurrentLexicalScope) {
                 if (! arity) {
                     arity = 0;
                 }
@@ -24,7 +24,10 @@
                         nuIP: {value: function (index) {
                             return nuIP(this, index);
                         }},
-                        nuSegment: {value: segmentTypes.json}
+                        nuSegment: {value: segmentTypes.json},
+                        clone: {value: function () {
+                            return nuSegment(segment.clone(), this.arity, this.ls);
+                        }}
                     });
             }
 

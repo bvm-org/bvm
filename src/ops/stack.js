@@ -21,7 +21,7 @@
                     DUPLICATE: {value: function () {
                         var len = vcpu.cs.length();
                         if (len > 0) {
-                            vcpu.cs.push(vcpu.cs.index(len - 1));
+                            vcpu.cs.push(vcpu.cs.copy(len - 1));
                             return undefined;
                         } else {
                             throw "NOT ENOUGH OPERANDS (DUPLICATE)"; // TODO interrupt handler
@@ -50,7 +50,7 @@
                             len -= 1;
                             if (len >= count) {
                                 for (idx = len - count; idx < len; idx += 1) {
-                                    vcpu.cs.push(vcpu.cs.index(idx));
+                                    vcpu.cs.push(vcpu.cs.copy(idx));
                                 }
                                 return undefined;
                             } else {
@@ -66,7 +66,7 @@
                             idx = vcpu.cs.pop();
                             len -= 1;
                             if (len > idx) {
-                                vcpu.cs.push(vcpu.cs.index(len - idx - 1));
+                                vcpu.cs.push(vcpu.cs.copy(len - idx - 1));
                                 return undefined;
                             } else {
                                 throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler

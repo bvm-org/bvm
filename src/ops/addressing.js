@@ -14,7 +14,7 @@
                         if (vcpu.cs.length() > 0) {
                             reference = vcpu.cs.pop();
                             if (isAddressCouplet(reference)) {
-                                vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
+                                vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).copy(reference.index));
                                 return undefined;
                             } else if (isAtomString(reference)) {
                                 if (vcpu.cd.has(reference)) {
@@ -55,7 +55,7 @@
                     UNKNOWN: {value: function (op) {
                         var thing;
                         if (isAddressCouplet(op)) {
-                            thing = vcpu.dereferenceScope(op.lsl);
+                            thing = vcpu.dereferenceScope(op.lsl).copy(op.index);
                         } else if (isAtomString(op)) {
                             thing = vcpu.cd.load(op);
                         } else {

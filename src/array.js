@@ -26,6 +26,25 @@
                             return array[idx];
                         }
                     }},
+                    copy: {value: function (idx) {
+                        var val;
+                        if (idx < 0 || array.length <= idx) {
+                            throw "ILLEGAL STACK ADDRESS";
+                        } else {
+                            val = array[idx];
+                            if (typeof val === 'number' ||
+                                typeof val === 'string' ||
+                                typeof val === 'boolean') {
+                                return val;
+                            } else {
+                                if ('clone' in val && typeof val.clone === 'function') {
+                                    return val.clone();
+                                } else {
+                                    throw "UNABLE TO CLONE VALUE";
+                                }
+                            }
+                        }
+                    }},
                     store: {value: function (idx, val) {
                         if (idx < 0 || array.length <= idx) {
                             throw "ILLEGAL STACK ADDRESS";
@@ -40,7 +59,10 @@
                         }
                         return array.splice(from, array.length - from);
                     }},
-                    lastIndexOf: {value: array.lastIndexOf.bind(array)}
+                    lastIndexOf: {value: array.lastIndexOf.bind(array)},
+                    clone: {value: function () {
+                        return nuArray(array.slice(0));
+                    }}
                 });
         }
 

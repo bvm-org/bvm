@@ -5,6 +5,7 @@
 
         var types = require('./types');
         var nuArray = require('./array');
+        var nuDict = require('./dict');
         var segmentTypes = require('./segment');
         var fs = require('fs');
         var path = require('path');
@@ -104,7 +105,7 @@
 
         // segment here is the new segment being entered.
         function nuStack (stackBase, oldStack, segment, index) {
-            var stack = adornStackHeader(nuArray(stackBase));
+            var stack = adornStackHeader(nuArray(stackBase), segment);
             if (oldStack) {
                 stack.dps = oldStack;
             }
@@ -117,7 +118,7 @@
             return stack;
         }
 
-        function adornStackHeader (stack, arity) {
+        function adornStackHeader (stack, segment) {
             return Object.create(
                 stack,
                 {
@@ -130,43 +131,9 @@
                     ip: {value: undefined,
                          writable: true},
                     nuSegment: {value: undefined,
-                                writable: true}
-                });
-        }
-
-        function nuDict (dict) {
-            if (! dict) {
-                dict = {};
-            }
-            dict = adornDictOps(dict);
-            return dict;
-        }
-
-        function adornDictOps (dict) {
-            return Object.create(
-                {},
-                {
-                    has: {value: function (key) {
-                        return dict.hasOwnProperty(key);
-                    }},
-                    load: {value: function (key) {
-                        if (dict.hasOwnProperty(key)) {
-                            return dict[key];
-                        } else {
-                            return undefined;
-                        }
-                    }},
-                    store: {value: function (key, value) {
-                        if (value === undefined && value === null) {
-                            delete dict[key];
-                        } else {
-                            dict[key] = value;
-                        }
-                        return undefined;
-                    }},
-                    remove: {value: function (key) {
-                        delete dict[key];
-                        return undefined;
+                                writable: true},
+                    clone: {value: function () {
+                        return nuStack(stack.clone(), this.dps, segment, this.ip.index);
                     }}
                 });
         }
