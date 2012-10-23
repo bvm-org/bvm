@@ -4,6 +4,7 @@
         'use strict';
 
         var segmentTypes = require('../segment');
+        var types = require('../types');
 
         return function (vcpu, ops) {
             Object.defineProperties(
@@ -13,7 +14,7 @@
                         var reference;
                         if (vcpu.cs.length() > 0) {
                             reference = vcpu.cs.pop();
-                            if (isAddressCouplet(reference)) {
+                            if (types.isAddressCouplet(reference)) {
                                 vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).copy(reference.index));
                                 return undefined;
                             } else if (isAtomString(reference)) {
@@ -35,7 +36,7 @@
                         if (vcpu.cs.length() > 1) {
                             value = vcpu.cs.pop();
                             reference = vcpu.cs.pop();
-                            if (isAddressCouplet(reference)) {
+                            if (types.isAddressCouplet(reference)) {
                                 vcpu.dereferenceScope(reference.lsl).store(reference.index, value);
                                 return undefined;
                             } else if (isAtomString(reference)) {
@@ -49,12 +50,12 @@
                         }
                     }},
                     ADDRESS: {value: function () { // TODO not entirely sure if this is needed.
-                        vcpu.cs.push({lsl: vcpu.cs.lsl, index: vcpu.cs.length()})
+                        vcpu.cs.push(types.nuAddressCouplet(vcpu.cs.lsl, vcpu.cs.length()));
                         return undefined;
                     }},
                     UNKNOWN: {value: function (op) {
                         var thing;
-                        if (isAddressCouplet(op)) {
+                        if (types.isAddressCouplet(op)) {
                             thing = vcpu.dereferenceScope(op.lsl).copy(op.index);
                         } else if (isAtomString(op)) {
                             thing = vcpu.cd.load(op);
@@ -71,13 +72,6 @@
                 });
             return undefined;
         };
-
-        function isAddressCouplet (thing) {
-            return thing &&
-                typeof thing === 'object' &&
-                'lsl' in thing &&
-                'index' in thing;
-        }
 
         function isAtomString (thing) {
             return thing &&

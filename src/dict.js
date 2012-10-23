@@ -57,6 +57,9 @@
                             d[key] = dict[key];
                         });
                         return nuDict(d);
+                    }},
+                    asPointer: {value: function () {
+                        return types.nuPointer(this);
                     }}
                 });
         }

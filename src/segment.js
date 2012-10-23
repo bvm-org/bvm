@@ -3,8 +3,9 @@
 
         'use strict';
 
-        var nuArray = require('./array'),
-            segmentTypes = {};
+        var nuArray = require('./array');
+        var types = require('./types');
+        var segmentTypes = {};
 
         (function jsonSegment () {
 
@@ -27,6 +28,9 @@
                         nuSegment: {value: segmentTypes.json},
                         clone: {value: function () {
                             return nuSegment(segment.clone(), this.arity, this.ls);
+                        }},
+                        asPointer: {value: function () {
+                            return types.nuPointer(this);
                         }}
                     });
             }
