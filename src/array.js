@@ -3,19 +3,28 @@
 
         'use strict';
 
-        var types = require('./types');
+        var types = require('./types'),
+            id = {},
+            nuArray;
 
-        return function nuArray (array) {
+        nuArray = function (array) {
             if (! array) {
                 array = [];
             }
             return adornArrayOps(array);
-        }
+        };
+        nuArray.isArray = function (thing) {
+            return thing &&
+                typeof thing === 'object' &&
+                id === thing.id;
+        };
+        return nuArray;
 
         function adornArrayOps (array) {
             return Object.create(
                 {},
                 {
+                    id: {value: id},
                     push: {value: array.push.bind(array)},
                     pop: {value: array.pop.bind(array)},
                     length: {value: function () {

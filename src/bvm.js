@@ -59,7 +59,11 @@
                     cd: {value: nuDict(), writable: true},
                     cs: {value: undefined, writable: true},
                     dereferenceScope: {value: function (lsl) {
-                        return this.lsps[lsl];
+                        if (0 <= lsl && lsl < this.lsps.length) {
+                            return this.lsps[lsl];
+                        } else {
+                            throw "ILLEGAL LEXICAL STACK LEVEL";
+                        }
                     }},
                     setStackAndLSPs: {value: function (stack) {
                         var maxidx = stack.lsl, idx, lps;

@@ -3,9 +3,10 @@
 
         'use strict';
 
-        var nuArray = require('./array');
-        var types = require('./types');
-        var segmentTypes = {};
+        var nuArray = require('./array'),
+            types = require('./types'),
+            segmentTypes = {},
+            id = {};
 
         (function jsonSegment () {
 
@@ -20,6 +21,7 @@
                 return Object.create(
                     segment,
                     {
+                        id: {value: id},
                         ls: {value: stackOfCurrentLexicalScope},
                         arity: {value: arity},
                         nuIP: {value: function (index) {
@@ -73,8 +75,8 @@
 
         segmentTypes.isSegment = function (thing) {
             return thing &&
-                'ls' in thing &&
-                'arity' in thing;
+                typeof thing === 'object' &&
+                id === thing.id;
         };
 
         return segmentTypes;

@@ -3,8 +3,10 @@
 
         'use strict';
 
-        var segmentTypes = require('../segment');
-        var types = require('../types');
+        var segmentTypes = require('../segment'),
+            types = require('../types'),
+            nuArray = require('../array'),
+            nuDict = require('../dict');
 
         return function (vcpu, ops) {
             Object.defineProperties(
@@ -23,6 +25,9 @@
                                 } else {
                                     vcpu.cs.push(types.undef);
                                 }
+                                return undefined;
+                            } else if (types.isPointer(reference)) {
+                                vcpu.cs.push(reference.target);
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (LOAD)"; // TODO interrupt handler
@@ -49,9 +54,38 @@
                             throw "NOT ENOUGH OPERANDS (STORE)"; // TODO interrupt handler
                         }
                     }},
-                    ADDRESS: {value: function () { // TODO not entirely sure if this is needed.
-                        vcpu.cs.push(types.nuAddressCouplet(vcpu.cs.lsl, vcpu.cs.length()));
+                    STACK_COUPLET: {value: function () {
+                        var lsl, index;
+                        if (vcpu.cs.length() > 1) {
+                            index = vcpu.cs.pop();
+                            lsl = vcpu.cs.pop();
+                            if (typeof index === 'number' &&
+                                typeof lsl === 'number') {
+                                vcpu.cs.push(types.nuAddressCouplet(lsl, index));
+                            } else {
+                                throw "INVALID OPERAND (STACK_COUPLET)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (STACK_COUPLET)"; // TODO interrupt handler
+                        }
                         return undefined;
+                    }},
+                    ADDRESS: {value: function () {
+                        var thing;
+                        if (vcpu.cs.length() > 0) {
+                            thing = vcpu.cs.pop();
+                            if (types.isPointer(thing) ||
+                                types.isAddressCouplet(thing) ||
+                                segmentTypes.isSegment(thing) ||
+                                nuArray.isArray(thing) ||
+                                nuDict.isDict(thing)) {
+                                vcpu.cs.push(types.nuPointer(thing));
+                            } else {
+                                throw "INVALID OPERAND (ADDRESS)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (ADDRESS)"; // TODO interrupt handler
+                        }
                     }},
                     UNKNOWN: {value: function (op) {
                         var thing;
@@ -59,6 +93,8 @@
                             thing = vcpu.dereferenceScope(op.lsl).copy(op.index);
                         } else if (isAtomString(op)) {
                             thing = vcpu.cd.load(op);
+                        } else if (types.isPointer(op)) {
+                            thing = op.transitiveDereference();
                         } else {
                             vcpu.cs.push(op);
                             return undefined;

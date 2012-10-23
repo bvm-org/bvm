@@ -3,20 +3,29 @@
 
         'use strict';
 
-        var types = require('./types');
+        var types = require('./types'),
+            id = {},
+            nuDict;
 
-        return function nuDict (dict) {
+        nuDict = function (dict) {
             if (! dict) {
                 dict = {};
             }
             dict = adornDictOps(dict);
             return dict;
         };
+        nuDict.isDict = function (thing) {
+            return thing &&
+                typeof thing === 'object' &&
+                id === thing.id;
+        }
+        return nuDict;
 
         function adornDictOps (dict) {
             return Object.create(
                 {},
                 {
+                    id: {value: id},
                     has: {value: function (key) {
                         return dict.hasOwnProperty(key);
                     }},

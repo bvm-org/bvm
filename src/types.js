@@ -20,6 +20,9 @@
                     return this; // assume singleton by default
                 }
             },
+            addressCoupletId = {},
+            pointerId = {},
+            addressCoupletBase, pointerBase,
             mark, undef, nuAddressCouplet, nuPointer;
 
         mark = Object.create(plain, {name: {value: 'mark'}});
@@ -28,16 +31,22 @@
         undef = Object.create(plain, {name: {value: 'undef'}});
         Object.defineProperty(types, 'undef', {value: undef, enumerable: true});
 
+        addressCoupletBase = Object.create(
+            plain,
+            {
+                id: {value: addressCoupletId},
+                name: {value: 'address couplet'},
+                clone: {value: function () {
+                    return nuAddressCouplet(this.lsl, this.index);
+                }}
+            });
+
         nuAddressCouplet = function (lsl, index) {
             return Object.create(
-                plain,
+                addressCoupletBase,
                 {
-                    name: {value: 'address couplet'},
                     lsl: {value: lsl, writable: true},
                     index: {value: index, writable: true},
-                    clone: {value: function () {
-                        return nuAddressCouplet(this.lsl, this.index);
-                    }}
                 });
         };
         Object.defineProperty(types, 'nuAddressCouplet', {value: nuAddressCouplet, enumerable: true});
@@ -45,19 +54,35 @@
                               {value: function (thing) {
                                   return thing &&
                                       typeof thing === 'object' &&
-                                      'lsl' in thing &&
-                                      'index' in thing;
+                                      addressCoupletId === thing.id;
                               }, enumerable: true});
 
-        nuPointer = function (target) {          // pointers are immutable so
-            return Object.create(                // we don't bother overriding
-                plain,                           // clone
+        pointerBase = Object.create(
+            plain,
+            {
+                id: {value: pointerId},            // pointers are immutable so
+                name: {value: 'pointer'},          // we don't bother overriding
+                asPointer: {value: function () {   // clone
+                    return nuPointer(this);
+                }},
+                transitiveDereference: {value: function () {
+                    var seen = [this], target = this.target;
+                    while (types.isPointer(target)) {
+                        if (-1 === seen.lastIndexOf(target)) {
+                            seen.push(target);
+                            target = target.target;
+                        } else {
+                            return undef;
+                        }
+                    }
+                    return target;
+                }}
+            });
+        nuPointer = function (target) {
+            return Object.create(
+                pointerBase,
                 {
-                    name: {value: 'pointer'},
                     target: {value: target},
-                    asPointer: {value: function () {
-                        return nuPointer(this);
-                    }}
                 });
         };
         Object.defineProperty(types, 'nuPointer', {value: nuPointer, enumerable: true});
@@ -65,7 +90,7 @@
                               {value: function (thing) {
                                   return thing &&
                                       typeof thing === 'object' &&
-                                      'target' in thing;
+                                      pointerId === thing.id;
                               }, enumerable: true});
 
         return types;
