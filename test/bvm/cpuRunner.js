@@ -51,6 +51,7 @@
                 assert(test === found);
             } else if (Array.isArray(test)) {
                 assert(nuArray.isArray(found));
+                assert(test.length === found.length());
                 test.forEach(function (value, idx) {
                     comparator(value, found.index(idx));
                 });

@@ -38,7 +38,7 @@
                              'ADDRESS', 'DUPLICATE', 'LOAD', 'EXCHANGE', 'LOAD', 'ARRAY_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[[5, 'inner'], 17, 'foo', 'foo', [12], [12], [12]]],
-                                 pre: function (stack) {
+                                 post: function (stack) {
                                      var ary = stack.index(0);
                                      assert(ary.index(4).index(0) === 12);
                                      assert(ary.index(5).index(0) === 12);
@@ -72,7 +72,13 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'ptr',
                                               target: ['goodbye', types.undef, types.undef]},
-                                            3]}))
+                                            3]})),
+                             'POP', 'DUPLICATE', 'LOAD', 1, 'ARRAY_TRUNCATE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'ptr', target: ['goodbye']}]})),
+                             'DUPLICATE', 'LOAD', 2, 'ARRAY_TRUNCATE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'ptr', target: ['goodbye', types.undef]}]}))
                             ]).run();
             }
         });

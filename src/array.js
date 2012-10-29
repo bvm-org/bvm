@@ -27,8 +27,12 @@
                     id: {value: id},
                     push: {value: array.push.bind(array)},
                     pop: {value: array.pop.bind(array)},
-                    length: {value: function () {
-                        return array.length;
+                    length: {value: function (num) {
+                        var len = array.length;
+                        if (typeof num === 'number' && num >= 0) {
+                            array.length = num;
+                        }
+                        return len
                     }},
                     index: {value: function (idx) {
                         var val;

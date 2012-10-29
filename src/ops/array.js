@@ -67,11 +67,27 @@
                             array = vcpu.cs.pop();
                             if (nuArray.isArray(array)) {
                                 vcpu.cs.push(array.length());
+                                return undefined;
                             } else {
                                 throw "INVALID OPERAND (ARRAY_LENGTH)"; // TODO interrupt handler
                             }
                         } else {
                             throw "NOT ENOUGH OPERANDS (ARRAY_LENGTH)"; // TODO interrupt handler
+                        }
+                    }},
+                    ARRAY_TRUNCATE: {value: function () {
+                        var len, array;
+                        if (vcpu.cs.length() > 1) {
+                            len = vcpu.cs.pop();
+                            array = vcpu.cs.pop();
+                            if (nuArray.isArray(array) && typeof len === 'number' && len >= 0) {
+                                array.length(len);
+                                return undefined;
+                            } else {
+                                throw "INVALID OPERAND (ARRAY_TRUNCATE)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (ARRAY_TRUNCATE)"; // TODO interrupt handler
                         }
                     }}
                 });
