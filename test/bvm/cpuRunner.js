@@ -58,10 +58,12 @@
             } else if (typeof test === 'object' && 'type' in test) {
                 if (test.type === 'dict') {
                     assert(nuDict.isDict(found));
-                    assert(Object.keys(test.contents).length === found.keys().length);
-                    Object.keys(test.contents).forEach(function (key) {
-                        comparator(test.contents[key], found.load(key));
-                    });
+                    if ('contents' in test) {
+                        assert(Object.keys(test.contents).length === found.keys().length);
+                        Object.keys(test.contents).forEach(function (key) {
+                            comparator(test.contents[key], found.load(key));
+                        });
+                    }
                 } else if (test.type === 'ptr') {
                     assert(types.isPointer(found));
                     if ('target' in test) {
