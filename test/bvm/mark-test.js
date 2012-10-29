@@ -7,8 +7,8 @@
             fail = buster.assertions.fail,
             assert = buster.assertions.assert,
             refute = buster.assertions.refute,
-            types = require('../../src/types'), // eww
-            runner = require('./cpuRunner');
+            runner = require('./cpuRunner'),
+            types = runner.types;
 
         buster.testRunner.timeout = 10000; // 10 seconds
 

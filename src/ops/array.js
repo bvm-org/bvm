@@ -26,6 +26,51 @@
                             return undefined;
                         }
                     }},
+                    ARRAY_NEW: {value: function () {
+                        var len;
+                        if (vcpu.cs.length() > 0) {
+                            len = vcpu.cs.pop();
+                            if (typeof len === 'number') {
+                                vcpu.cs.push(nuArray(new Array(len)));
+                            } else {
+                                throw "INVALID OPERAND (ARRAY_NEW)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (ARRAY_NEW)"; // TODO interrupt handler
+                        }
+                        return undefined;
+                    }},
+                    ARRAY_STORE: {value: function () {
+                        var array, idx, value;
+                        if (vcpu.cs.length() > 2) {
+                            value = vcpu.cs.pop();
+                            idx = vcpu.cs.pop();
+                            array = vcpu.cs.pop();
+                            if (nuArray.isArray(array) && typeof idx === 'number') {
+                                array.store(idx, value);
+                                return undefined;
+                            } else {
+                                throw "INVALID OPERAND (ARRAY_STORE)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (ARRAY_STORE)"; // TODO interrupt handler
+                        }
+                    }},
+                    ARRAY_LOAD: {value: function () {
+                        var array, idx;
+                        if (vcpu.cs.length() > 1) {
+                            idx = vcpu.cs.pop();
+                            array = vcpu.cs.pop();
+                            if (nuArray.isArray(array) && typeof idx === 'number') {
+                                vcpu.cs.push(array.index(idx));
+                                return undefined;
+                            } else {
+                                throw "INVALID OPERAND (ARRAY_STORE)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (ARRAY_STORE)"; // TODO interrupt handler
+                        }
+                    }}
                 });
             return undefined;
         };

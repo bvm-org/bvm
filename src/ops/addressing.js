@@ -19,7 +19,7 @@
                             if (types.isAddressCouplet(reference)) {
                                 vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).copy(reference.index));
                                 return undefined;
-                            } else if (isAtomString(reference)) {
+                            } else if (types.isAtomString(reference)) {
                                 if (vcpu.cd.has(reference)) {
                                     vcpu.cs.push(vcpu.cd.load(reference));
                                 } else {
@@ -44,7 +44,7 @@
                             if (types.isAddressCouplet(reference)) {
                                 vcpu.dereferenceScope(reference.lsl).store(reference.index, value);
                                 return undefined;
-                            } else if (isAtomString(reference)) {
+                            } else if (types.isAtomString(reference)) {
                                 vcpu.cd.store(reference, value);
                                 return undefined;
                             } else {
@@ -91,7 +91,7 @@
                         var thing;
                         if (types.isAddressCouplet(op)) {
                             thing = vcpu.dereferenceScope(op.lsl).copy(op.index);
-                        } else if (isAtomString(op)) {
+                        } else if (types.isAtomString(op)) {
                             thing = vcpu.cd.load(op);
                         } else if (types.isPointer(op)) {
                             thing = op.transitiveDereference();
@@ -108,11 +108,6 @@
                 });
             return undefined;
         };
-
-        function isAtomString (thing) {
-            return thing &&
-                typeof thing === 'string';
-        }
 
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));

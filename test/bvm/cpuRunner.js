@@ -5,12 +5,15 @@
 
         var bvm = require('../../index'),
             buster = require('buster'),
+            types = require('../../src/types'),
+            nuArray = require('../../src/array'),
+            nuDict = require('../../src/dict'),
             breakpoint = 'BREAKPOINT',
             baseStackConfig = {dps: undefined,
                                lps: undefined,
                                lsl: 0,
                                contents: []},
-            runnerBase, result;
+            runnerBase, result, comparator;
 
         buster.assertions.add('stackConfiguration', {
             assert: function (stack, expectedStack) {
@@ -21,9 +24,12 @@
                 });
                 if (expectedStack.contents) {
                     expectedStack.contents.forEach(function (value, idx) {
-                        assert(value === stack.index(idx));
+                        comparator(value, stack.index(idx));
                     });
                     assert(expectedStack.contents.length === stack.length());
+                }
+                if (expectedStack.fun) {
+                    expectedStack.fun(stack);
                 }
                 return true;
             },
@@ -31,6 +37,33 @@
             refuteMessage: 'Expected stack(${0}) to not match ${1}',
             expectation: 'toBeStackMatching'
         });
+
+        comparator = function (test, found) {
+            if (typeof test === 'string' ||
+                typeof test === 'boolean' ||
+                typeof test === 'number' ||
+                test === types.mark ||
+                test === types.undef ||
+                test === undefined) {
+                assert(test === found);
+            } else if (Array.isArray(test)) {
+                assert(nuArray.isArray(found));
+                test.forEach(function (value, idx) {
+                    comparator(value, found.index(idx));
+                });
+            } else if (typeof test === 'object' && 'type' in test) {
+                if (test.type === 'dict') {
+                    assert(nuDict.isDict(found));
+                    Object.keys(test).forEach(function (key) {
+                        comparator(test[key], found.load(key));
+                    });
+                } else {
+                    throw 'Non-understood type to compare in contents: ' + test;
+                }
+            } else {
+                throw 'Non-understood type to compare in contents: ' + test;
+            }
+        };
 
         runnerBase = {
             run: function () {
@@ -78,6 +111,7 @@
             }
             return obj;
         };
+        result.types = types;
 
         return result;
     });
