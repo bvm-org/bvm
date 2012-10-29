@@ -48,7 +48,7 @@
                             ]).run();
             },
 
-            'new, store, load, length': function (done) {
+            'new, store, load, length, truncate': function (done) {
                 var cpu = runner(done);
                 cpu.setCode(['ARRAY_NEW',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(

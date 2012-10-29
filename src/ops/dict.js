@@ -5,6 +5,7 @@
 
         var types = require('../types');
         var nuDict = require('../dict');
+        var nuArray = require('../array');
 
         return function (vcpu, ops) {
             Object.defineProperties(
@@ -55,6 +56,36 @@
                             throw "NOT ENOUGH OPERANDS (DICT_STORE)"; // TODO interrupt handler
                         }
                     }},
+                    DICT_CONTAINS: {value: function () {
+                        var dict, key;
+                        if (vcpu.cs.length() > 1) {
+                            key = vcpu.cs.pop();
+                            dict = vcpu.cs.pop();
+                            if (nuDict.isDict(dict) && types.isAtomString(key)) {
+                                vcpu.cs.push(dict.has(key));
+                                return undefined;
+                            } else {
+                                throw "INVALID OPERAND (DICT_HAS)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (DICT_HAS)"; // TODO interrupt handler
+                        }
+                    }},
+                    DICT_REMOVE: {value: function () {
+                        var dict, key;
+                        if (vcpu.cs.length() > 1) {
+                            key = vcpu.cs.pop();
+                            dict = vcpu.cs.pop();
+                            if (nuDict.isDict(dict) && types.isAtomString(key)) {
+                                dict.remove(key);
+                                return undefined;
+                            } else {
+                                throw "INVALID OPERAND (DICT_HAS)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (DICT_HAS)"; // TODO interrupt handler
+                        }
+                    }},
                     DICT_LOAD: {value: function () {
                         var dict, key;
                         if (vcpu.cs.length() > 1) {
@@ -72,6 +103,37 @@
                             }
                         } else {
                             throw "NOT ENOUGH OPERANDS (DICT_STORE)"; // TODO interrupt handler
+                        }
+                    }},
+                    DICT_KEYS: {value: function () {
+                        var dict, keys;
+                        if (vcpu.cs.length() > 0) {
+                            dict = vcpu.cs.pop();
+                            if (nuDict.isDict(dict)) {
+                                vcpu.cs.push(nuArray(dict.keys()));
+                            } else {
+                                throw "INVALID OPERAND (DICT_KEYS)"; // TODO interrupt handler
+                            }
+                        } else {
+                                throw "NOT ENOUGH OPERANDS (DICT_KEYS)"; // TODO interrupt handler
+                        }
+                    }},
+                    DICT_CUR_GET: {value: function () {
+                        vcpu.cs.push(vcpu.cd);
+                        return undefined;
+                    }},
+                    DICT_CUR_SET: {value: function () {
+                        var dict;
+                        if (vcpu.cs.length() > 0) {
+                            dict = vcpu.cs.pop();
+                            if (nuDict.isDict(dict)) {
+                                vcpu.cd = dict;
+                                return undefined;
+                            } else {
+                                throw "INVALID OPERAND (DICT_CUR_SET)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (DICT_CUR_SET)"; // TODO interrupt handler
                         }
                     }}
                 });

@@ -29,7 +29,15 @@
                     has: {value: function (key) {
                         return dict.hasOwnProperty(key);
                     }},
+                    keys: {value: function () { return Object.keys(dict); }},
                     load: {value: function (key) {
+                        if (dict.hasOwnProperty(key)) {
+                            return dict[key];
+                        } else {
+                            return types.undef;
+                        }
+                    }},
+                    copy: {value: function (key) {
                         var val;
                         if (dict.hasOwnProperty(key)) {
                             val = dict[key];
@@ -49,11 +57,7 @@
                         }
                     }},
                     store: {value: function (key, value) {
-                        if (value === undefined || value === null || value === types.undef) {
-                            delete dict[key];
-                        } else {
-                            dict[key] = value;
-                        }
+                        dict[key] = value;
                         return undefined;
                     }},
                     remove: {value: function (key) {

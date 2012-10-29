@@ -21,7 +21,7 @@
                                 return undefined;
                             } else if (types.isAtomString(reference)) {
                                 if (vcpu.cd.has(reference)) {
-                                    vcpu.cs.push(vcpu.cd.load(reference));
+                                    vcpu.cs.push(vcpu.cd.copy(reference));
                                 } else {
                                     vcpu.cs.push(types.undef);
                                 }
@@ -92,7 +92,7 @@
                         if (types.isAddressCouplet(op)) {
                             thing = vcpu.dereferenceScope(op.lsl).copy(op.index);
                         } else if (types.isAtomString(op)) {
-                            thing = vcpu.cd.load(op);
+                            thing = vcpu.cd.copy(op);
                         } else if (types.isPointer(op)) {
                             thing = op.transitiveDereference();
                         } else {
