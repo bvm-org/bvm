@@ -31,10 +31,12 @@
                         return array.length;
                     }},
                     index: {value: function (idx) {
+                        var val;
                         if (idx < 0 || array.length <= idx) {
                             throw "ILLEGAL STACK ADDRESS";
                         } else {
-                            return array[idx];
+                            val = array[idx];
+                            return val === undefined ? types.undef : val;
                         }
                     }},
                     copy: {value: function (idx) {
@@ -47,6 +49,8 @@
                                 typeof val === 'string' ||
                                 typeof val === 'boolean') {
                                 return val;
+                            } else if (val === undefined) {
+                                return types.undef;
                             } else {
                                 if ('clone' in val && typeof val.clone === 'function') {
                                     return val.clone();
@@ -57,7 +61,7 @@
                         }
                     }},
                     store: {value: function (idx, val) {
-                        if (idx < 0 || array.length <= idx) {
+                        if (idx < 0) {
                             throw "ILLEGAL STACK ADDRESS";
                         } else {
                             array[idx] = val;

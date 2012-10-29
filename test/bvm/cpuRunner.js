@@ -17,6 +17,9 @@
 
         buster.assertions.add('stackConfiguration', {
             assert: function (stack, expectedStack) {
+                if (expectedStack.pre) {
+                    expectedStack.pre(stack, expectedStack);
+                }
                 ['dps', 'lps', 'lsl'].forEach(function (key) {
                     if (key in expectedStack) {
                         assert(expectedStack[key] === stack[key]);
@@ -28,8 +31,8 @@
                     });
                     assert(expectedStack.contents.length === stack.length());
                 }
-                if (expectedStack.fun) {
-                    expectedStack.fun(stack);
+                if (expectedStack.post) {
+                    expectedStack.post(stack, expectedStack);
                 }
                 return true;
             },
@@ -57,6 +60,11 @@
                     Object.keys(test).forEach(function (key) {
                         comparator(test[key], found.load(key));
                     });
+                } else if (test.type === 'ptr') {
+                    assert(types.isPointer(found));
+                    if ('target' in test) {
+                        comparator(test.target, found.target);
+                    }
                 } else {
                     throw 'Non-understood type to compare in contents: ' + test;
                 }

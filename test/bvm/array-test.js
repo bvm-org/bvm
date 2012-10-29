@@ -34,31 +34,45 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [types.mark, [5, 'inner']]})),
                              17, 'PUSH', 'foo', 'PUSH', 'wibble', 'POP', 'DUPLICATE',
-                             'ARRAY_START', 12, 'ARRAY_END', 'DUPLICATE', 'ARRAY_END',
+                             'ARRAY_START', 12, 'ARRAY_END', 'DUPLICATE',
+                             'ADDRESS', 'DUPLICATE', 'LOAD', 'EXCHANGE', 'LOAD', 'ARRAY_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [[[5, 'inner'], 17, 'foo', 'foo', [12], [12]]],
-                                 fun: function (stack) {
+                                 {contents: [[[5, 'inner'], 17, 'foo', 'foo', [12], [12], [12]]],
+                                 pre: function (stack) {
                                      var ary = stack.index(0);
                                      assert(ary.index(4).index(0) === 12);
                                      assert(ary.index(5).index(0) === 12);
                                      assert(ary.index(4) !== ary.index(5));
+                                     assert(ary.index(5) === ary.index(6));
                                  }}))
                             ]).run();
             },
 
-            'new, store, load': function (done) {
+            'new, store, load, length': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([1, 'ARRAY_NEW',
+                cpu.setCode(['ARRAY_NEW',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [[undefined]]})),
-                             'ADDRESS', 'DUPLICATE', 'LOAD',
-                             0, 'PUSH', 'hello', 'ARRAY_STORE', 'LOAD',
+                                 {contents: [[]]})),
+                             'ADDRESS', 'DUPLICATE', 'LOAD', 0, 'PUSH', 'hello', 'ARRAY_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [['hello']]})),
-                             'ADDRESS', 'DUPLICATE', 'LOAD',
-                             0, 'PUSH', 'goodbye', 'ARRAY_STORE', 'LOAD',
+                                 {contents: [{type: 'ptr', target: ['hello']}]})),
+                             'DUPLICATE', 'LOAD', 0, 'PUSH', 'goodbye', 'ARRAY_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [['goodbye']]}))
+                                 {contents: [{type: 'ptr', target: ['goodbye']}]})),
+                             'DUPLICATE', 'LOAD', 2, 17, 'ARRAY_STORE',
+                             'DUPLICATE', 'LOAD', 1, 'ARRAY_LOAD',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'ptr', target: ['goodbye', types.undef, 17]},
+                                             types.undef]})),
+                             'EXCHANGE', 'DUPLICATE', 'LOAD', 3, -1, 'ROLL', 2, 'EXCHANGE', 'ARRAY_STORE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'ptr',
+                                              target: ['goodbye', types.undef, types.undef]}]})),
+                             'DUPLICATE', 'LOAD', 'ARRAY_LENGTH',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'ptr',
+                                              target: ['goodbye', types.undef, types.undef]},
+                                            3]}))
                             ]).run();
             }
         });

@@ -81,7 +81,7 @@
                             shift = vcpu.cs.pop();
                             count = vcpu.cs.pop();
                             len -= 2;
-                            if (len > count) {
+                            if (len >= count) {
                                 removed = vcpu.cs.clear(len - count);
                                 if (shift > 0) {
                                     shift = - (shift % count);

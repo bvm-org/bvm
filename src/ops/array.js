@@ -27,17 +27,7 @@
                         }
                     }},
                     ARRAY_NEW: {value: function () {
-                        var len;
-                        if (vcpu.cs.length() > 0) {
-                            len = vcpu.cs.pop();
-                            if (typeof len === 'number') {
-                                vcpu.cs.push(nuArray(new Array(len)));
-                            } else {
-                                throw "INVALID OPERAND (ARRAY_NEW)"; // TODO interrupt handler
-                            }
-                        } else {
-                            throw "NOT ENOUGH OPERANDS (ARRAY_NEW)"; // TODO interrupt handler
-                        }
+                        vcpu.cs.push(nuArray());
                         return undefined;
                     }},
                     ARRAY_STORE: {value: function () {
@@ -65,10 +55,23 @@
                                 vcpu.cs.push(array.index(idx));
                                 return undefined;
                             } else {
-                                throw "INVALID OPERAND (ARRAY_STORE)"; // TODO interrupt handler
+                                throw "INVALID OPERAND (ARRAY_LOAD)"; // TODO interrupt handler
                             }
                         } else {
-                            throw "NOT ENOUGH OPERANDS (ARRAY_STORE)"; // TODO interrupt handler
+                            throw "NOT ENOUGH OPERANDS (ARRAY_LOAD)"; // TODO interrupt handler
+                        }
+                    }},
+                    ARRAY_LENGTH: {value: function () {
+                        var array;
+                        if (vcpu.cs.length() > 0) {
+                            array = vcpu.cs.pop();
+                            if (nuArray.isArray(array)) {
+                                vcpu.cs.push(array.length());
+                            } else {
+                                throw "INVALID OPERAND (ARRAY_LENGTH)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (ARRAY_LENGTH)"; // TODO interrupt handler
                         }
                     }}
                 });
