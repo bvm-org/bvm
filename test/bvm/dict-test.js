@@ -92,8 +92,18 @@
                              'DUPLICATE', 'LOAD', 'PUSH', 'c', 'DICT_CONTAINS',
                              'EXCHANGE', 'LOAD', 'PUSH', 'b', 'DICT_CONTAINS',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [false, true]}))
-
+                                 {contents: [false, true]})),
+                             'CLEAR',
+                             'DICT_NEW', 'ADDRESS', 'DUPLICATE', 'LOAD',
+                             'PUSH', 'a', 7, 'DICT_STORE',
+                             'DUPLICATE', 'LOAD', 'DUPLICATE', 'ADDRESS', 'DUPLICATE', 'LOAD',
+                             'PUSH', 'a', 8, 'DICT_STORE',
+                             'EXCHANGE', 'PUSH', 'b', 9, 'DICT_STORE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'ptr', target:
+                                              {type: 'dict', contents: {'a': 7, 'b': 9}}},
+                                             {type: 'ptr', target:
+                                              {type: 'dict', contents: {'a': 8}}}]}))
                              ]).run();
             },
 

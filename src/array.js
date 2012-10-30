@@ -81,9 +81,6 @@
                     lastIndexOf: {value: array.lastIndexOf.bind(array)},
                     clone: {value: function () {
                         return nuArray(array.slice(0));
-                    }},
-                    asPointer: {value: function () {
-                        return types.nuPointer(this);
                     }}
                 });
         }

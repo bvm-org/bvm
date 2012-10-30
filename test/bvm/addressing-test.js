@@ -37,12 +37,16 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'ptr', target: {type: 'couplet', lsl: 0, index: 0}},
                                              {type: 'ptr', target: {type: 'couplet', lsl: 0, index: 0}}]})),
-                             'PUSH', 'bar', 'EXCHANGE', 'STORE', 'foo',
+                             'POP', 'PUSH', 'bar', 'ARRAY_NEW', 'ADDRESS', 'STORE', 'foo',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'ptr', target: {type: 'couplet', lsl: 0, index: 0}},
                                              7]})),
-                             'bar', 'LOAD', 'EXCHANGE', 'STORE',
-                             cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [7]}))
+                             //                => (ptrA.ptrB.sc) (ptrC.ptrB.sc)]
+                             'POP', 'ADDRESS', 'DUPLICATE',
+                             // -> (ptrB.sc)] +> (ptrD.ay)] -> (ptrA.ptrB.ptrD.ay)] -> (ptrB.ptrD.ay)
+                             'LOAD',          'bar',        'STORE',                'LOAD',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'ptr', target: {type: 'ptr', target: []}}]}))
                             ]).run();
             }
         });

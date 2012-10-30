@@ -47,6 +47,14 @@
                             } else if (types.isAtomString(reference)) {
                                 vcpu.cd.store(reference, value);
                                 return undefined;
+                            } else if (types.isPointer(reference) &&
+                                       (types.isPointer(reference) ||
+                                        types.isAddressCouplet(reference) ||
+                                        segmentTypes.isSegment(reference) ||
+                                        nuArray.isArray(reference) ||
+                                        nuDict.isDict(reference))) {
+                                reference.target = value;
+                                return undefined;
                             } else {
                                 throw "INVALID OPERAND (STORE)"; // TODO interrupt handler
                             }

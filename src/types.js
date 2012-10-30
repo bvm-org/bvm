@@ -60,11 +60,9 @@
         pointerBase = Object.create(
             plain,
             {
-                id: {value: pointerId},                     // pointers are immutable so
-                name: {value: 'pointer', enumerable: true}, // we don't bother overriding
-                asPointer: {value: function () {            // clone
-                    return nuPointer(this);
-                }},
+                id: {value: pointerId},
+                name: {value: 'pointer', enumerable: true},
+                clone: {value: function () { return nuPointer(this.target); }},
                 transitiveDereference: {value: function () {
                     var seen = [this], target = this.target;
                     while (types.isPointer(target)) {
@@ -82,7 +80,7 @@
             return Object.create(
                 pointerBase,
                 {
-                    target: {value: target},
+                    target: {value: target, writable: true},
                 });
         };
         Object.defineProperty(types, 'nuPointer', {value: nuPointer, enumerable: true});
