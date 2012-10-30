@@ -3,7 +3,8 @@
 
         'use strict';
 
-        var segmentTypes = require('../segment');
+        var segmentTypes = require('../segment'),
+            types = require('../types');
 
         return function (vcpu, ops) {
             Object.defineProperties(
@@ -16,6 +17,10 @@
                         } else {
                             segment = vcpu.cs.pop();
                             len -= 1;
+                            if (types.isPointer(segment)) {
+                                segment = segment.transitiveDereference();
+                            }
+
                             if (segmentTypes.isSegment(segment)) {
                                 if (len < segment.arity) {
                                     throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler

@@ -101,8 +101,6 @@
                             thing = vcpu.dereferenceScope(op.lsl).copy(op.index);
                         } else if (types.isAtomString(op)) {
                             thing = vcpu.cd.copy(op);
-                        } else if (types.isPointer(op)) {
-                            thing = op.transitiveDereference();
                         } else {
                             vcpu.cs.push(op);
                             return undefined;
