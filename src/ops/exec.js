@@ -19,6 +19,8 @@
                             len -= 1;
                             if (types.isPointer(segment)) {
                                 segment = segment.transitiveDereference();
+                            } else if (types.isAddressCouplet(segment)) {
+                                segment = vcpu.dereferenceScope(segment.lsl).copy(segment.index);
                             }
 
                             if (segmentTypes.isSegment(segment)) {
