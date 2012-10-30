@@ -25,17 +25,17 @@
             addressCoupletBase, pointerBase,
             mark, undef, nuAddressCouplet, nuPointer;
 
-        mark = Object.create(plain, {name: {value: 'mark'}});
+        mark = Object.create(plain, {name: {value: 'mark', enumerable: true}});
         Object.defineProperty(types, 'mark', {value: mark, enumerable: true});
 
-        undef = Object.create(plain, {name: {value: 'undef'}});
+        undef = Object.create(plain, {name: {value: 'undef', enumerable: true}});
         Object.defineProperty(types, 'undef', {value: undef, enumerable: true});
 
         addressCoupletBase = Object.create(
             plain,
             {
                 id: {value: addressCoupletId},
-                name: {value: 'address couplet'},
+                name: {value: 'address couplet', enumerable: true},
                 clone: {value: function () {
                     return nuAddressCouplet(this.lsl, this.index);
                 }}
@@ -60,9 +60,9 @@
         pointerBase = Object.create(
             plain,
             {
-                id: {value: pointerId},            // pointers are immutable so
-                name: {value: 'pointer'},          // we don't bother overriding
-                asPointer: {value: function () {   // clone
+                id: {value: pointerId},                     // pointers are immutable so
+                name: {value: 'pointer', enumerable: true}, // we don't bother overriding
+                asPointer: {value: function () {            // clone
                     return nuPointer(this);
                 }},
                 transitiveDereference: {value: function () {

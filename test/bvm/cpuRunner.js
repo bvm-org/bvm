@@ -69,6 +69,10 @@
                     if ('target' in test) {
                         comparator(test.target, found.target);
                     }
+                } else if (test.type === 'couplet') {
+                    assert(types.isAddressCouplet(found));
+                    assert(test.lsl === found.lsl);
+                    assert(test.index === found.index);
                 } else {
                     throw 'Non-understood type to compare in contents: ' + test;
                 }
