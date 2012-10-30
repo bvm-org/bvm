@@ -98,6 +98,10 @@
                         } else {
                             throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
                         }
+                    }},
+                    CLEAR: {value: function () {
+                        vcpu.cs.clear();
+                        return undefined;
                     }}
                 });
             return undefined;

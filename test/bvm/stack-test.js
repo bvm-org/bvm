@@ -168,6 +168,16 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['a', 'b', 'c', 'd']})),
                             ]).run();
+            },
+
+            'clear': function (done) {
+                var cpu = runner(done);
+                cpu.setCode([4, 3, 2, 1, 'COUNT',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [4, 3, 2, 1, 4]})),
+                             'CLEAR',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff())
+                            ]).run();
             }
 
         });
