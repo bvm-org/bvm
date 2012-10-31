@@ -8,12 +8,15 @@
             types = require('../../src/types'),
             nuArray = require('../../src/array'),
             nuDict = require('../../src/dict'),
-            breakpoint = 'BREAKPOINT',
+            segmentTypes = require('../../src/segment'),
+            breakpointBase = 'BREAKPOINT',
             baseStackConfig = {dps: undefined,
                                lps: undefined,
                                lsl: 0,
                                contents: []},
             runnerBase, result, comparator;
+
+        buster.testRunner.timeout = 2000; // 2 seconds
 
         buster.assertions.add('stackConfiguration', {
             assert: function (stack, expectedStack) {
@@ -22,7 +25,7 @@
                 }
                 ['dps', 'lps', 'lsl'].forEach(function (key) {
                     if (key in expectedStack) {
-                        assert(expectedStack[key] === stack[key]);
+                        assert(expectedStack[key] === stack[key], key);
                     }
                 });
                 if (expectedStack.contents) {
@@ -64,6 +67,14 @@
                             comparator(test.contents[key], found.load(key));
                         });
                     }
+                } else if (test.type === 'seg') {
+                    assert(segmentTypes.isSegment(found));
+                    if ('contents' in test) {
+                        assert(test.contents.length === found.length());
+                        test.contents.forEach(function (op, idx) {
+                            comparator(op, found.index(idx));
+                        });
+                    }
                 } else if (test.type === 'ptr') {
                     assert(types.isPointer(found));
                     if ('target' in test) {
@@ -76,6 +87,9 @@
                 } else {
                     throw 'Non-understood type to compare in contents: ' + test;
                 }
+            } else if (test === result.breakpoint) {
+                assert(typeof found === 'string' &&
+                       found.substr(0, breakpointBase.length) === breakpointBase);
             } else {
                 throw 'Non-understood type to compare in contents: ' + test;
             }
@@ -83,28 +97,28 @@
 
         runnerBase = {
             run: function () {
-                try {
-                    var cpu = bvm.bvm(bvm.segmentTypes.json(this.code));
-                    if (this.breakpoints.length !== 0) {
-                        cpu.installOp(
-                            breakpoint,
-                            function (vcpu, ops) {
-                                assert.stackConfiguration(vcpu.cs, this.breakpoints.shift());
-                                if (! this.breakpoints.length) { this.done(); }
-                            }.bind(this));
-                    }
-                    cpu.boot();
-                    return undefined;
-                } catch (e) {
-                    return e;
-                }
+                var cpu = bvm.bvm(bvm.segmentTypes.json(this.code)),
+                    breakpoints = this.breakpoints;
+                Object.keys(breakpoints).forEach(function (breakpoint) {
+                    cpu.installOp(
+                        breakpoint,
+                        function (vcpu, ops) {
+                            assert.stackConfiguration(vcpu.cs, breakpoints[breakpoint]);
+                            delete breakpoints[breakpoint];
+                        });
+                });
+                cpu.boot();
+                assert(Object.keys(breakpoints).length === 0);
+                this.done();
             },
             setCode: function (code) {
                 this.code = code;
                 return this;
             },
             addBreakPoint: function (config) {
-                this.breakpoints.push(config);
+                var breakpoint = breakpointBase + this.breakpointCount;
+                this.breakpoints[breakpoint] = config;
+                this.breakpointCount += 1;
                 return breakpoint;
             }
         };
@@ -113,7 +127,8 @@
             return Object.create(
                 runnerBase,
                 {
-                    breakpoints: {value: []},
+                    breakpointCount: {value: 0, writable: true},
+                    breakpoints: {value: {}},
                     done: {value: done}
                 });
         };
@@ -128,6 +143,7 @@
             return obj;
         };
         result.types = types;
+        result.breakpoint = {};
 
         return result;
     });

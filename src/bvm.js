@@ -23,19 +23,31 @@
                         vcpu.lsps.length = 1;
                         while (true) { // TODO: we currently just crash when we run out of ops!
                             op = vcpu.cs.ip.fetch();
-                            if (op === 'SEG_END') {
-                                vcpu.deferred -= 1;
-                            }
-                            if (vcpu.deferred > 0) {
-                                vcpu.cs.push(op);
-                            } else {
-                                if (ops[op]) {
-                                    ops[op]();
-                                    if (op === 'SEG_START') {
-                                        vcpu.deferred += 1;
-                                    }
+                            if (op === segmentTypes.segmentExhausted) {
+                                if (vcpu.cs.dps) {
+                                    vcpu.exit(); // implicit return with 0 results
                                 } else {
-                                    ops['UNKNOWN'](op);
+                                    if (vcpu.cs.lsl !== 0) {
+                                        // valid warning iff we don't have a HALT opcode
+                                        console.warn('WARNING: halted in LSL', vcpu.cs.lsl);
+                                    }
+                                    return; // HALTED
+                                }
+                            } else {
+                                if (op === 'SEG_END') {
+                                    vcpu.deferred -= 1;
+                                }
+                                if (vcpu.deferred > 0) {
+                                    vcpu.cs.push(op);
+                                } else {
+                                    if (ops[op]) {
+                                        ops[op]();
+                                    } else {
+                                        ops['UNKNOWN'](op);
+                                    }
+                                }
+                                if (op === 'SEG_START') {
+                                    vcpu.deferred += 1;
                                 }
                             }
                         }

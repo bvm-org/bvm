@@ -10,8 +10,6 @@
             runner = require('./cpuRunner'),
             types = runner.types;
 
-        buster.testRunner.timeout = 10000; // 10 seconds
-
         buster.testCase('dict ops', {
             'literal empty': function (done) {
                 var cpu = runner(done);

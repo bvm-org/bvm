@@ -9,8 +9,6 @@
             refute = buster.assertions.refute,
             runner = require('./cpuRunner');
 
-        buster.testRunner.timeout = 10000; // 10 seconds
-
         buster.testCase('basic stack ops', {
 
             'can push one': function (done) {

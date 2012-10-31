@@ -6,7 +6,8 @@
         var nuArray = require('./array'),
             types = require('./types'),
             segmentTypes = {},
-            id = {};
+            id = {},
+            segmentExhausted = {};
 
         (function jsonSegment () {
 
@@ -54,7 +55,7 @@
                         fetch: {value: function () {
                             var op;
                             if (ip.index >= ip.segment.length()) {
-                                throw "HALT: EXHAUSTED SEGMENT";
+                                return segmentExhausted;
                             } else {
                                 op = ip.segment.index(ip.index);
                                 ip.index += 1;
@@ -75,6 +76,8 @@
                 typeof thing === 'object' &&
                 id === thing.id;
         };
+
+        segmentTypes.segmentExhausted = segmentExhausted;
 
         return segmentTypes;
     });

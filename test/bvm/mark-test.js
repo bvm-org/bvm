@@ -10,8 +10,6 @@
             runner = require('./cpuRunner'),
             types = runner.types;
 
-        buster.testRunner.timeout = 10000; // 10 seconds
-
         buster.testCase('mark ops', {
             'single mark': function (done) {
                 var cpu = runner(done);

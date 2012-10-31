@@ -52,7 +52,7 @@
                                 return undefined;
                             }
                         }
-                    }},
+                    }}
                 });
             return undefined;
         };
