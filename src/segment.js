@@ -30,7 +30,7 @@
                         }},
                         nuSegment: {value: segmentTypes.json},
                         clone: {value: function () {
-                            return nuSegment(segment.clone(), this.arity, this.ls);
+                            return adornSegmentFields(segment.clone(), this.arity, this.ls);
                         }}
                     });
             }
