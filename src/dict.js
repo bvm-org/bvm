@@ -11,8 +11,7 @@
             if (! dict) {
                 dict = {};
             }
-            dict = adornDictOps(dict);
-            return dict;
+            return adornDictOps(dict);
         };
         nuDict.isDict = function (thing) {
             return thing &&

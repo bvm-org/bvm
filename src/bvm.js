@@ -6,6 +6,7 @@
         var types = require('./types');
         var nuArray = require('./array');
         var nuDict = require('./dict');
+        var nuStack = require('./stack');
         var segmentTypes = require('./segment');
         var fs = require('fs');
         var path = require('path');
@@ -117,41 +118,6 @@
                 }
             });
             return ops;
-        }
-
-        // segment here is the new segment being entered.
-        function nuStack (stackBase, oldStack, segment, index) {
-            var stack = adornStackHeader(nuArray(stackBase), segment);
-            if (oldStack) {
-                stack.dps = oldStack;
-            }
-            stack.lps = segment.ls;
-            if (stack.lps) {
-                stack.lsl = segment.ls.lsl + 1;
-            }
-            stack.ip = segment.nuIP(index);
-            stack.nuSegment = segment.nuSegment;
-            return stack;
-        }
-
-        function adornStackHeader (stack, segment) {
-            return Object.create(
-                stack,
-                {
-                    dps: {value: undefined,
-                          writable: true},
-                    lps: {value: undefined,
-                          writable: true},
-                    lsl: {value: 0,
-                          writable: true},
-                    ip: {value: undefined,
-                         writable: true},
-                    nuSegment: {value: undefined,
-                                writable: true},
-                    clone: {value: function () {
-                        return nuStack(stack.clone(), this.dps, segment, this.ip.index);
-                    }}
-                });
         }
 
     });

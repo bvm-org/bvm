@@ -39,26 +39,16 @@
                 if (! index) {
                     index = 0;
                 }
-                var ip = Object.create(
-                    {},
-                    {
-                        segment: {value: segment},
-                        index: {value: index, writable: true}
-                    });
-                return adornIPHelpers(ip);
-            }
-
-            function adornIPHelpers (ip) {
                 return Object.create(
                     {},
                     {
                         fetch: {value: function () {
                             var op;
-                            if (ip.index >= ip.segment.length()) {
+                            if (index >= segment.length()) {
                                 return segmentExhausted;
                             } else {
-                                op = ip.segment.index(ip.index);
-                                ip.index += 1;
+                                op = segment.index(index);
+                                index += 1;
                                 return op;
                             }
                         }}
