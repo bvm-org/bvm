@@ -22,9 +22,6 @@
                             } else if (types.isAtomString(reference)) {
                                 vcpu.cs.push(vcpu.cd.load(reference));
                                 return undefined;
-                            } else if (types.isPointer(reference)) {
-                                vcpu.cs.push(reference.target);
-                                return undefined;
                             } else {
                                 throw "INVALID OPERAND (LOAD)"; // TODO interrupt handler
                             }
@@ -42,14 +39,6 @@
                                 return undefined;
                             } else if (types.isAtomString(reference)) {
                                 vcpu.cd.store(reference, value);
-                                return undefined;
-                            } else if (types.isPointer(reference) &&
-                                       (types.isPointer(reference) ||
-                                        types.isAddressCouplet(reference) ||
-                                        segmentTypes.isSegment(reference) ||
-                                        nuArray.isArray(reference) ||
-                                        nuDict.isDict(reference))) {
-                                reference.target = value;
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (STORE)"; // TODO interrupt handler
@@ -73,23 +62,6 @@
                             throw "NOT ENOUGH OPERANDS (STACK_COUPLET)"; // TODO interrupt handler
                         }
                         return undefined;
-                    }},
-                    ADDRESS: {value: function () {
-                        var thing;
-                        if (vcpu.cs.length() > 0) {
-                            thing = vcpu.cs.pop();
-                            if (types.isPointer(thing) ||
-                                types.isAddressCouplet(thing) ||
-                                segmentTypes.isSegment(thing) ||
-                                nuArray.isArray(thing) ||
-                                nuDict.isDict(thing)) {
-                                vcpu.cs.push(types.nuPointer(thing));
-                            } else {
-                                throw "INVALID OPERAND (ADDRESS)"; // TODO interrupt handler
-                            }
-                        } else {
-                            throw "NOT ENOUGH OPERANDS (ADDRESS)"; // TODO interrupt handler
-                        }
                     }},
                     UNKNOWN: {value: function (op) {
                         var thing;

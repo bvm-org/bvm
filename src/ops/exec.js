@@ -17,9 +17,7 @@
                         } else {
                             segment = vcpu.cs.pop();
                             len -= 1;
-                            if (types.isPointer(segment)) {
-                                segment = segment.transitiveDereference();
-                            } else if (types.isAddressCouplet(segment)) {
+                            if (types.isAddressCouplet(segment)) {
                                 segment = vcpu.dereferenceScope(segment.lsl).index(segment.index);
                             }
 

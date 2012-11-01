@@ -15,7 +15,7 @@
                 var cpu = runner(done);
                 cpu.setCode([0, 'SEG_START', 'SEG_END', // MUST provide arity
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg', contents: []}]}))
+                                 {contents: [{type: 'seg', arity: 0, contents: []}]}))
                             ]).run();
             },
 
@@ -23,7 +23,7 @@
                 var cpu = runner(done);
                 cpu.setCode([0, 'SEG_START', 'PUSH', 'hello', 5, 'EXCHANGE', 'SEG_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg',
+                                 {contents: [{type: 'seg', arity: 0,
                                               contents: ['PUSH', 'hello', 5, 'EXCHANGE']}]}))
                             ]).run();
             },
@@ -34,7 +34,7 @@
                              0, 'SEG_START', 'PUSH', 'inner', 6, 'SEG_END',
                              7, 'SEG_END', 15464,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg', contents:
+                                 {contents: [{type: 'seg', arity: 0, contents:
                                               ['PUSH', 'outer', 5,
                                                0, 'SEG_START', 'PUSH', 'inner', 6, 'SEG_END',
                                                7]}, 15464]}))
@@ -48,7 +48,7 @@
                                                 post: function () { assert(x === 1); x += 1; }}),
                              'SEG_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [7, {type: 'seg', contents: [runner.breakpoint]}],
+                                 {contents: [7, {type: 'seg', arity: 0, contents: [runner.breakpoint]}],
                                   post: function () { assert(x === 0); x += 1; }})),
                              'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -64,7 +64,8 @@
                                                 post: function () { assert(x === 1); x += 1; }}),
                              'SEG_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [1, 7, {type: 'seg', contents: [runner.breakpoint]}],
+                                 {contents: [1, 7, {type: 'seg', arity: 1,
+                                                    contents: [runner.breakpoint]}],
                                   post: function () { assert(x === 0); x += 1; }})),
                              'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -80,7 +81,8 @@
                                                 post: function () { assert(x === 1); x += 1; }}),
                              'SEG_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [6, 7, 3, {type: 'seg', contents: [runner.breakpoint]}],
+                                 {contents: [6, 7, 3, {type: 'seg', arity: 2,
+                                                       contents: [runner.breakpoint]}],
                                   post: function () { assert(x === 0); x += 1; }})),
                              'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -150,7 +152,7 @@
                              1, 'EXIT', 'SEG_END', 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'seg',
+                                             {type: 'seg', arity: 0,
                                               contents: [1, 0, 'STACK_COUPLET', 'LOAD', 1, 'EXIT']
                                              }]})),
                              'EXEC',
@@ -165,7 +167,7 @@
                              0, 'SEG_START', 1, 0, 'STACK_COUPLET', 'LOAD', 1, 'EXIT', 'SEG_END',
                              0, 0, 'STACK_COUPLET', 'EXCHANGE', 'STORE', 'SEG_END', 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg',
+                                 {contents: [{type: 'seg', arity: 0,
                                               contents: [1, 0, 'STACK_COUPLET', 'LOAD', 1, 'EXIT']
                                              }]})),
                              'EXEC',
@@ -182,28 +184,26 @@
                              0, 1, 'STACK_COUPLET', 'EXCHANGE', 'STORE', 'SEG_END', 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'seg',
+                                             {type: 'seg', arity: 0,
                                               contents: [1, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD',
                                                          'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
                                              }]})),
-                             'DUPLICATE', 'EXEC',
+                             'CLONE', 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'seg',
+                                             {type: 'seg', arity: 0,
                                               contents: [1, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD',
                                                          'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
                                              },
                                              'hello'
                                             ]})),
-                             'POP', 'ADDRESS', 'DUPLICATE', 'EXEC',
+                             'POP', 0, 1, 'STACK_COUPLET', 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'ptr',
-                                              target: {type: 'seg',
-                                                       contents: [1, 0, 'STACK_COUPLET', 'DUPLICATE',
-                                                                  'LOAD', 'EXCHANGE', 'PUSH', 'goodbye',
-                                                                  'STORE', 1, 'EXIT']
-                                                      }},
+                                             {type: 'seg', arity: 0,
+                                              contents: [1, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD',
+                                                         'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
+                                             },
                                              'goodbye']})),
                              'POP', 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [456, 'goodbye']}))

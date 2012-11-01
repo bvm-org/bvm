@@ -37,26 +37,6 @@
                             return types.undef;
                         }
                     }},
-                    // TODO: dict.copy is currently deadcode. Remove later.
-                    copy: {value: function (key) {
-                        var val;
-                        if (dict.hasOwnProperty(key)) {
-                            val = dict[key];
-                            if (typeof val === 'number' ||
-                                typeof val === 'string' ||
-                                typeof val === 'boolean') {
-                                return val;
-                            } else {
-                                if ('clone' in val && typeof val.clone === 'function') {
-                                    return val.clone();
-                                } else {
-                                    throw "UNABLE TO CLONE VALUE";
-                                }
-                            }
-                        } else {
-                            return undefined;
-                        }
-                    }},
                     store: {value: function (key, value) {
                         dict[key] = value;
                         return undefined;

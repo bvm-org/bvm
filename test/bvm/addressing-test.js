@@ -27,24 +27,24 @@
                              0, 2, 'STACK_COUPLET', 'EXCHANGE', 'STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [types.undef, types.undef, 'hello']})),
-                             'CLEAR', 0, 0, 'STACK_COUPLET', 'ADDRESS', 'DUPLICATE', 'LOAD',
+                             'CLEAR', 0, 0, 'STACK_COUPLET', 'DUPLICATE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target: {type: 'couplet', lsl: 0, index: 0}},
+                                 {contents: [{type: 'couplet', lsl: 0, index: 0},
                                              {type: 'couplet', lsl: 0, index: 0}]})),
                              'LOAD', // !!!!! Is this useful in any way though?
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target: {type: 'couplet', lsl: 0, index: 0}},
-                                             {type: 'ptr', target: {type: 'couplet', lsl: 0, index: 0}}]})),
-                             'POP', 'PUSH', 'bar', 'ARRAY_NEW', 'ADDRESS', 'STORE', 'foo',
+                                 {contents: [{type: 'couplet', lsl: 0, index: 0},
+                                             {type: 'couplet', lsl: 0, index: 0}]})),
+                             'POP', 'PUSH', 'bar', 'ARRAY_NEW', 'STORE', 'foo',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target: {type: 'couplet', lsl: 0, index: 0}},
+                                 {contents: [{type: 'couplet', lsl: 0, index: 0},
                                              7]})),
-                             //                => (ptrA.ptrB.sc) (ptrC.ptrB.sc)]
-                             'POP', 'ADDRESS', 'DUPLICATE',
-                             // -> (ptrB.sc)] +> (ptrD.ay)] -> (ptrA.ptrB.ptrD.ay)] -> (ptrB.ptrD.ay)
-                             'LOAD',          'bar',        'STORE',                'LOAD',
-                             cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target: {type: 'ptr', target: []}}]}))
+                             'POP', 'DUPLICATE', 'LOAD', 'bar', 'STORE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [[]]})),
+                             0, 1, 'ARRAY_STORE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [[1]]})),
+                             'POP', 'bar',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [[1]]}))
                             ]).run();
             }
         });

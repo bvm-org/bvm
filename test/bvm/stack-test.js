@@ -7,7 +7,8 @@
             fail = buster.assertions.fail,
             assert = buster.assertions.assert,
             refute = buster.assertions.refute,
-            runner = require('./cpuRunner');
+            runner = require('./cpuRunner'),
+            types = runner.types;
 
         buster.testCase('basic stack ops', {
 
@@ -165,6 +166,43 @@
                              3, -27, 'ROLL',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['a', 'b', 'c', 'd']})),
+                            ]).run();
+            },
+
+            'clone, duplicate': function (done) {
+                var cpu = runner(done);
+                cpu.setCode(['ARRAY_NEW', 'CLONE', 'DUPLICATE',
+                             'DICT_NEW', 'CLONE', 'DUPLICATE',
+                             0, 'SEG_START', 'SEG_END', 'CLONE', 'DUPLICATE',
+                             0, 0, 'STACK_COUPLET', 'CLONE', 'DUPLICATE',
+                             5, 'CLONE', 'DUPLICATE',
+                             'PUSH', 'hello', 'CLONE', 'DUPLICATE',
+                             'TRUE', 'CLONE', 'DUPLICATE',
+                             'UNDEF', 'CLONE', 'DUPLICATE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [[], [], [],
+                                             {type: 'dict', contents: {}},
+                                               {type: 'dict', contents: {}},
+                                                 {type: 'dict', contents: {}},
+                                             {type: 'seg', contents: []},
+                                               {type: 'seg', contents: []},
+                                                 {type: 'seg', contents: []},
+                                             {type: 'couplet', lsl: 0, index: 0},
+                                               {type: 'couplet', lsl: 0, index: 0},
+                                                 {type: 'couplet', lsl: 0, index: 0},
+                                             5, 5, 5,
+                                             'hello', 'hello', 'hello',
+                                             true, true, true,
+                                             types.undef, types.undef, types.undef
+                                            ],
+                                 post: function (stack) {
+                                     var idx;
+                                     for (idx = 0; idx < stack.length(); idx += 3) {
+                                         assert(stack.index(idx) !== stack.index(idx+1) ||
+                                                idx >= 12);
+                                         assert(stack.index(idx+1) === stack.index(idx+2));
+                                     }
+                                 }}))
                             ]).run();
             },
 

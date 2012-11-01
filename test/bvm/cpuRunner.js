@@ -75,6 +75,9 @@
                             comparator(op, found.index(idx));
                         });
                     }
+                    if ('arity' in test) {
+                        assert(test.arity === found.arity);
+                    }
                 } else if (test.type === 'ptr') {
                     assert(types.isPointer(found));
                     if ('target' in test) {

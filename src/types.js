@@ -21,9 +21,7 @@
                 }
             },
             addressCoupletId = {},
-            pointerId = {},
-            addressCoupletBase, pointerBase,
-            mark, undef, nuAddressCouplet, nuPointer;
+            addressCoupletBase, nuAddressCouplet, mark, undef;
 
         mark = Object.create(plain, {name: {value: 'mark', enumerable: true}});
         Object.defineProperty(types, 'mark', {value: mark, enumerable: true});
@@ -55,40 +53,6 @@
                                   return thing &&
                                       typeof thing === 'object' &&
                                       addressCoupletId === thing.id;
-                              }, enumerable: true});
-
-        pointerBase = Object.create(
-            plain,
-            {
-                id: {value: pointerId},
-                name: {value: 'pointer', enumerable: true},
-                clone: {value: function () { return nuPointer(this.target); }},
-                transitiveDereference: {value: function () {
-                    var seen = [this], target = this.target;
-                    while (types.isPointer(target)) {
-                        if (-1 === seen.lastIndexOf(target)) {
-                            seen.push(target);
-                            target = target.target;
-                        } else {
-                            return undef;
-                        }
-                    }
-                    return target;
-                }}
-            });
-        nuPointer = function (target) {
-            return Object.create(
-                pointerBase,
-                {
-                    target: {value: target, writable: true},
-                });
-        };
-        Object.defineProperty(types, 'nuPointer', {value: nuPointer, enumerable: true});
-        Object.defineProperty(types, 'isPointer',
-                              {value: function (thing) {
-                                  return thing &&
-                                      typeof thing === 'object' &&
-                                      pointerId === thing.id;
                               }, enumerable: true});
 
         Object.defineProperty(types, 'isAtomString',

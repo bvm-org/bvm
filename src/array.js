@@ -43,27 +43,6 @@
                             return val === undefined ? types.undef : val;
                         }
                     }},
-                    copy: {value: function (idx) {
-                        var val;
-                        if (idx < 0 || array.length <= idx) {
-                            throw "ILLEGAL STACK ADDRESS";
-                        } else {
-                            val = array[idx];
-                            if (typeof val === 'number' ||
-                                typeof val === 'string' ||
-                                typeof val === 'boolean') {
-                                return val;
-                            } else if (val === undefined) {
-                                return types.undef;
-                            } else {
-                                if ('clone' in val && typeof val.clone === 'function') {
-                                    return val.clone();
-                                } else {
-                                    throw "UNABLE TO CLONE VALUE";
-                                }
-                            }
-                        }
-                    }},
                     store: {value: function (idx, val) {
                         if (idx < 0) {
                             throw "ILLEGAL STACK ADDRESS";

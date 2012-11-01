@@ -3,6 +3,8 @@
 
         'use strict';
 
+        var types = require('../types');
+
         return function (vcpu, ops) {
             Object.defineProperties(
                 ops,
@@ -21,7 +23,7 @@
                     DUPLICATE: {value: function () {
                         var len = vcpu.cs.length();
                         if (len > 0) {
-                            vcpu.cs.push(vcpu.cs.copy(len - 1));
+                            vcpu.cs.push(vcpu.cs.index(len - 1));
                             return undefined;
                         } else {
                             throw "NOT ENOUGH OPERANDS (DUPLICATE)"; // TODO interrupt handler
@@ -50,7 +52,7 @@
                             len -= 1;
                             if (len >= count) {
                                 for (idx = len - count; idx < len; idx += 1) {
-                                    vcpu.cs.push(vcpu.cs.copy(idx));
+                                    vcpu.cs.push(vcpu.cs.index(idx));
                                 }
                                 return undefined;
                             } else {
@@ -66,7 +68,7 @@
                             idx = vcpu.cs.pop();
                             len -= 1;
                             if (len > idx) {
-                                vcpu.cs.push(vcpu.cs.copy(len - idx - 1));
+                                vcpu.cs.push(vcpu.cs.index(len - idx - 1));
                                 return undefined;
                             } else {
                                 throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler
@@ -99,8 +101,43 @@
                             throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
                         }
                     }},
+                    CLONE: {value: function () {
+                        var len = vcpu.cs.length(), thing, thingT;
+                        if (len > 0) {
+                            thing = vcpu.cs.index(len - 1);
+                            thingT = typeof thing;
+                            if (thingT === 'number' ||
+                                thingT === 'boolean' ||
+                                thingT === 'string' ||
+                                thing === types.isAddressCouplet(thing) ||
+                                thing === types.undef ||
+                                thing === types.mark) {
+                                vcpu.cs.push(thing);
+                                return undefined;
+                            } else if (thing.clone && Function === thing.clone.constructor) {
+                                vcpu.cs.push(thing.clone());
+                                return undefined;
+                            } else {
+                                throw "INTERNAL ERROR (CLONE)"; // TODO interrupt handler
+                            }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (CLONE)"; // TODO interrupt handler
+                        }
+                    }},
                     CLEAR: {value: function () {
                         vcpu.cs.clear();
+                        return undefined;
+                    }},
+                    TRUE: {value: function () {
+                        vcpu.cs.push(true);
+                        return undefined;
+                    }},
+                    FALSE: {value: function () {
+                        vcpu.cs.push(true);
+                        return undefined;
+                    }},
+                    UNDEF: {value: function () {
+                        vcpu.cs.push(types.undef);
                         return undefined;
                     }}
                 });
