@@ -51,58 +51,68 @@
                                   }}))]).run();
             },
 
-            'new, store, load, keys, has, remove': function (done) {
+            'new, store, load, keys, contains, remove': function (done) {
                 var cpu = runner(done);
                 cpu.setCode(['DICT_NEW',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict', contents: {}}]})),
-                             'ADDRESS', 'DUPLICATE', 'LOAD', 'PUSH', 'a', 'PUSH', 'hello', 'DICT_STORE',
+                             'PUSH', 'a', 'PUSH', 'hello', 'DICT_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target:
-                                              {type: 'dict', contents: {'a': 'hello'}}}]})),
-                             'DUPLICATE', 'LOAD', 'PUSH', 'b', 17, 'DICT_STORE',
-                             'DUPLICATE', 'LOAD', 'PUSH', 'a', 'PUSH', 'goodbye', 'DICT_STORE',
+                                 {contents: [{type: 'dict', contents: {'a': 'hello'}}]})),
+                             'PUSH', 'b', 17, 'DICT_STORE',
+                             'PUSH', 'a', 'PUSH', 'goodbye', 'DICT_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target:
-                                              {type: 'dict', contents: {'a': 'goodbye',
-                                                                        'b': 17}}}]})),
-                             'DUPLICATE', 'LOAD', 'PUSH', 'b', 'DICT_LOAD',
+                                 {contents: [{type: 'dict', contents: {'a': 'goodbye',
+                                                                       'b': 17}}]})),
+                             'PUSH', 'b', 'DICT_LOAD',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target:
-                                              {type: 'dict', contents: {'a': 'goodbye',
-                                                                        'b': 17}}},
+                                 {contents: [{type: 'dict', contents: {'a': 'goodbye',
+                                                                       'b': 17}},
                                              17]})),
-                             'POP', 'DUPLICATE', 'LOAD', 'DICT_KEYS',
+                             'POP', 'DICT_KEYS',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target:
-                                              {type: 'dict', contents: {'a': 'goodbye',
-                                                                        'b': 17}}},
+                                 {contents: [{type: 'dict', contents: {'a': 'goodbye',
+                                                                       'b': 17}},
                                              ['a', 'b']]})),
-                             0, 'ARRAY_LOAD', 'EXCHANGE', 'DUPLICATE', 'LOAD', 3, -1, 'ROLL',
-                             'DICT_REMOVE',
+                             0, 'ARRAY_LOAD', 'EXCHANGE', 'POP', 'DICT_REMOVE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target:
-                                              {type: 'dict', contents: {'b': 17}}}]})),
-                             'DUPLICATE', 'LOAD', 'PUSH', 'c', 'DICT_REMOVE',
+                                 {contents: [{type: 'dict', contents: {'b': 17}}]})),
+                             'PUSH', 'c', 'DICT_REMOVE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target:
-                                              {type: 'dict', contents: {'b': 17}}}]})),
-                             'DUPLICATE', 'LOAD', 'PUSH', 'c', 'DICT_CONTAINS',
-                             'EXCHANGE', 'LOAD', 'PUSH', 'b', 'DICT_CONTAINS',
+                                 {contents: [{type: 'dict', contents: {'b': 17}}]})),
+                             'PUSH', 'c', 'DICT_CONTAINS',
+                             'EXCHANGE', 'PUSH', 'b', 'DICT_CONTAINS',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [false, true]})),
-                             'CLEAR',
-                             'DICT_NEW', 'ADDRESS', 'DUPLICATE', 'LOAD',
-                             'PUSH', 'a', 7, 'DICT_STORE',
-                             'DUPLICATE', 'LOAD', 'DUPLICATE', 'ADDRESS', 'DUPLICATE', 'LOAD',
-                             'PUSH', 'a', 8, 'DICT_STORE',
+                                 {contents: [false, {type: 'dict', contents: {'b': 17}}, true]}))
+                            ]).run();
+            },
+
+            'references': function (done) {
+                var cpu = runner(done);
+                cpu.setCode(['DICT_NEW', 'PUSH', 'a', 7, 'DICT_STORE',
+                             'DUPLICATE', 'PUSH', 'a', 8, 'DICT_STORE',
                              'EXCHANGE', 'PUSH', 'b', 9, 'DICT_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'ptr', target:
-                                              {type: 'dict', contents: {'a': 7, 'b': 9}}},
-                                             {type: 'ptr', target:
-                                              {type: 'dict', contents: {'a': 8}}}]}))
-                             ]).run();
+                                 {contents: [{type: 'dict', contents: {'a': 8}},
+                                             {type: 'dict', contents: {'a': 7, 'b': 9}}]})),
+                             0, 1, 'STACK_COUPLET', 'LOAD', 'PUSH', 'a', 'DICT_REMOVE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'dict', contents: {'a': 8}},
+                                             {type: 'dict', contents: {'b': 9}},
+                                             {type: 'dict', contents: {'b': 9}}]})),
+                             'POP', 'ADDRESS', 'DUPLICATE', 'LOAD', 'PUSH', 'b', 10, 'DICT_STORE',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'dict', contents: {'a': 8}},
+                                             {type: 'ptr', contents: {type: 'dict', contents: {'b': 10}}},
+                                             {type: 'dict', contents: {'b': 10}}]})),
+                             0, 0, 'STACK_COUPLET', 'ADDRESS', 'LOAD', 'LOAD', 'DICT_KEYS',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [{type: 'dict', contents: {'a': 8}},
+                                             {type: 'ptr', contents: {type: 'dict', contents: {'b': 10}}},
+                                             {type: 'dict', contents: {'b': 10}},
+                                             {type: 'dict', contents: {'a': 8}},
+                                             ['a']]}))
+                            ]).run();
             },
 
             'current': function (done) {
@@ -112,19 +122,17 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict'},
                                              {type: 'dict', contents: {}}]})),
-                             'ADDRESS', 'DUPLICATE', 'LOAD', 'PUSH', 'a', 5, 'DICT_STORE',
-                             'DUPLICATE', 'LOAD', 'DICT_CUR_SET', 'PUSH', 'a', 'LOAD',
+                             'PUSH', 'a', 5, 'DICT_STORE',
+                             'DICT_CUR_SET', 'PUSH', 'a', 'LOAD',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict'},
-                                             {type: 'ptr',
-                                              target: {type: 'dict', contents: {'a': 5}}},
+                                             {type: 'dict', contents: {'a': 5}},
                                              5]})),
                              'POP', 'PUSH', 'b', 17, 'STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict'},
-                                             {type: 'ptr',
-                                              target: {type: 'dict', contents: {'a': 5,
-                                                                                'b': 17}}}]})),
+                                             {type: 'dict', contents: {'a': 5,
+                                                                       'b': 17}}]})),
                              'POP', 'DICT_CUR_SET'
                             ]).run();
             }

@@ -17,14 +17,10 @@
                         if (vcpu.cs.length() > 0) {
                             reference = vcpu.cs.pop();
                             if (types.isAddressCouplet(reference)) {
-                                vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).copy(reference.index));
+                                vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
                                 return undefined;
                             } else if (types.isAtomString(reference)) {
-                                if (vcpu.cd.has(reference)) {
-                                    vcpu.cs.push(vcpu.cd.copy(reference));
-                                } else {
-                                    vcpu.cs.push(types.undef);
-                                }
+                                vcpu.cs.push(vcpu.cd.load(reference));
                                 return undefined;
                             } else if (types.isPointer(reference)) {
                                 vcpu.cs.push(reference.target);
@@ -98,9 +94,9 @@
                     UNKNOWN: {value: function (op) {
                         var thing;
                         if (types.isAddressCouplet(op)) {
-                            thing = vcpu.dereferenceScope(op.lsl).copy(op.index);
+                            thing = vcpu.dereferenceScope(op.lsl).index(op.index);
                         } else if (types.isAtomString(op)) {
-                            thing = vcpu.cd.copy(op);
+                            thing = vcpu.cd.load(op);
                         } else {
                             vcpu.cs.push(op);
                             return undefined;

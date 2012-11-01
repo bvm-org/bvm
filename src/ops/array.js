@@ -38,6 +38,7 @@
                             array = vcpu.cs.pop();
                             if (nuArray.isArray(array) && typeof idx === 'number') {
                                 array.store(idx, value);
+                                vcpu.cs.push(array);
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (ARRAY_STORE)"; // TODO interrupt handler
@@ -52,6 +53,7 @@
                             idx = vcpu.cs.pop();
                             array = vcpu.cs.pop();
                             if (nuArray.isArray(array) && typeof idx === 'number') {
+                                vcpu.cs.push(array);
                                 vcpu.cs.push(array.index(idx));
                                 return undefined;
                             } else {
@@ -66,6 +68,7 @@
                         if (vcpu.cs.length() > 0) {
                             array = vcpu.cs.pop();
                             if (nuArray.isArray(array)) {
+                                vcpu.cs.push(array);
                                 vcpu.cs.push(array.length());
                                 return undefined;
                             } else {
@@ -82,6 +85,7 @@
                             array = vcpu.cs.pop();
                             if (nuArray.isArray(array) && typeof len === 'number' && len >= 0) {
                                 array.length(len);
+                                vcpu.cs.push(array);
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (ARRAY_TRUNCATE)"; // TODO interrupt handler

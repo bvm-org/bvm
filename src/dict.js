@@ -37,6 +37,7 @@
                             return types.undef;
                         }
                     }},
+                    // TODO: dict.copy is currently deadcode. Remove later.
                     copy: {value: function (key) {
                         var val;
                         if (dict.hasOwnProperty(key)) {

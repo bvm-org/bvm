@@ -48,6 +48,7 @@
                             dict = vcpu.cs.pop();
                             if (nuDict.isDict(dict) && types.isAtomString(key)) {
                                 dict.store(key, value);
+                                vcpu.cs.push(dict);
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (DICT_STORE)"; // TODO interrupt handler
@@ -62,13 +63,14 @@
                             key = vcpu.cs.pop();
                             dict = vcpu.cs.pop();
                             if (nuDict.isDict(dict) && types.isAtomString(key)) {
+                                vcpu.cs.push(dict);
                                 vcpu.cs.push(dict.has(key));
                                 return undefined;
                             } else {
-                                throw "INVALID OPERAND (DICT_HAS)"; // TODO interrupt handler
+                                throw "INVALID OPERAND (DICT_CONTAINS)"; // TODO interrupt handler
                             }
                         } else {
-                            throw "NOT ENOUGH OPERANDS (DICT_HAS)"; // TODO interrupt handler
+                            throw "NOT ENOUGH OPERANDS (DICT_CONTAINS)"; // TODO interrupt handler
                         }
                     }},
                     DICT_REMOVE: {value: function () {
@@ -78,6 +80,7 @@
                             dict = vcpu.cs.pop();
                             if (nuDict.isDict(dict) && types.isAtomString(key)) {
                                 dict.remove(key);
+                                vcpu.cs.push(dict);
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (DICT_HAS)"; // TODO interrupt handler
@@ -92,11 +95,8 @@
                             key = vcpu.cs.pop();
                             dict = vcpu.cs.pop();
                             if (nuDict.isDict(dict) && types.isAtomString(key)) {
-                                if (dict.has(key)) {
-                                    vcpu.cs.push(dict.load(key));
-                                } else {
-                                    vcpu.cs.push(types.undef);
-                                }
+                                vcpu.cs.push(dict);
+                                vcpu.cs.push(dict.load(key));
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (DICT_STORE)"; // TODO interrupt handler
@@ -110,6 +110,7 @@
                         if (vcpu.cs.length() > 0) {
                             dict = vcpu.cs.pop();
                             if (nuDict.isDict(dict)) {
+                                vcpu.cs.push(dict);
                                 vcpu.cs.push(nuArray(dict.keys()));
                             } else {
                                 throw "INVALID OPERAND (DICT_KEYS)"; // TODO interrupt handler
@@ -128,6 +129,7 @@
                             dict = vcpu.cs.pop();
                             if (nuDict.isDict(dict)) {
                                 vcpu.cd = dict;
+                                vcpu.cs.push(dict);
                                 return undefined;
                             } else {
                                 throw "INVALID OPERAND (DICT_CUR_SET)"; // TODO interrupt handler
