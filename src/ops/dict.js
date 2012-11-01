@@ -46,7 +46,7 @@
                             value = vcpu.cs.pop();
                             key = vcpu.cs.pop();
                             dict = vcpu.cs.pop();
-                            if (nuDict.isDict(dict) && types.isAtomString(key)) {
+                            if (nuDict.isDict(dict) && typeof key === 'string') {
                                 dict.store(key, value);
                                 vcpu.cs.push(dict);
                                 return undefined;
@@ -62,7 +62,7 @@
                         if (vcpu.cs.length() > 1) {
                             key = vcpu.cs.pop();
                             dict = vcpu.cs.pop();
-                            if (nuDict.isDict(dict) && types.isAtomString(key)) {
+                            if (nuDict.isDict(dict) && typeof key === 'string') {
                                 vcpu.cs.push(dict);
                                 vcpu.cs.push(dict.has(key));
                                 return undefined;
@@ -78,7 +78,7 @@
                         if (vcpu.cs.length() > 1) {
                             key = vcpu.cs.pop();
                             dict = vcpu.cs.pop();
-                            if (nuDict.isDict(dict) && types.isAtomString(key)) {
+                            if (nuDict.isDict(dict) && typeof key === 'string') {
                                 dict.remove(key);
                                 vcpu.cs.push(dict);
                                 return undefined;
@@ -94,7 +94,7 @@
                         if (vcpu.cs.length() > 1) {
                             key = vcpu.cs.pop();
                             dict = vcpu.cs.pop();
-                            if (nuDict.isDict(dict) && types.isAtomString(key)) {
+                            if (nuDict.isDict(dict) && typeof key === 'string') {
                                 vcpu.cs.push(dict);
                                 vcpu.cs.push(dict.load(key));
                                 return undefined;

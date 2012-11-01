@@ -19,7 +19,7 @@
                             if (types.isAddressCouplet(reference)) {
                                 vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
                                 return undefined;
-                            } else if (types.isAtomString(reference)) {
+                            } else if (typeof reference === 'string') {
                                 vcpu.cs.push(vcpu.cd.load(reference));
                                 return undefined;
                             } else {
@@ -37,7 +37,7 @@
                             if (types.isAddressCouplet(reference)) {
                                 vcpu.dereferenceScope(reference.lsl).store(reference.index, value);
                                 return undefined;
-                            } else if (types.isAtomString(reference)) {
+                            } else if (typeof reference === 'string') {
                                 vcpu.cd.store(reference, value);
                                 return undefined;
                             } else {
@@ -67,7 +67,7 @@
                         var thing;
                         if (types.isAddressCouplet(op)) {
                             thing = vcpu.dereferenceScope(op.lsl).index(op.index);
-                        } else if (types.isAtomString(op)) {
+                        } else if (typeof op === 'string') {
                             thing = vcpu.cd.load(op);
                         } else {
                             vcpu.cs.push(op);

@@ -55,12 +55,6 @@
                                       addressCoupletId === thing.id;
                               }, enumerable: true});
 
-        Object.defineProperty(types, 'isAtomString',
-                              {value: function (thing) {
-                                  return thing &&
-                                      typeof thing === 'string';
-                              }, enumerable: true});
-
         return types;
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));
