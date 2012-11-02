@@ -240,7 +240,7 @@
                                          {type: 'stack', contents: [], lsl: 1},
                                          7],
                                      lsl: 2}),
-                                 'EXCHANGE', 'SUSPEND',
+                                 'EXCHANGE', 'SUSPEND', // NB suspending into a suspension!
                                  cpu.addUnreachablePoint(),
                                'SEG_END', 'SUSPEND',
                                cpu.addBreakPoint({
@@ -258,6 +258,7 @@
                 var cpu = runner(done), results = [5, 5];
                 cpu.setCode([1, 'SEG_START', 'DUPLICATE', 'EXEC',
                                cpu.addBreakPoint({lsl: 1, dps: undefined, contents: [6]}),
+                               // We actually stop (eventually) here.
                                'SEG_END',
                              'SUSPEND',
                              // At this point, 1st time through, top
@@ -272,14 +273,17 @@
                              cpu.addBreakPoint({contents: results, lsl: 0,
                                                 post: function () { results.push(7); results.push(6); }}),
                              // EXECing a stack sets the return
-                             // pointer of the (cloned) stack to the
-                             // old stack. So when we first get here,
+                             // pointer of the newly cloned stack to
+                             // the current stack. So when we first
+                             // get here, the return pointer is back
+                             // to the above breakpoint. Hence the 7,
+                             // 6 appearing on the stack - the 7
+                             // directly and demonstrates it's the
+                             // same stack, the 6 via the EXIT
+                             // opcode. When we get here the 2nd time,
                              // the return pointer is actually back to
-                             // just after the first EXEC (before the
-                             // above breakpoint). Hence the 7, 6
-                             // appearing on the stack. When we get
-                             // here the 2nd time, the return pointer
-                             // is actually back to the inner segment!
+                             // the inner segment, hence 6 being
+                             // passed on its own up there.
                              7, 6, 1, 'EXIT',
                              cpu.addUnreachablePoint()
                             ]).run();
