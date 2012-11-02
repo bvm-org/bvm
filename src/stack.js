@@ -9,17 +9,22 @@
 
         // segment here is the new segment being entered.
         nuStack = function (stackBase, oldStack, segment, index) {
+            return adornStackOps(nuArray(stackBase), oldStack, segment, segment.nuIP(index));
+        }
+
+        function adornStackOps (stack, oldStack, segment, ip) {
             return Object.create(
-                nuArray(stackBase),
+                stack,
                 {
                     id: {value: id},
-                    dps: {value: oldStack},
+                    dps: {value: oldStack, writable: true},
                     lps: {value: segment.ls},
                     lsl: {value: segment.ls ? segment.ls.lsl + 1 : 0},
-                    ip: {value: segment.nuIP(index)},
+                    ip: {value: ip},
                     nuSegment: {value: segment.nuSegment},
-                    clone: {value: function () {
-                        return nuStack(stack.clone(), this.dps, segment, this.ip.index);
+                    clone: {value: function (cloneStack) {
+                        return adornStackOps(cloneStack ? stack.clone() : stack,
+                                             this.dps, segment, this.ip.clone());
                     }}
                 });
         }

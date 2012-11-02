@@ -36,6 +36,23 @@
                 name: {value: 'address couplet', enumerable: true},
                 clone: {value: function () {
                     return nuAddressCouplet(this.lsl, this.index);
+                }},
+                transitiveDereference: {value: function (vcpu) {
+                    var seen = {}, obj = this;
+                    seen[obj.lsl] = {};
+                    seen[obj.lsl][obj.index] = true;
+                    while (true) {
+                        obj = vcpu.dereferenceScope(obj.lsl).index(obj.index);
+                        if (types.isAddressCouplet(obj)) {
+                            if (seen[obj.lsl] && seen[obj.lsl][obj.index]) {
+                                throw "CYCLICAL ADDRESS COUPLETS"; // TODO interrupt handler
+                            } else {
+                                (seen[obj.lsl] ? seen[obj.lsl] : seen[obj.lsl] = {})[obj.index] = true;
+                            }
+                        } else {
+                            return obj;
+                        }
+                    }
                 }}
             });
 

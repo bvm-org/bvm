@@ -26,12 +26,8 @@
                             op = vcpu.cs.ip.fetch();
                             if (op === segmentTypes.segmentExhausted) {
                                 if (vcpu.cs.dps) {
-                                    vcpu.exit(); // implicit return with 0 results
+                                    vcpu.exit(vcpu.cs.dps); // implicit return with 0 results
                                 } else {
-                                    if (vcpu.cs.lsl !== 0) {
-                                        // valid warning iff we don't have a HALT opcode
-                                        console.warn('WARNING: halted in LSL', vcpu.cs.lsl);
-                                    }
                                     return; // HALTED
                                 }
                             } else {
@@ -90,19 +86,20 @@
                         this.cs = stack;
                         return undefined;
                     }},
-                    enter: {value: function (segment, argsAry) {
-                        if (! argsAry) {
-                            argsAry = [];
-                        }
-                        this.setStackAndLSPs(nuStack(argsAry, this.cs, segment, 0));
+                    enter: {value: function (segment, argsAry, parentStack) {
+                        this.setStackAndLSPs(nuStack(argsAry, parentStack, segment, 0));
                         return undefined;
                     }},
-                    exit: {value: function (resultsAry) {
-                        this.setStackAndLSPs(this.cs.dps);
-                        if (resultsAry) {
-                            resultsAry.forEach(function (result) {
-                                this.cs.push(result);
-                            }.bind(this));
+                    exit: {value: function (stack, resultsAry) {
+                        if (nuStack.isStack(stack)) {
+                            this.setStackAndLSPs(stack);
+                            if (resultsAry) {
+                                resultsAry.forEach(function (elem) {
+                                    stack.push(elem);
+                                });
+                            }
+                        } else {
+                            throw 'ILLEGAL MANOEUVRE'; // TODO interrupt handler
                         }
                         return undefined;
                     }}

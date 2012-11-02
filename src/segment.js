@@ -51,6 +51,9 @@
                                 index += 1;
                                 return op;
                             }
+                        }},
+                        clone: {value: function () {
+                            return nuIP(segment, index);
                         }}
                     });
             }

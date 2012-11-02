@@ -208,6 +208,80 @@
                              'POP', 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [456, 'goodbye']}))
                             ]).run();
+            },
+
+            'suspend single': function (done) {
+                var cpu = runner(done), x = 0;
+                cpu.setCode([123, 2, 'SEG_START',
+                               cpu.addBreakPoint(
+                                   {lsl: 1,
+                                    contents: ['hello', {type: 'stack', contents: [123], lsl: 0}],
+                                    post: function () { assert(x === 0); x += 1; }}),
+                               'PUSH', 'goodbye', 'EXCHANGE', 'EXEC',
+                                cpu.addBreakPoint({lsl: 1,
+                                                   contents: ['hello'],
+                                                   post: function () { assert(x === 2); }}),
+                             'SEG_END',
+                             'PUSH', 'hello', 'EXCHANGE', 'SUSPEND',
+                             cpu.addBreakPoint({contents: [123, 'goodbye'], lsl: 0,
+                                                post: function () { assert(x === 1); x += 1; }})
+                            ]).run();
+            },
+
+            'suspend multiple': function (done) {
+                var cpu = runner(done);
+                cpu.setCode([123,
+                             1, 'SEG_START',
+                               2, 'SEG_START',
+                                 'PUSH', 'goodbye', 2, 0, 'STACK_COUPLET', 'EXEC',
+                                 cpu.addBreakPoint({
+                                     contents: [
+                                         {type: 'stack', contents: [123, 'goodbye'], lsl: 0},
+                                         {type: 'stack', contents: [], lsl: 1},
+                                         7],
+                                     lsl: 2}),
+                                 'EXCHANGE', 'SUSPEND',
+                                 cpu.addUnreachablePoint(),
+                               'SEG_END', 'SUSPEND',
+                               cpu.addBreakPoint({
+                                   contents: [{type: 'stack', contents: [
+                                       {type: 'stack', contents: [123, 'goodbye'], lsl: 0},
+                                       7]}],
+                                   dps: undefined, lsl: 1}),
+                             'SEG_END', 'SUSPEND',
+                             cpu.addBreakPoint({contents: [123, 'goodbye'], lsl: 0}),
+                             7, 1, 'EXIT'
+                            ]).run();
+            },
+
+            'suspend loop': function (done) {
+                var cpu = runner(done), results = [5, 5];
+                cpu.setCode([1, 'SEG_START', 'DUPLICATE', 'EXEC',
+                               cpu.addBreakPoint({lsl: 1, dps: undefined, contents: [6]}),
+                               'SEG_END',
+                             'SUSPEND',
+                             // At this point, 1st time through, top
+                             // of stack is the stack itself as a
+                             // continuation from here.
+                             5, 'EXCHANGE', 'EXEC',
+                             // 1st time through, 5 is provided as an
+                             // arg to the continuation. Thus 2nd time
+                             // through, continuation starts with a 5.
+                             // We then add another 5, and EXEC on 5
+                             // is a noop, so now [5, 5].
+                             cpu.addBreakPoint({contents: results, lsl: 0,
+                                                post: function () { results.push(7); results.push(6); }}),
+                             // EXECing a stack sets the return
+                             // pointer of the (cloned) stack to the
+                             // old stack. So when we first get here,
+                             // the return pointer is actually back to
+                             // just after the first EXEC (before the
+                             // above breakpoint). Hence the 7, 6
+                             // appearing on the stack. When we get
+                             // here the 2nd time, the return pointer
+                             // is actually back to the inner segment!
+                             7, 6, 1, 'EXIT',
+                            ]).run();
             }
         });
 

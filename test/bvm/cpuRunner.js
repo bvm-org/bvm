@@ -5,9 +5,13 @@
 
         var bvm = require('../../index'),
             buster = require('buster'),
+            fail = buster.assertions.fail,
+            assert = buster.assertions.assert,
+            refute = buster.assertions.refute,
             types = require('../../src/types'),
             nuArray = require('../../src/array'),
             nuDict = require('../../src/dict'),
+            nuStack = require('../../src/stack'),
             segmentTypes = require('../../src/segment'),
             breakpointBase = 'BREAKPOINT',
             baseStackConfig = {dps: undefined,
@@ -87,6 +91,17 @@
                     assert(types.isAddressCouplet(found));
                     assert(test.lsl === found.lsl);
                     assert(test.index === found.index);
+                } else if (test.type === 'stack') {
+                    assert(nuStack.isStack(found));
+                    if ('contents' in test) {
+                        assert(test.contents.length === found.length());
+                        test.contents.forEach(function (op, idx) {
+                            comparator(op, found.index(idx));
+                        });
+                    }
+                    if ('lsl' in test) {
+                        assert(test.lsl === found.lsl);
+                    }
                 } else {
                     throw 'Non-understood type to compare in contents: ' + test;
                 }
@@ -101,17 +116,25 @@
         runnerBase = {
             run: function () {
                 var cpu = bvm.bvm(bvm.segmentTypes.json(this.code)),
-                    breakpoints = this.breakpoints;
+                    breakpoints = this.breakpoints,
+                    unreachables = this.unreachables;
                 Object.keys(breakpoints).forEach(function (breakpoint) {
                     cpu.installOp(
                         breakpoint,
                         function (vcpu, ops) {
                             assert.stackConfiguration(vcpu.cs, breakpoints[breakpoint]);
-                            delete breakpoints[breakpoint];
+                            breakpoints[breakpoint].reached = true;;
                         });
                 });
+                Object.keys(unreachables).forEach(function (unreachable) {
+                    cpu.installOp(
+                        unreachable,
+                        function (vcpu, ops) { fail(unreachables[unreachable]); });
+                });
                 cpu.boot();
-                assert(Object.keys(breakpoints).length === 0);
+                Object.keys(breakpoints).forEach(function (breakpoint) {
+                    assert('reached' in breakpoints[breakpoint]);
+                });
                 this.done();
             },
             setCode: function (code) {
@@ -123,6 +146,12 @@
                 this.breakpoints[breakpoint] = config;
                 this.breakpointCount += 1;
                 return breakpoint;
+            },
+            addUnreachablePoint: function (msg) {
+                var unreachablepoint = breakpointBase + '-' + this.unreachableCount;
+                this.unreachables[unreachablepoint] = msg || ('' + unreachablepoint);
+                this.unreachableCount += 1;
+                return unreachablepoint;
             }
         };
 
@@ -132,6 +161,8 @@
                 {
                     breakpointCount: {value: 0, writable: true},
                     breakpoints: {value: {}},
+                    unreachableCount: {value: 0, writable: true},
+                    unreachables: {value: {}},
                     done: {value: done}
                 });
         };
