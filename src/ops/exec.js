@@ -87,6 +87,8 @@
                                     return undefined;
                                 }
                             } else if (nuStack.isStack(segment)) {
+                                // NB we do not do the same dps
+                                // modifications here as in EXEC
                                 vcpu.exit(segment.clone(false), [vcpu.cs]);
                                 return undefined;
                             } else {

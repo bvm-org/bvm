@@ -281,6 +281,7 @@
                              // here the 2nd time, the return pointer
                              // is actually back to the inner segment!
                              7, 6, 1, 'EXIT',
+                             cpu.addUnreachablePoint()
                             ]).run();
             }
         });
