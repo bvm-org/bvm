@@ -167,9 +167,9 @@ QuotedStringCharacters
   = chars:QuotedStringCharacter+ { return chars.join(""); }
 
 QuotedStringCharacter
-  = '\\"' { return '"'; }
-  / '\\\\' { return '\\'; }
-  / !'"' char:Char { return char; }
+  = "\\\"" { return "\""; }
+  / "\\\\" { return "\\"; }
+  / !"\"" char:Char { return char; }
 
 Opcode
   = chars:(!(SectionPrefix / Push) OpcodeCharset+) { return chars[1].join(""); }
