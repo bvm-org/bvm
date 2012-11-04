@@ -16,7 +16,7 @@
                         var reference;
                         if (vcpu.cs.length() > 0) {
                             reference = vcpu.cs.pop();
-                            if (types.isAddressCouplet(reference)) {
+                            if (types.isLexicalAddress(reference)) {
                                 vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
                                 return undefined;
                             } else if (typeof reference === 'string') {
@@ -34,7 +34,7 @@
                         if (vcpu.cs.length() > 1) {
                             value = vcpu.cs.pop();
                             reference = vcpu.cs.pop();
-                            if (types.isAddressCouplet(reference)) {
+                            if (types.isLexicalAddress(reference)) {
                                 vcpu.dereferenceScope(reference.lsl).store(reference.index, value);
                                 return undefined;
                             } else if (typeof reference === 'string') {
@@ -47,37 +47,33 @@
                             throw "NOT ENOUGH OPERANDS (STORE)"; // TODO interrupt handler
                         }
                     }},
-                    STACK_COUPLET: {value: function () {
+                    LEXICAL_ADDRESS: {value: function () {
                         var lsl, index;
                         if (vcpu.cs.length() > 1) {
                             index = vcpu.cs.pop();
                             lsl = vcpu.cs.pop();
                             if (typeof index === 'number' &&
                                 typeof lsl === 'number') {
-                                vcpu.cs.push(types.nuAddressCouplet(lsl, index));
+                                vcpu.cs.push(types.nuLexicalAddress(lsl, index));
+                                return undefined;
                             } else {
-                                throw "INVALID OPERAND (STACK_COUPLET)"; // TODO interrupt handler
+                                throw "INVALID OPERAND (LEXICAL_ADDRESS)"; // TODO interrupt handler
                             }
                         } else {
-                            throw "NOT ENOUGH OPERANDS (STACK_COUPLET)"; // TODO interrupt handler
+                            throw "NOT ENOUGH OPERANDS (LEXICAL_ADDRESS)"; // TODO interrupt handler
                         }
-                        return undefined;
                     }},
                     UNKNOWN: {value: function (op) {
-                        var thing;
-                        if (types.isAddressCouplet(op)) {
-                            thing = vcpu.dereferenceScope(op.lsl).index(op.index);
+                        if (types.isLexicalAddress(op)) {
+                            vcpu.cs.push(vcpu.dereferenceScope(op.lsl).index(op.index));
+                            return undefined;
                         } else if (typeof op === 'string') {
-                            thing = vcpu.cd.load(op);
+                            vcpu.cs.push(vcpu.cd.load(op));
+                            return undefined;
                         } else {
                             vcpu.cs.push(op);
                             return undefined;
                         }
-                        vcpu.cs.push(thing);
-                        if (segmentTypes.isSegment(thing)) {
-                            this.EXEC();
-                        }
-                        return undefined;
                     }}
                 });
             return undefined;

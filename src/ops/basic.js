@@ -109,7 +109,7 @@
                             if (thingT === 'number' ||
                                 thingT === 'boolean' ||
                                 thingT === 'string' ||
-                                thing === types.isAddressCouplet(thing) ||
+                                thing === types.isLexicalAddress(thing) ||
                                 thing === types.undef ||
                                 thing === types.mark) {
                                 vcpu.cs.push(thing);

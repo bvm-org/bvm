@@ -95,7 +95,7 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict', contents: {'a': 8}},
                                              {type: 'dict', contents: {'a': 7, 'b': 9}}]})),
-                             0, 1, 'STACK_COUPLET', 'LOAD', 'PUSH', 'a', 'DICT_REMOVE',
+                             0, 1, 'LEXICAL_ADDRESS', 'LOAD', 'PUSH', 'a', 'DICT_REMOVE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict', contents: {'a': 8}},
                                              {type: 'dict', contents: {'b': 9}},
@@ -105,12 +105,12 @@
                                  {contents: [{type: 'dict', contents: {'a': 8}},
                                              {type: 'dict', contents: {'b': 10}},
                                              {type: 'dict', contents: {'b': 10}}]})),
-                             0, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD', 'DICT_KEYS',
+                             0, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD', 'DICT_KEYS',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict', contents: {'a': 8}},
                                              {type: 'dict', contents: {'b': 10}},
                                              {type: 'dict', contents: {'b': 10}},
-                                             {type: 'couplet', lsl: 0, index: 0},
+                                             {type: 'lexical', lsl: 0, index: 0},
                                              {type: 'dict', contents: {'a': 8}},
                                              ['a']]})),
                              0, 'ARRAY_LOAD', 'EXCHANGE', 'POP', 3, -1, 'ROLL', 'LOAD', 'EXCHANGE',

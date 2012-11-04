@@ -11,26 +11,22 @@
 
         (function jsonSegment () {
 
-            segmentTypes.json = function nuSegment (array, arity, stackOfCurrentLexicalScope) {
-                if (! arity) {
-                    arity = 0;
-                }
-                return adornSegmentFields(nuArray(array), arity, stackOfCurrentLexicalScope);
+            segmentTypes.json = function nuSegment (array, stackOfCurrentLexicalScope) {
+                return adornSegmentFields(nuArray(array), stackOfCurrentLexicalScope);
             }
 
-            function adornSegmentFields (segment, arity, stackOfCurrentLexicalScope) {
+            function adornSegmentFields (segment, stackOfCurrentLexicalScope) {
                 return Object.create(
                     segment,
                     {
                         id: {value: id},
                         ls: {value: stackOfCurrentLexicalScope},
-                        arity: {value: arity},
                         nuIP: {value: function (index) {
                             return nuIP(this, index);
                         }},
                         nuSegment: {value: segmentTypes.json},
                         clone: {value: function () {
-                            return adornSegmentFields(segment.clone(), this.arity, this.ls);
+                            return adornSegmentFields(segment.clone(), this.ls);
                         }}
                     });
             }
@@ -49,6 +45,9 @@
                             } else {
                                 op = segment.index(index);
                                 index += 1;
+                                if (Array.isArray(op)) {
+                                    op = types.nuLexicalAddress(op[0], op[1]);
+                                }
                                 return op;
                             }
                         }},

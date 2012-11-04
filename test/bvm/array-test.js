@@ -81,7 +81,7 @@
                              'CLONE', 1, 347, 'ARRAY_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[47389], [47389, 347]]})),
-                             0, 0, 'STACK_COUPLET', 'LOAD', 1, 'PUSH', 'hello', 'ARRAY_STORE',
+                             0, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'PUSH', 'hello', 'ARRAY_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[47389, 'hello'], [47389, 347], [47389, 'hello']]})),
                              0, 0, 'ARRAY_STORE',
@@ -89,7 +89,7 @@
                                  {contents: [[0, 'hello'],
                                              [47389, 347],
                                              [0, 'hello']]})),
-                             0, 2, 'STACK_COUPLET', 'LOAD', 1, 'ARRAY_TRUNCATE',
+                             0, 2, 'LEXICAL_ADDRESS', 'LOAD', 1, 'ARRAY_TRUNCATE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[0],
                                              [47389, 347],

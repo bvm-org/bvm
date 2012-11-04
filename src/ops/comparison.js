@@ -50,8 +50,8 @@
                                     a === types.undef) {
                                     vcpu.cs.push(a === b);
                                     return undefined;
-                                } else if (types.isAddressCouplet(a)) {
-                                    vcpu.cs.push(types.isAddressCouplet(b) &&
+                                } else if (types.isLexicalAddress(a)) {
+                                    vcpu.cs.push(types.isLexicalAddress(b) &&
                                                  a.lsl === b.lsl && a.index === b.index);
                                     return undefined;
                                 } else if (nuArray.isArray(a) || nuDict.isDict(a) ||

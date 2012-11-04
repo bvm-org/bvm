@@ -79,16 +79,13 @@
                             comparator(op, found.index(idx));
                         });
                     }
-                    if ('arity' in test) {
-                        assert(test.arity === found.arity);
-                    }
                 } else if (test.type === 'ptr') {
                     assert(types.isPointer(found));
                     if ('target' in test) {
                         comparator(test.target, found.target);
                     }
-                } else if (test.type === 'couplet') {
-                    assert(types.isAddressCouplet(found));
+                } else if (test.type === 'lexical') {
+                    assert(types.isLexicalAddress(found));
                     assert(test.lsl === found.lsl);
                     assert(test.index === found.index);
                 } else if (test.type === 'stack') {

@@ -13,44 +13,44 @@
         buster.testCase('segment/exec/exit ops', {
             'literal empty': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([0, 'SEG_START', 'SEG_END', // MUST provide arity
+                cpu.setCode(['SEG_START', 'SEG_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg', arity: 0, contents: []}]}))
+                                 {contents: [{type: 'seg', contents: []}]}))
                             ]).run();
             },
 
             'literal non-empty deferred': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([0, 'SEG_START', 'PUSH', 'hello', 5, 'EXCHANGE', 'SEG_END',
+                cpu.setCode(['SEG_START', 'PUSH', 'hello', 5, 'EXCHANGE', 'SEG_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg', arity: 0,
+                                 {contents: [{type: 'seg',
                                               contents: ['PUSH', 'hello', 5, 'EXCHANGE']}]}))
                             ]).run();
             },
 
             'literal nested': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([0, 'SEG_START', 'PUSH', 'outer', 5,
-                             0, 'SEG_START', 'PUSH', 'inner', 6, 'SEG_END',
+                cpu.setCode(['SEG_START', 'PUSH', 'outer', 5,
+                             'SEG_START', 'PUSH', 'inner', 6, 'SEG_END',
                              7, 'SEG_END', 15464,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg', arity: 0, contents:
+                                 {contents: [{type: 'seg', contents:
                                               ['PUSH', 'outer', 5,
-                                               0, 'SEG_START', 'PUSH', 'inner', 6, 'SEG_END',
+                                               'SEG_START', 'PUSH', 'inner', 6, 'SEG_END',
                                                7]}, 15464]}))
                             ]).run();
             },
 
             'enter 0-arity': function (done) {
                 var cpu = runner(done), x = 0;
-                cpu.setCode([7, 0, 'SEG_START',
+                cpu.setCode([7, 'SEG_START',
                              cpu.addBreakPoint({lsl: 1, contents: [],
                                                 post: function () { assert(x === 1); x += 1; }}),
                              'SEG_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [7, {type: 'seg', arity: 0, contents: [runner.breakpoint]}],
+                                 {contents: [7, {type: 'seg', contents: [runner.breakpoint]}],
                                   post: function () { assert(x === 0); x += 1; }})),
-                             'EXEC',
+                             0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [7],
                                   post: function () { assert(x === 2); }}))
@@ -59,30 +59,32 @@
 
             'enter 1-arity': function (done) {
                 var cpu = runner(done), x = 0;
-                cpu.setCode([1, 7, 1, 'SEG_START',
+                cpu.setCode([3, 'SEG_START',
                              cpu.addBreakPoint({lsl: 1, contents: [7],
                                                 post: function () { assert(x === 1); x += 1; }}),
-                             'SEG_END',
+                             'SEG_END', 7, 1,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [1, 7, {type: 'seg', arity: 1,
-                                                    contents: [runner.breakpoint]}],
+                                 {contents: [3, {type: 'seg',
+                                                 contents: [runner.breakpoint]},
+                                             7, 1],
                                   post: function () { assert(x === 0); x += 1; }})),
                              'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [1],
+                                 {contents: [3],
                                   post: function () { assert(x === 2); }}))
                             ]).run();
             },
 
             'enter 2-arity': function (done) {
                 var cpu = runner(done), x = 0;
-                cpu.setCode([6, 7, 3, 2, 'SEG_START',
+                cpu.setCode([6, 'SEG_START',
                              cpu.addBreakPoint({lsl: 1, contents: [7, 3],
                                                 post: function () { assert(x === 1); x += 1; }}),
-                             'SEG_END',
+                             'SEG_END', 7, 3, 2,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [6, 7, 3, {type: 'seg', arity: 2,
-                                                       contents: [runner.breakpoint]}],
+                                 {contents: [6, {type: 'seg',
+                                                 contents: [runner.breakpoint]},
+                                             7, 3, 2],
                                   post: function () { assert(x === 0); x += 1; }})),
                              'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -93,18 +95,18 @@
 
             'return 0 explicit': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([0, 'SEG_START', 0,
+                cpu.setCode(['SEG_START', 0,
                              cpu.addBreakPoint({lsl: 1, contents: [0]}),
-                             'EXIT', 'SEG_END', 'EXEC',
+                             'EXIT', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff())
                             ]).run();
             },
 
             'return 1': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([0, 'SEG_START', 3, 1,
+                cpu.setCode(['SEG_START', 3, 1,
                              cpu.addBreakPoint({lsl: 1, contents: [3, 1]}),
-                             'EXIT', 'SEG_END', 'EXEC',
+                             'EXIT', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [3]}))
                             ]).run();
@@ -112,9 +114,9 @@
 
             'return 2': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([0, 'SEG_START', 6, 3, 17, 2,
+                cpu.setCode(['SEG_START', 6, 3, 17, 2,
                              cpu.addBreakPoint({lsl: 1, contents: [6, 3, 17, 2]}),
-                             'EXIT', 'SEG_END', 'EXEC',
+                             'EXIT', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [3, 17]}))
                             ]).run();
@@ -122,24 +124,26 @@
 
             'nested invoke': function (done) {
                 var cpu = runner(done), x = 0;
-                cpu.setCode([3, 1, 'SEG_START',
+                cpu.setCode(['SEG_START',
                                cpu.addBreakPoint({lsl: 1, contents: [3],
                                                   post: function () { assert(x === 1); x += 1; }}),
-                               6, 2, 'SEG_START',
+                               'SEG_START',
                                  cpu.addBreakPoint({lsl: 2, contents: [3, 6],
                                                     post: function () { assert(x === 2); x += 1; }}),
-                                 9, 3, 'SEG_START',
+                                 'SEG_START',
                                    cpu.addBreakPoint({lsl: 3, contents: [3, 6, 9],
                                                       post: function () { assert(x === 3); x += 1; }}),
-                                   12, 1, 'EXIT', 'SEG_END', 'EXEC',
+                                   12, 1, 'EXIT',
+                                 'SEG_END', 3, 1, 'ROLL', 9, 3, 'EXEC',
                                  cpu.addBreakPoint({lsl: 2, contents: [12],
                                                     post: function () { assert(x === 4); x += 1; }}),
-                                 15, 1, 'EXIT', 'SEG_END', 'EXEC',
+                                 15, 1, 'EXIT',
+                                 'SEG_END', 'EXCHANGE', 6, 2, 'EXEC',
                                cpu.addBreakPoint({lsl: 1, contents: [15],
                                                   post: function () { assert(x === 5); x += 1; }}),
                                18, 1, 'EXIT', 'SEG_END',
                              cpu.addBreakPoint({post: function () { assert(x === 0); x += 1; }}),
-                             'EXEC',
+                             3, 1, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [18], post: function () { assert(x === 6); }}))
                             ]).run();
@@ -147,15 +151,15 @@
 
             'closure capture via return': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([456, 0, 'SEG_START', 'PUSH', 'hello',
-                             0, 'SEG_START', 1, 0, 'STACK_COUPLET', 'LOAD', 1, 'EXIT', 'SEG_END',
-                             1, 'EXIT', 'SEG_END', 'EXEC',
+                cpu.setCode([456, 'SEG_START', 'PUSH', 'hello',
+                             'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT', 'SEG_END',
+                             1, 'EXIT', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'seg', arity: 0,
-                                              contents: [1, 0, 'STACK_COUPLET', 'LOAD', 1, 'EXIT']
+                                             {type: 'seg',
+                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT']
                                              }]})),
-                             'EXEC',
+                             0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456, 'hello']}))
                             ]).run();
@@ -163,14 +167,14 @@
 
             'closure capture via store': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([456, 0, 'SEG_START', 'PUSH', 'hello',
-                             0, 'SEG_START', 1, 0, 'STACK_COUPLET', 'LOAD', 1, 'EXIT', 'SEG_END',
-                             0, 0, 'STACK_COUPLET', 'EXCHANGE', 'STORE', 'SEG_END', 'EXEC',
+                cpu.setCode([456, 'SEG_START', 'PUSH', 'hello',
+                             'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT', 'SEG_END',
+                             0, 0, 'LEXICAL_ADDRESS', 'EXCHANGE', 'STORE', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'seg', arity: 0,
-                                              contents: [1, 0, 'STACK_COUPLET', 'LOAD', 1, 'EXIT']
+                                 {contents: [{type: 'seg',
+                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT']
                                              }]})),
-                             'EXEC',
+                             0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello']}))
                             ]).run();
@@ -178,98 +182,99 @@
 
             'repeated closure capture via store': function (done) {
                 var cpu = runner(done);
-                cpu.setCode([456, 0, 'SEG_START', 'PUSH', 'hello',
-                             0, 'SEG_START', 1, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD',
+                cpu.setCode([456, 'SEG_START', 'PUSH', 'hello',
+                             'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
                              'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT', 'SEG_END',
-                             0, 1, 'STACK_COUPLET', 'EXCHANGE', 'STORE', 'SEG_END', 'EXEC',
+                             0, 1, 'LEXICAL_ADDRESS', 'EXCHANGE', 'STORE', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'seg', arity: 0,
-                                              contents: [1, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD',
+                                             {type: 'seg',
+                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
                                                          'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
                                              }]})),
-                             'CLONE', 'EXEC',
+                             'CLONE', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'seg', arity: 0,
-                                              contents: [1, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD',
+                                             {type: 'seg',
+                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
                                                          'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
                                              },
                                              'hello'
                                             ]})),
-                             'POP', 0, 1, 'STACK_COUPLET', 'EXEC',
+                             'POP', 0, 1, 'LEXICAL_ADDRESS', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
-                                             {type: 'seg', arity: 0,
-                                              contents: [1, 0, 'STACK_COUPLET', 'DUPLICATE', 'LOAD',
+                                             {type: 'seg',
+                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
                                                          'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
                                              },
                                              'goodbye']})),
-                             'POP', 'EXEC',
+                             'POP', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [456, 'goodbye']}))
                             ]).run();
             },
 
-            'suspend single': function (done) {
+            'callcc single': function (done) {
                 var cpu = runner(done), x = 0;
-                cpu.setCode([123, 2, 'SEG_START',
+                cpu.setCode([123, 'SEG_START',
                                cpu.addBreakPoint(
                                    {lsl: 1,
                                     contents: ['hello', {type: 'stack', contents: [123], lsl: 0}],
                                     post: function () { assert(x === 0); x += 1; }}),
-                               'PUSH', 'goodbye', 'EXCHANGE', 'EXEC',
+                               'PUSH', 'goodbye', 1, 'EXEC',
                                 cpu.addBreakPoint({lsl: 1,
                                                    contents: ['hello'],
                                                    post: function () { assert(x === 2); }}),
                              'SEG_END',
-                             'PUSH', 'hello', 'EXCHANGE', 'SUSPEND',
+                             'PUSH', 'hello', 1, 'CALLCC',
                              cpu.addBreakPoint({contents: [123, 'goodbye'], lsl: 0,
                                                 post: function () { assert(x === 1); x += 1; }})
                             ]).run();
             },
 
-            'suspend multiple': function (done) {
+            'callcc multiple': function (done) {
                 var cpu = runner(done);
                 cpu.setCode([123,
-                             1, 'SEG_START',
-                               2, 'SEG_START',
-                                 'PUSH', 'goodbye', 2, 0, 'STACK_COUPLET', 'EXEC',
+                             'SEG_START',
+                               'SEG_START',
+                                 2, 0, 'LEXICAL_ADDRESS', 'PUSH', 'goodbye', 1, 'EXEC',
                                  cpu.addBreakPoint({
                                      contents: [
                                          {type: 'stack', contents: [123, 'goodbye'], lsl: 0},
                                          {type: 'stack', contents: [], lsl: 1},
                                          7],
                                      lsl: 2}),
-                                 'EXCHANGE', 'SUSPEND', // NB suspending into a suspension!
+                                 1, 'CALLCC', // NB suspending into a suspension!
                                  cpu.addUnreachablePoint(),
-                               'SEG_END', 'SUSPEND',
+                               'SEG_END', 'EXCHANGE', 1, 'CALLCC',
                                cpu.addBreakPoint({
-                                   contents: [{type: 'stack', contents: [
-                                       {type: 'stack', contents: [123, 'goodbye'], lsl: 0},
-                                       7]}],
+                                   contents: [7,
+                                              {type: 'stack', lsl: 2, contents:
+                                               [{type: 'stack', contents: [123, 'goodbye'], lsl: 0}]}],
                                    dps: undefined, lsl: 1}),
-                             'SEG_END', 'SUSPEND',
+                             'SEG_END', 0, 'CALLCC',
                              cpu.addBreakPoint({contents: [123, 'goodbye'], lsl: 0}),
                              7, 1, 'EXIT'
                             ]).run();
             },
 
-            'suspend loop': function (done) {
-                var cpu = runner(done), results = [5, 5];
-                cpu.setCode([1, 'SEG_START', 'DUPLICATE', 'EXEC',
-                               cpu.addBreakPoint({lsl: 1, dps: undefined, contents: [6]}),
+            'callcc loop': function (done) {
+                var cpu = runner(done), results = [5];
+                cpu.setCode(['SEG_START', 'DUPLICATE', 1, 'EXEC',
+                               cpu.addBreakPoint({lsl: 1, dps: undefined, contents: [5, 6]}),
                                // We actually stop (eventually) here.
-                               'SEG_END',
-                             'SUSPEND',
+                             'SEG_END',
+                             0, 'CALLCC',
                              // At this point, 1st time through, top
                              // of stack is the stack itself as a
                              // continuation from here.
-                             5, 'EXCHANGE', 'EXEC',
-                             // 1st time through, 5 is provided as an
-                             // arg to the continuation. Thus 2nd time
-                             // through, continuation starts with a 5.
-                             // We then add another 5, and EXEC on 5
-                             // is a noop, so now [5, 5].
+                             'DUPLICATE', 5, 'SEG_START', 'SEG_END', 3, 'EXEC',
+                             // k == the contination of ourself from after the above callcc
+                             // a == the empty segment just created
+                             // 1st: k, k, 5, a, 3];       (exec k(k, 5, a)), which leads to:
+                             // 2nd: k, 5, a, a, 5, a, 3]; (exec a(a, 5, a))
+                             // After execing a, we're left with a stack of [k, 5]
+                             'EXCHANGE', 'POP',
                              cpu.addBreakPoint({contents: results, lsl: 0,
                                                 post: function () { results.push(7); results.push(6); }}),
                              // EXECing a stack sets the return
@@ -279,12 +284,13 @@
                              // to the above breakpoint. Hence the 7,
                              // 6 appearing on the stack - the 7
                              // directly and demonstrates it's the
-                             // same stack, the 6 via the EXIT
-                             // opcode. When we get here the 2nd time,
-                             // the return pointer is actually back to
-                             // the inner segment, hence 6 being
-                             // passed on its own up there.
-                             7, 6, 1, 'EXIT',
+                             // same stack, the 6 via the EXIT opcode
+                             // (along with the 5, but then the
+                             // EXCHANGE+POP happens). When we get
+                             // here the 2nd time, the return pointer
+                             // is actually back to the inner segment,
+                             // hence 5 and 6 being passed up there.
+                             7, 5, 6, 2, 'EXIT',
                              cpu.addUnreachablePoint()
                             ]).run();
             }

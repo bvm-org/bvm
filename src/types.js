@@ -20,8 +20,8 @@
                     return this; // assume singleton by default
                 }
             },
-            addressCoupletId = {},
-            addressCoupletBase, nuAddressCouplet, mark, undef;
+            lexicalAddressId = {},
+            lexicalAddressBase, nuLexicalAddress, mark, undef;
 
         mark = Object.create(plain, {name: {value: 'mark', enumerable: true}});
         Object.defineProperty(types, 'mark', {value: mark, enumerable: true});
@@ -29,13 +29,13 @@
         undef = Object.create(plain, {name: {value: 'undef', enumerable: true}});
         Object.defineProperty(types, 'undef', {value: undef, enumerable: true});
 
-        addressCoupletBase = Object.create(
+        lexicalAddressBase = Object.create(
             plain,
             {
-                id: {value: addressCoupletId},
-                name: {value: 'address couplet', enumerable: true},
+                id: {value: lexicalAddressId},
+                name: {value: 'lexical address', enumerable: true},
                 clone: {value: function () {
-                    return nuAddressCouplet(this.lsl, this.index);
+                    return nuLexicalAddress(this.lsl, this.index);
                 }},
                 transitiveDereference: {value: function (vcpu) {
                     var seen = {}, obj = this;
@@ -43,9 +43,9 @@
                     seen[obj.lsl][obj.index] = true;
                     while (true) {
                         obj = vcpu.dereferenceScope(obj.lsl).index(obj.index);
-                        if (types.isAddressCouplet(obj)) {
+                        if (types.isLexicalAddress(obj)) {
                             if (seen[obj.lsl] && seen[obj.lsl][obj.index]) {
-                                throw "CYCLICAL ADDRESS COUPLETS"; // TODO interrupt handler
+                                throw "CYCLICAL LEXICAL ADDRESSES"; // TODO interrupt handler
                             } else {
                                 (seen[obj.lsl] ? seen[obj.lsl] : seen[obj.lsl] = {})[obj.index] = true;
                             }
@@ -56,20 +56,20 @@
                 }}
             });
 
-        nuAddressCouplet = function (lsl, index) {
+        nuLexicalAddress = function (lsl, index) {
             return Object.create(
-                addressCoupletBase,
+                lexicalAddressBase,
                 {
                     lsl: {value: lsl, writable: true},
                     index: {value: index, writable: true},
                 });
         };
-        Object.defineProperty(types, 'nuAddressCouplet', {value: nuAddressCouplet, enumerable: true});
-        Object.defineProperty(types, 'isAddressCouplet',
+        Object.defineProperty(types, 'nuLexicalAddress', {value: nuLexicalAddress, enumerable: true});
+        Object.defineProperty(types, 'isLexicalAddress',
                               {value: function (thing) {
                                   return thing &&
                                       typeof thing === 'object' &&
-                                      addressCoupletId === thing.id;
+                                      lexicalAddressId === thing.id;
                               }, enumerable: true});
 
         return types;

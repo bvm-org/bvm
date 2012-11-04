@@ -12,28 +12,24 @@
                 ops,
                 {
                     EXEC: {value: function () {
-                        var len = vcpu.cs.length(), segment, removed;
-                        if (len === 0) {
-                            throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
-                        } else {
-                            segment = vcpu.cs.pop();
+                        var len = vcpu.cs.length(), segment, arity, removed;
+                        if (len > 1) {
+                            arity =  vcpu.cs.pop();
                             len -= 1;
-                            if (types.isAddressCouplet(segment)) {
-                                segment = segment.transitiveDereference(vcpu);
-                            }
+                            if (len < (arity+1)) {
+                                throw "NOT ENOUGH OPERANDS (EXEC)"; // TODO interrupt handler
+                            } else {
+                                removed = vcpu.cs.clear(len - arity);
+                                segment = vcpu.cs.pop();
 
-                            if (segmentTypes.isSegment(segment)) {
-                                if (len < segment.arity) {
-                                    throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
-                                } else {
-                                    removed = vcpu.cs.clear(len - segment.arity);
+                                if (types.isLexicalAddress(segment)) {
+                                    segment = segment.transitiveDereference(vcpu);
+                                }
+
+                                if (segmentTypes.isSegment(segment)) {
                                     vcpu.enter(segment, removed, vcpu.cs);
                                     return undefined;
-                                }
-                            } else if (nuStack.isStack(segment)) {
-                                if (len === 0) {
-                                    throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
-                                } else {
+                                } else if (nuStack.isStack(segment)) {
                                     segment = segment.clone(false);
                                     // It is vitally important we do
                                     // this dps assigment *after* the
@@ -41,13 +37,14 @@
                                     // === segment. Thus doing the
                                     // clone first avoids a loop.
                                     segment.dps = vcpu.cs;
-                                    vcpu.exit(segment, [vcpu.cs.pop()]);
+                                    vcpu.exit(segment, removed);
                                     return undefined;
+                                } else {
+                                    throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
                                 }
-                            } else {
-                                vcpu.cs.push(segment);
-                                return undefined;
                             }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (EXEC)"; // TODO interrupt handler
                         }
                     }},
                     EXIT: {value: function () {
@@ -66,34 +63,36 @@
                             }
                         }
                     }},
-                    SUSPEND: {value: function () {
-                        var len = vcpu.cs.length(), segment, removed;
-                        if (len === 0) {
-                            throw "INVALID OPERAND (SUSPEND)"; // TODO interrupt handler
-                        } else {
-                            segment = vcpu.cs.pop();
+                    CALLCC: {value: function () {
+                        var len = vcpu.cs.length(), segment, arity, removed;
+                        if (len > 1) {
+                            arity = vcpu.cs.pop();
                             len -= 1;
-                            if (types.isAddressCouplet(segment)) {
-                                segment = segment.transitiveDereference(vcpu);
-                            }
+                            if (len < (arity+1)) {
+                                throw "NOT ENOUGH OPERANDS (CALLCC)"; // TODO interrupt handler
+                            } else {
+                                removed = vcpu.cs.clear(len - arity);
+                                removed.push(vcpu.cs);
+                                segment = vcpu.cs.pop();
 
-                            if (segmentTypes.isSegment(segment)) {
-                                if (len < (segment.arity - 1)) {
-                                    throw "INVALID OPERAND (SUSPEND)"; // TODO interrupt handler
-                                } else {
-                                    removed = vcpu.cs.clear(len - (segment.arity - 1));
-                                    removed.push(vcpu.cs);
+                                if (types.isLexicalAddress(segment)) {
+                                    segment = segment.transitiveDereference(vcpu);
+                                }
+
+                                if (segmentTypes.isSegment(segment)) {
                                     vcpu.enter(segment, removed, undefined);
                                     return undefined;
+                                } else if (nuStack.isStack(segment)) {
+                                    // NB we do not do the same dps
+                                    // modifications here as in EXEC
+                                    vcpu.exit(segment.clone(false), removed);
+                                    return undefined;
+                                } else {
+                                    throw "INVALID OPERAND (CALLCC)"; // TODO interrupt handler
                                 }
-                            } else if (nuStack.isStack(segment)) {
-                                // NB we do not do the same dps
-                                // modifications here as in EXEC
-                                vcpu.exit(segment.clone(false), [vcpu.cs]);
-                                return undefined;
-                            } else {
-                                throw "INVALID OPERAND (SUSPEND)"; // TODO interrupt handler
                             }
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (CALLCC)"; // TODO interrupt handler
                         }
                     }}
                 });
