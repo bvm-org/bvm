@@ -168,6 +168,7 @@ QuotedStringCharacters
 
 QuotedStringCharacter
   = '\\"' { return '"'; }
+  / '\\\\' { return '\\'; }
   / !'"' char:Char { return char; }
 
 Opcode
