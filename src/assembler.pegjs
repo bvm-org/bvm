@@ -15,13 +15,13 @@ LineTerminatorSequence "end of line"
   / "\r\n"
   / "\r"
 
-MultiLineComment
+MultiLineComment "multi-line comment"
   = "/*" (!"*/" Char)* "*/"
 
 MultiLineCommentNoLineTerminator
   = "/*" (!("*/" / LineTerminatorSequence) Char)* "*/"
 
-SingleLineComment
+SingleLineComment "single-line comment"
   = "//" (!LineTerminatorSequence Char)*
 
 Comment "comment"
@@ -43,6 +43,9 @@ __
 _
   = (WhiteSpace / MultiLineCommentNoLineTerminator)*
 
+gap
+  = (LineTerminatorSequence / WhiteSpace / MultiLineComment / (SingleLineComment LineTerminatorSequence))+
+
 Program
   = statements:Statements? {
       return {
@@ -52,8 +55,8 @@ Program
     }
 
 Statements
-  = head:Statement _slc ((LineTerminatorSequence ___) / EOF)
-    tail:(Statement _slc ((LineTerminatorSequence ___) / EOF))* {
+  = head:Statement (gap / EOF)
+    tail:(Statement (gap / EOF))* {
       var result = [head];
       for (var i = 0; i < tail.length; i++) {
         result.push(tail[i][0]);
@@ -61,18 +64,52 @@ Statements
       return result;
     }
 
-AddressTuple "scope relative address"
+Statement
+  = Section
+  / PushOpcode
+  / LexicalAddress
+  / SignedNumericLiteral
+  / QuotedStringLiteral
+  / Opcode
+
+PushOpcode
+  = Push gap
+    arg:(LexicalAddress / SignedNumericLiteral / QuotedStringLiteral) {
+      return {
+        type: "PUSH",
+        arg: arg
+      };
+    }
+
+Push "push"
+  = "PUSH"i
+
+SectionPrefix
+  = "SEG"i / "ARRAY"i / "DICT"i
+
+Section "section"
+  = start:SectionPrefix "_START"i gap
+    contents:Statements?
+    end:SectionPrefix "_END"i & {
+      return start === end;
+    } {
+      return {
+        type: start,
+        contents: contents
+      };
+    }
+
+LexicalAddress "lexical address"
   = "(" _ lsp:UnsignedInteger _ "," _ offset:UnsignedInteger _ ")" {
       return {
-        type: "AddressTuple",
+        type: "LexicalAddress",
         lsp: lsp,
         offset: offset
       };
     }
   / "(" _ offset:UnsignedInteger _ ")" { // shorthand - implicitly current scope
       return {
-        type: "AddressTuple",
-        lsp: 0,
+        type: "LexicalAddress",
         offset: offset
       };
     }
@@ -133,203 +170,8 @@ QuotedStringCharacter
   = '\\"' { return '"'; }
   / !'"' char:Char { return char; }
 
-Statement
-  = Segment
+Opcode
+  = chars:(!(SectionPrefix / Push) OpcodeCharset+) { return chars[1].join(""); }
 
-  / PushName
-  / PushValue
-  / LoadConstant
-  / LoadValue
-  / Load
-  / Duplicate
-  / Pop
-  / Store
-
-  / Enter
-  / Return
-
-  / Link
-  / Resolve
-
-  / Add
-  / Subtract
-  / Multiply
-  / Divide
-  / Increment
-  / Decrement
-
-  / Compare
-  / IfZero
-  / IfNotZero
-
-Segment "segment"
-  = segment:SegmentDeclare _slc LineTerminatorSequence ___
-    body:Statements? end:SegmentEnd {
-      if (body) {
-          segment.body = body;
-      }
-      segment.end = end;
-      return segment;
-    }
-
-SegmentDeclare "segment declaration"
-  = "seg"i
-    name:(__ QuotedStringLiteral)?
-    arity:(__ UnsignedInteger)? {
-      return {
-        type: "SEGMENT",
-        name: name[1] ? name[1] : undefined,
-        arity: arity[1] ? arity[1] : 0,
-        line: line, column: column
-      };
-    }
-
-SegmentEnd "segment end"
-  = "end"i { return { type: "END", line: line, column: column }; }
-
-PushName "push name"
-  = "pushn"i __ address:AddressTuple {
-      return {
-        type: "PUSHN",
-        address: address,
-        line: line, column: column
-      };
-    }
-
-PushValue "push value"
-  = "pushv"i __ address:AddressTuple {
-      return {
-        type: "PUSHV",
-        address: address,
-        line: line, column: column
-      };
-    }
-
-Load "load"
-  = "load"i {
-      return {
-        type: "LOAD",
-        line: line, column: column
-      };
-    }
-
-LoadValue "load value"
-  = "loadv"i {
-      return {
-        type: "LOADV",
-        line: line, column: column
-      };
-    }
-
-LoadConstant "load constant"
-  = "loadc"i __ value:((SignedNumericLiteral (_ NumericWidthIndicator)?) / QuotedStringLiteral) {
-      return {
-        type: "LOADC",
-        value: Array.isArray(value) ?
-               {type: 'number', value: value[0], width: value[1][1]} :
-               {type: 'string', value: value},
-        line: line, column: column
-      };
-    }
-
-Duplicate "duplicate"
-  = "dup"i __ num:UnsignedInteger {
-      return {
-        type: "DUPLICATE",
-        number: num,
-        line: line, column: column
-      };
-    }
-
-Pop "pop"
-  = "pop"i __ num:UnsignedInteger {
-      return {
-        type: "POP",
-        number: num,
-        line: line, column: column
-      };
-    }
-
-Store "store"
-  = "store"i {
-      return {
-        type: "STORE",
-        line: line, column: column
-      };
-    }
-
-Enter "enter"
-  = "enter"i {
-      return {
-        type: "ENTER",
-        line: line, column: column
-      };
-    }
-
-Return "return"
-  = "return"i {
-      return {
-        type: "RETURN",
-        line: line, column: column
-      };
-    }
-
-Link "link"
-  = "link"i {
-      return {
-        type: "LINK",
-        line: line, column: column
-      };
-    }
-
-Resolve "resolve"
-  = "resolve"i {
-      return {
-        type: "RESOLVE",
-        line: line, column: column
-      };
-    }
-
-Add "add"
-  = "add"i { return { type: "ADD", line: line, column: column }; }
-
-Subtract "subtract"
-  = "sub"i { return { type: "SUBTRACT", line: line, column: column }; }
-
-Multiply "multiply"
-  = "mul"i { return { type: "MULTIPLY", line: line, column: column }; }
-
-Divide "divide"
-  = "div"i { return { type: "DIVIDE", line: line, column: column }; }
-
-Decrement "decrement"
-  = "dec"i { return { type: "DECREMENT", line: line, column: column }; }
-
-Increment "increment"
-  = "inc"i { return { type: "INCREMENT", line: line, column: column }; }
-
-Compare "compare"
-  = "cmp"i _ st:("eq" / "lte" / "lt" / "gte" / "gt") {
-      return {
-        type: "COMPARE", subtype: st,
-        line: line, column: column
-      };
-    }
-
-IfZero "ifzero"
-  = "ifzero"i __ t:AddressTuple {
-      return {
-        type: "IFZERO",
-        true: t,
-        line: line, column: column
-      };
-    }
-
-IfNotZero "ifnotzero"
-  = "ifnotzero"i __ t:AddressTuple {
-      return {
-        type: "IFZERO",
-        true: t,
-        line: line, column: column
-      };
-    }
+OpcodeCharset "opcode"
+  = [A-Za-z_]

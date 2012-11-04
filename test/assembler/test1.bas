@@ -1,11 +1,5 @@
-loadc "some path to some library or something"
-link
+ FOO BAR // a comment
+BAZ (5) /* a multiline
+comment */ SEG_START FOO ARRAY_START SEG_START 0 SEG_END 1 ARRAY_END  SEG_END
 
-seg "fib" 1
-  
-  loadc 0 ui32
-  cmp lte
-  ifnotzero (1,1)
-  loadc 1 ui32
-  return
-end
+PUSH "foo" "foo" (7,3) -5.2e7
