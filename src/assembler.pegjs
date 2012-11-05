@@ -1,51 +1,6 @@
 start
   = ___ program:Program ___ { return program; }
 
-Char
-  = .
-
-EOF
-  = !.
-
-WhiteSpace "whitespace"
-  = [\t\v\f ]
-
-LineTerminatorSequence "end of line"
-  = "\n"
-  / "\r\n"
-  / "\r"
-
-MultiLineComment "multi-line comment"
-  = "/*" (!"*/" Char)* "*/"
-
-MultiLineCommentNoLineTerminator
-  = "/*" (!("*/" / LineTerminatorSequence) Char)* "*/"
-
-SingleLineComment "single-line comment"
-  = "//" (!LineTerminatorSequence Char)*
-
-Comment "comment"
-  = MultiLineComment
-  / SingleLineComment
-
-EOF
-  = !.
-
-___
-  = (WhiteSpace / Comment / LineTerminatorSequence)*
-
-_slc
-  = (WhiteSpace / MultiLineCommentNoLineTerminator / SingleLineComment)*
-
-__
-  = (WhiteSpace / MultiLineCommentNoLineTerminator)+
-
-_
-  = (WhiteSpace / MultiLineCommentNoLineTerminator)*
-
-gap
-  = (LineTerminatorSequence / WhiteSpace / MultiLineComment / (SingleLineComment LineTerminatorSequence))+
-
 Program
   = statements:Statements? {
       return {
@@ -55,8 +10,8 @@ Program
     }
 
 Statements
-  = head:Statement (gap / EOF)
-    tail:(Statement (gap / EOF))* {
+  = head:Statement (__ / EOF)
+    tail:(Statement (__ / EOF))* {
       var result = [head];
       for (var i = 0; i < tail.length; i++) {
         result.push(tail[i][0]);
@@ -72,11 +27,40 @@ Statement
   / QuotedStringLiteral
   / Opcode
 
+Section "section"
+  = start:SectionStart __
+    statements:Statements?
+    end:SectionEnd & {
+      return start.text === end.text;
+    } {
+      return {
+        type: "Section",
+        subtype: start.type,
+        statements: statements
+      };
+    }
+
+SectionStart
+  = type:SectionPrefix "_START"i { type = type.toUpperCase();
+                                   return { type: type, text: type }; }
+  / "[" { return { type: "ARRAY", text: 0 }; }
+  / "<" { return { type: "DICT", text: 1 }; }
+  / "{" { return { type: "SEG", text: 2 }; }
+
+SectionEnd
+  = type:SectionPrefix "_END"i { type = type.toUpperCase(); return { type: type, text: type }; }
+  / "]" { return { type: "ARRAY", text: 0 }; }
+  / ">" { return { type: "DICT", text: 1 }; }
+  / "}" { return { type: "SEG", text: 2 }; }
+
+SectionPrefix
+  = "SEG"i / "ARRAY"i / "DICT"i
+
 PushOpcode
-  = Push gap
+  = Push __
     arg:(LexicalAddress / SignedNumericLiteral / QuotedStringLiteral) {
       return {
-        type: "PUSH",
+        type: "Push",
         arg: arg
       };
     }
@@ -84,34 +68,24 @@ PushOpcode
 Push "push"
   = "PUSH"i
 
-SectionPrefix
-  = "SEG"i / "ARRAY"i / "DICT"i
-
-Section "section"
-  = start:SectionPrefix "_START"i gap
-    contents:Statements?
-    end:SectionPrefix "_END"i & {
-      return start === end;
-    } {
-      return {
-        type: start,
-        contents: contents
-      };
-    }
-
 LexicalAddress "lexical address"
-  = "(" _ lsp:UnsignedInteger _ "," _ offset:UnsignedInteger _ ")" {
+  = "(" _ lsl:SignedInteger _ "," _ index:UnsignedInteger _ ")" {
       return {
         type: "LexicalAddress",
-        lsp: lsp,
-        offset: offset
+        lsl: lsl,
+        index: index
       };
     }
-  / "(" _ offset:UnsignedInteger _ ")" { // shorthand - implicitly current scope
+  / "(" _ index:UnsignedInteger _ ")" { // shorthand - implicitly current scope
       return {
         type: "LexicalAddress",
-        offset: offset
+        index: index
       };
+    }
+
+SignedNumericLiteral
+  = sign:Sign? num:(HexInteger / UnsignedReal) {
+      return (sign && sign === "-") ? - num : num;
     }
 
 UnsignedInteger "unsigned integer"
@@ -152,14 +126,6 @@ ExponentPart
 ExponentIndicator
   = [eE]
 
-SignedNumericLiteral
-  = sign:Sign? num:(HexInteger / UnsignedReal) {
-      return (sign && sign === "-") ? - num : num;
-    }
-
-NumericWidthIndicator
-  = 'i16' / 'i32'/ 'i64' / 'ui16' / 'ui32'/ 'ui64' / 'f32' / 'f64'
-
 QuotedStringLiteral "string"
   = parts:('"' QuotedStringCharacters? '"' ) { return parts[1]; }
 
@@ -167,12 +133,70 @@ QuotedStringCharacters
   = chars:QuotedStringCharacter+ { return chars.join(""); }
 
 QuotedStringCharacter
-  = "\\\"" { return "\""; }
-  / "\\\\" { return "\\"; }
+  = Escaped
   / !"\"" char:Char { return char; }
 
+EscapeChar
+  = "\\"
+
+Escaped
+  = EscapeChar char:(SingleEscapeCharacter / NonEscapeCharacter) { return char; }
+
+SingleEscapeCharacter
+  = char:[\'\"\\bfnrtv] {
+      return char
+        .replace("b", "\b")
+        .replace("f", "\f")
+        .replace("n", "\n")
+        .replace("r", "\r")
+        .replace("t", "\t")
+        .replace("v", "\x0B") // IE does not recognize "\v".
+    }
+
+NonEscapeCharacter
+  = (!SingleEscapeCharacter) char:Char { return char; }
+
 Opcode
-  = chars:(!(SectionPrefix / Push) OpcodeCharset+) { return chars[1].join(""); }
+  = chars:(!(SectionPrefix / Push) OpcodeCharset+ ) { return chars[1].join(""); }
 
 OpcodeCharset "opcode"
   = [A-Za-z_]
+
+Char
+  = .
+
+EOF
+  = !.
+
+WhiteSpace "whitespace"
+  = [\t\v\f ]
+
+LineTerminatorSequence "end of line"
+  = "\n"
+  / "\r\n"
+  / "\r"
+
+MultiLineComment "multi-line comment"
+  = "/*" (!"*/" Char)* "*/"
+
+MultiLineCommentNoLineTerminator
+  = "/*" (!("*/" / LineTerminatorSequence) Char)* "*/"
+
+SingleLineComment "single-line comment"
+  = "//" (!LineTerminatorSequence Char)*
+
+Comment "comment"
+  = MultiLineComment
+  / SingleLineComment
+
+EOF
+  = !.
+
+___
+  = (WhiteSpace / Comment / LineTerminatorSequence)*
+
+__
+  = (WhiteSpace / Comment / LineTerminatorSequence)+
+
+_
+  = (WhiteSpace / MultiLineCommentNoLineTerminator)*

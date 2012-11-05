@@ -32,6 +32,49 @@
                         console.log(pd.json(JSON.stringify(this.parsed)));
                     }
                     return this;
+                },
+                toJSONString: function () {
+                    var lsl = 0, result = [], worklist, elem, tmp;
+                    if (this.parsed && ! this.json) {
+                        worklist = this.parsed.statements.slice(0);
+                        while (worklist.length) {
+                            elem = worklist.shift();
+                            if (typeof elem === 'string') {
+                                if (elem === 'SEG_END') {
+                                    lsl -= 1;
+                                }
+                                result.push(elem);
+                            } else if (typeof elem === 'number') {
+                                result.push(elem);
+                            } else if (typeof elem === 'object' && 'type' in elem) {
+                                if (elem.type === 'LexicalAddress') {
+                                    if ('lsl' in elem) {
+                                        tmp = elem.lsl < 0 ? lsl + elem.lsl : elem.lsl;
+                                        if (tmp < 0) {
+                                            throw "Invalid lexical scope indicator: " + tmp;
+                                        }
+                                    } else {
+                                        tmp = lsl;
+                                    }
+                                    result.push([tmp, elem.index]);
+                                } else if (elem.type === 'Push') {
+                                    result.push('PUSH');
+                                    result.push(elem.arg);
+                                } else if (elem.type === 'Section') {
+                                    if (elem.subtype === 'SEG') {
+                                        lsl += 1;
+                                    }
+                                    result.push(elem.subtype + '_START');
+                                    worklist.unshift(elem.subtype + '_END');
+                                    worklist = elem.statements.slice(0).concat(worklist)
+                                }
+                            } else {
+                                throw "Unrecognised program element: " + elem;
+                            }
+                        }
+                        this.json = JSON.stringify(result);
+                    }
+                    return this;
                 }
             };
 
