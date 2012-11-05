@@ -14,7 +14,7 @@
                       interpret: function (codeStr) {
                           var assembly = nuAssembler();
                           assembly.source = codeStr;
-                          return bvm(segmentTypes.json(assembly.parse().toJSON().json));
+                          return bvm(segmentTypes.json(assembly.parse().toJSON().json)).boot();
                       }};
 
         return result;
