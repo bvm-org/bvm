@@ -4,11 +4,11 @@
         'use strict';
 
         var bvm = require('../../index'),
+            types = bvm.types,
             buster = require('buster'),
             fail = buster.assertions.fail,
             assert = buster.assertions.assert,
             refute = buster.assertions.refute,
-            types = require('../../src/types'),
             nuArray = require('../../src/array'),
             nuDict = require('../../src/dict'),
             nuStack = require('../../src/stack'),

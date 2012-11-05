@@ -51,6 +51,9 @@
                                 return op;
                             }
                         }},
+                        isExhausted: {value: function () {
+                            return index >= segment.length();
+                        }},
                         clone: {value: function () {
                             return nuIP(segment, index);
                         }}

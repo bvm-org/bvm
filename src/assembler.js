@@ -33,7 +33,7 @@
                     }
                     return this;
                 },
-                toJSONString: function () {
+                toJSON: function () {
                     var lsl = 0, result = [], worklist, elem, tmp;
                     if (this.parsed && ! this.json) {
                         worklist = this.parsed.statements.slice(0);
@@ -69,14 +69,14 @@
                                 throw "Unrecognised program element: " + elem;
                             }
                         }
-                        this.json = JSON.stringify(result);
+                        this.json = result;
                     }
                     return this;
                 }
             };
 
         return function (path) {
-            return Object.create(base, {path: {value: path}}).read().parse();
+            return Object.create(base, {path: {value: path}});
         };
 
     });

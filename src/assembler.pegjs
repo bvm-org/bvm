@@ -35,7 +35,7 @@ Section "section"
       return {
         type: "Section",
         subtype: start.type,
-        statements: statements
+        statements: statements ? statements : []
       };
     }
 

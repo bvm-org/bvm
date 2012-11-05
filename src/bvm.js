@@ -22,13 +22,14 @@
                         vcpu.cs = nuStack(undefined, undefined, segment, 0);
                         vcpu.lsps[0] = vcpu.cs;
                         vcpu.lsps.length = 1;
-                        while (true) { // TODO: we currently just crash when we run out of ops!
+                        vcpu.running = true;
+                        while (vcpu.running) { // TODO: we currently just crash when we run out of ops!
                             op = vcpu.cs.ip.fetch();
                             if (op === segmentTypes.segmentExhausted) {
                                 if (vcpu.cs.dps) {
-                                    vcpu.exit(vcpu.cs.dps); // implicit return with 0 results
+                                    vcpu.enterStack(vcpu.cs.dps); // implicit return with 0 results
                                 } else {
-                                    return; // HALTED
+                                    vcpu.running = false;
                                 }
                             } else {
                                 if (op === 'SEG_END') {
@@ -48,6 +49,7 @@
                                 }
                             }
                         }
+                        return vcpu.result;
                     }},
 
                     // means to install hooks for use by testing.
@@ -86,11 +88,11 @@
                         this.cs = stack;
                         return undefined;
                     }},
-                    enter: {value: function (segment, argsAry, parentStack) {
+                    enterSegment: {value: function (segment, argsAry, parentStack) {
                         this.setStackAndLSPs(nuStack(argsAry, parentStack, segment, 0));
                         return undefined;
                     }},
-                    exit: {value: function (stack, resultsAry) {
+                    enterStack: {value: function (stack, resultsAry) {
                         if (nuStack.isStack(stack)) {
                             this.setStackAndLSPs(stack);
                             if (resultsAry) {
@@ -98,6 +100,9 @@
                                     stack.push(elem);
                                 });
                             }
+                        } else if (stack === undefined) {
+                            this.running = false;
+                            this.result = resultsAry;
                         } else {
                             throw 'ILLEGAL MANOEUVRE'; // TODO interrupt handler
                         }
