@@ -8,4 +8,4 @@ PUSH "\nfoo" "foo
 
 \\" "foo\"" "foo\\\"" "foo\"\\" "\extra" (7,3) -5.2e7 PUSH "BAS"
 
-"uhtneos" TRUE
+"uhtneos" TRUE push push

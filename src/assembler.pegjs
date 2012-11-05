@@ -21,7 +21,6 @@ Statements
 
 Statement
   = Section
-  / PushOpcode
   / LexicalAddress
   / SignedNumericLiteral
   / QuotedStringLiteral
@@ -55,18 +54,6 @@ SectionEnd
 
 SectionPrefix
   = "SEG"i / "ARRAY"i / "DICT"i
-
-PushOpcode
-  = Push __
-    arg:(LexicalAddress / SignedNumericLiteral / QuotedStringLiteral) {
-      return {
-        type: "Push",
-        arg: arg
-      };
-    }
-
-Push "push"
-  = "PUSH"i
 
 LexicalAddress "lexical address"
   = "(" _ lsl:SignedInteger _ "," _ index:UnsignedInteger _ ")" {
@@ -154,10 +141,10 @@ SingleEscapeCharacter
     }
 
 NonEscapeCharacter
-  = (!SingleEscapeCharacter) char:Char { return char; }
+  = !SingleEscapeCharacter char:Char { return char; }
 
 Opcode
-  = chars:(!(SectionPrefix / Push) OpcodeCharset+ ) { return chars[1].join(""); }
+  = !SectionPrefix chars:OpcodeCharset+ { return chars.join(""); }
 
 OpcodeCharset "opcode"
   = [A-Za-z_]

@@ -57,9 +57,6 @@
                                         tmp = lsl;
                                     }
                                     result.push([tmp, elem.index]);
-                                } else if (elem.type === 'Push') {
-                                    result.push('PUSH');
-                                    result.push(elem.arg);
                                 } else if (elem.type === 'Section') {
                                     if (elem.subtype === 'SEG') {
                                         lsl += 1;
