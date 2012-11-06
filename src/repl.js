@@ -4,10 +4,7 @@
         'use strict';
 
         var repl = require('repl'),
-            index = require('../index'),
             e, i, bvmRepl;
-
-        console.log(Object.keys(index));
 
         e = function (cmd, context, filename, callback) {
             cmd = cmd.substring(1, cmd.length - 2); // drop the surrounding '( and )';
@@ -15,9 +12,7 @@
         };
 
         bvmRepl = function () {
-            return repl.start({eval: e,
-                               prompt: 'bvm> '
-                              });
+            return repl.start({eval: e, prompt: 'bvm> '});
         };
 
         // Doing requires in here because of the change in the context

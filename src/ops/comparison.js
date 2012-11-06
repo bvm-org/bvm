@@ -6,6 +6,7 @@
         var types = require('../types'),
             nuArray = require('../array'),
             nuDict = require('../dict'),
+            nuStack = require('../stack'),
             segmentTypes = require('../segment');
 
         return function (vcpu, ops) {
@@ -55,7 +56,8 @@
                                                  a.lsl === b.lsl && a.index === b.index);
                                     return undefined;
                                 } else if (nuArray.isArray(a) || nuDict.isDict(a) ||
-                                           segmentTypes.isSegment(a)) {
+                                           segmentTypes.isSegment(a) || nuStack.isStack(a) ||
+                                           typeof a === 'function') {
                                     vcpu.cs.push(a === b);
                                     return undefined;
                                 } else {
