@@ -56,6 +56,8 @@
                                 idx >= 0 && idx < segment.length()) {
                                 index = idx;
                                 return undefined;
+                            } else {
+                                throw "INVALID IP INDEX: " + idx; // TODO interrupt handler
                             }
                         }},
                         isExhausted: {value: function () {

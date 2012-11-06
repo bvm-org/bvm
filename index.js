@@ -7,15 +7,14 @@
             segmentTypes = require('./src/segment'),
             types = require('./src/types'),
             nuAssembler = require('./src/assembler'),
+            nuRepl = require('./src/repl'),
             result = {bvm: bvm,
                       segmentTypes: segmentTypes,
                       types: types,
                       assembler: nuAssembler,
-                      interpret: function (codeStr) {
-                          var assembly = nuAssembler();
-                          assembly.source = codeStr;
-                          return bvm(segmentTypes.json(assembly.parse().toJSON().json)).boot();
-                      }};
+                      repl: nuRepl,
+                      interpret: nuRepl.interpret
+                     };
 
         return result;
 
