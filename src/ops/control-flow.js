@@ -4,21 +4,22 @@
         'use strict';
 
         var types = require('../types'),
-            segmentTypes = require('../segment');
+            segmentTypes = require('../segment'),
+            utils = require('../utils');
 
         return function (vcpu, ops) {
             Object.defineProperties(
                 ops,
                 {
                     IF: {value: function () {
-                        var val, seg;
+                        var val, call;
                         if (vcpu.cs.length() > 1) {
-                            seg = vcpu.cs.pop();
                             val = vcpu.cs.pop();
-                            if (segmentTypes.isSegment(seg) && typeof val === 'boolean') {
-                                val ? vcpu.enter(seg) : undefined;
-                                return undefined;
-                            } else {
+                            call = utils.prepareForCall(vcpu, "IF");
+                            if (val === true) { // yes, really!
+                                vcpu.enterSegment(call.seg, call.args,
+                                                  utils.detectTailCall(vcpu));
+                            } else if (typeof val !== 'boolean') {
                                 throw "INVALID OPERAND (IF)"; // TODO interrupt handler
                             }
                         } else {
@@ -26,17 +27,18 @@
                         }
                     }},
 
-                    IF_ELSE: {value: function () {
-                        var val, tseg, fseg;
+                    IFELSE: {value: function () {
+                        var val, tCall, fCall;
                         if (vcpu.cs.length() > 2) {
-                            fseg = vcpu.cs.pop();
-                            tseg = vcpu.cs.pop();
                             val = vcpu.cs.pop();
-                            if (segmentTypes.isSegment(fseg) &&
-                                segmentTypes.isSegment(tseg) &&
-                                typeof val === 'boolean') {
-                                val ? vcpu.enter(tseg) : vcpu.enter(fseg);
-                                return undefined;
+                            fCall = utils.prepareForCall(vcpu, "IFELSE");
+                            tCall = utils.prepareForCall(vcpu, "IFELSE");
+                            if (val === true) {
+                                vcpu.enterSegment(tCall.seg, tCall.args,
+                                                  utils.detectTailCall(vcpu));
+                            } else if (val === false) {
+                                vcpu.enterSegment(fCall.seg, fCall.args,
+                                                  utils.detectTailCall(vcpu));
                             } else {
                                 throw "INVALID OPERAND (IF_ELSE)"; // TODO interrupt handler
                             }

@@ -133,7 +133,7 @@
                         return undefined;
                     }},
                     FALSE: {value: function () {
-                        vcpu.cs.push(true);
+                        vcpu.cs.push(false);
                         return undefined;
                     }},
                     UNDEF: {value: function () {

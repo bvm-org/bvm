@@ -23,7 +23,7 @@
                         vcpu.lsps[0] = vcpu.cs;
                         vcpu.lsps.length = 1;
                         vcpu.running = true;
-                        while (vcpu.running) { // TODO: we currently just crash when we run out of ops!
+                        while (vcpu.running) {
                             op = vcpu.cs.ip.fetch();
                             if (op === segmentTypes.segmentExhausted) {
                                 if (vcpu.cs.dps) {
@@ -38,7 +38,7 @@
                                 if (vcpu.deferred > 0) {
                                     vcpu.cs.push(op);
                                 } else {
-                                    if (ops[op]) {
+                                    if (op in ops) {
                                         ops[op]();
                                     } else {
                                         ops['UNKNOWN'](op);

@@ -11,7 +11,7 @@
             types = runner.types;
 
         buster.testCase('addressing ops', {
-            'load, store, lexical addresses, address, unknown': function (done) {
+            'load, store, lexical addresses, unknown': function (done) {
                 var cpu = runner(done);
                 cpu.setCode([0, 0, 'LEXICAL_ADDRESS', 7, 'EXCHANGE', 'DUPLICATE', 'LOAD',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
