@@ -51,11 +51,14 @@
                             return undefined;
                         }
                     }},
-                    clear: {value: function (from) {
-                        if (! from) {
+                    clear: {value: function (from, count) {
+                        if (typeof from !== 'number') {
                             from = 0;
                         }
-                        return array.splice(from, array.length - from);
+                        if (typeof count !== 'number') {
+                            count = array.length - from;
+                        }
+                        return array.splice(from, count);
                     }},
                     lastIndexOf: {value: array.lastIndexOf.bind(array)},
                     clone: {value: function () {

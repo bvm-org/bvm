@@ -8,8 +8,11 @@
                 ops,
                 {
                     LOG: {value: function () {
-                        console.log(vcpu.cs.pop());
-                        return undefined;
+                        if (vcpu.cs.length() > 0) {
+                            return console.log(vcpu.cs.pop());
+                        } else {
+                            throw "NOT ENOUGH OPERANDS (LOG)"; // TODO interrupt handler
+                        }
                     }}
                 });
             return undefined;

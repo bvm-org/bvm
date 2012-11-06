@@ -3,7 +3,9 @@
 
         'use strict';
 
-        var types = require('./types');
+        var types = require('./types'),
+            segmentTypes = require('./segment'),
+            nuStack = require('./stack');
 
         return Object.create(
             {},
@@ -37,6 +39,12 @@
 
                 detectTailCall: {value: function (vcpu) {
                     return vcpu.cs.ip.isExhausted() ? vcpu.cs.dps : vcpu.cs;
+                }},
+
+                isExecutable: {value: function (thing, ops) {
+                    return segmentTypes.isSegment(thing) ||
+                        nuStack.isStack(thing) ||
+                        (typeof thing === 'function' && thing.ops === ops);
                 }}
             });
 

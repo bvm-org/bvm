@@ -6,22 +6,32 @@
         var segmentTypes = require('../segment'),
             types = require('../types'),
             nuArray = require('../array'),
-            nuDict = require('../dict');
+            nuDict = require('../dict'),
+            nuStack = require('../stack'),
+            utils = require('../utils');
 
         return function (vcpu, ops) {
             Object.defineProperties(
                 ops,
                 {
                     LOAD: {value: function () {
-                        var reference;
+                        var reference, found;
                         if (vcpu.cs.length() > 0) {
                             reference = vcpu.cs.pop();
                             if (types.isLexicalAddress(reference)) {
                                 vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
                                 return undefined;
                             } else if (typeof reference === 'string') {
-                                vcpu.cs.push(vcpu.cd.load(reference));
-                                return undefined;
+                                found = vcpu.cd.load(reference);
+                                if (found === types.undef &&
+                                    reference in this) {
+                                    this[reference].ops = this;
+                                    vcpu.cs.push(this[reference]);
+                                    return undefined;
+                                } else {
+                                    vcpu.cs.push(found);
+                                    return undefined;
+                                }
                             } else {
                                 throw "INVALID OPERAND (LOAD)"; // TODO interrupt handler
                             }
@@ -64,16 +74,20 @@
                         }
                     }},
                     UNKNOWN: {value: function (op) {
+                        var thing;
                         if (types.isLexicalAddress(op)) {
-                            vcpu.cs.push(vcpu.dereferenceScope(op.lsl).index(op.index));
-                            return undefined;
+                            thing = vcpu.dereferenceScope(op.lsl).index(op.index);
                         } else if (typeof op === 'string') {
-                            vcpu.cs.push(vcpu.cd.load(op));
-                            return undefined;
+                            thing = vcpu.cd.load(op);
                         } else {
                             vcpu.cs.push(op);
                             return undefined;
                         }
+                        vcpu.cs.push(thing);
+                        if (utils.isExecutable(thing, this)) {
+                            return this.EXEC();
+                        }
+                        return undefined;
                     }}
                 });
             return undefined;

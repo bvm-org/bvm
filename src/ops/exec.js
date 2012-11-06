@@ -28,6 +28,11 @@
                             call.seg.dps = dps;
                             vcpu.enterStack(call.seg, call.args);
                             return undefined;
+                        } else if (typeof call.seg === 'function' &&
+                                   call.seg.ops === this) {
+                            // TODO this will break SEG_START and SEG_END. FIXME
+                            call.args.forEach(function (item) { vcpu.cs.push(item); });
+                            return call.seg.apply(this);
                         } else {
                             throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
                         }
@@ -35,22 +40,22 @@
                     EXIT: {value: function () {
                         var len = vcpu.cs.length(), resultCount, removed;
                         if (len === 0) {
-                            resultCount = 0;
+                            removed = [];
                         } else {
                             resultCount = vcpu.cs.pop();
                             if (typeof resultCount === 'number') {
                                 len -= 1;
                                 if (len < resultCount) {
-                                    throw "INVALID OPERAND (EXIT)"; // TODO interrupt handler
+                                    throw "NOT ENOUGH OPERANDS (EXIT)"; // TODO interrupt handler
                                 } else {
                                     removed = vcpu.cs.clear(len - resultCount);
                                 }
                             } else {
                                 removed = [];
                             }
-                            vcpu.enterStack(vcpu.cs.dps, removed);
-                            return undefined;
                         }
+                        vcpu.enterStack(vcpu.cs.dps, removed);
+                        return undefined;
                     }},
                     CALLCC: {value: function () {
                         var call = utils.prepareForCall(vcpu, "CALLCC");

@@ -12,14 +12,23 @@
                 ops,
                 {
                     IF: {value: function () {
-                        var val, call;
-                        if (vcpu.cs.length() > 1) {
+                        var len = vcpu.cs.length(), val, n;
+                        if (len > 1) {
                             val = vcpu.cs.pop();
-                            call = utils.prepareForCall(vcpu, "IF");
                             if (val === true) { // yes, really!
-                                vcpu.enterSegment(call.seg, call.args,
-                                                  utils.detectTailCall(vcpu));
-                            } else if (typeof val !== 'boolean') {
+                                return this.EXEC();
+                            } else if (val === false) {
+                                len -= 2;
+                                n = vcpu.cs.index(len);
+                                if (typeof n === 'number') {
+                                    len -= n + 1;
+                                    n += 2; // 1 for n, and 1 for the SEG
+                                } else {
+                                    n = 1;
+                                }
+                                vcpu.cs.clear(len, n);
+                                return undefined;
+                            } else {
                                 throw "INVALID OPERAND (IF)"; // TODO interrupt handler
                             }
                         } else {
@@ -28,17 +37,37 @@
                     }},
 
                     IFELSE: {value: function () {
-                        var val, tCall, fCall;
-                        if (vcpu.cs.length() > 2) {
+                        var len = vcpu.cs.length(), val, n;
+                        if (len > 2) {
                             val = vcpu.cs.pop();
-                            fCall = utils.prepareForCall(vcpu, "IFELSE");
-                            tCall = utils.prepareForCall(vcpu, "IFELSE");
+                            len -= 2;
                             if (val === true) {
-                                vcpu.enterSegment(tCall.seg, tCall.args,
-                                                  utils.detectTailCall(vcpu));
+                                n = vcpu.cs.index(len);
+                                if (typeof n === 'number') {
+                                    len -= n + 1;
+                                    n += 2; // 1 for n, and 1 for the SEG
+                                } else {
+                                    n = 1;
+                                }
+                                vcpu.cs.clear(len, n);
+                                return this.EXEC();
                             } else if (val === false) {
-                                vcpu.enterSegment(fCall.seg, fCall.args,
-                                                  utils.detectTailCall(vcpu));
+                                n = vcpu.cs.index(len);
+                                if (typeof n === 'number') {
+                                    n += 2; // 1 for n, and 1 for the SEG
+                                } else {
+                                    n = 1;
+                                }
+                                len -= n;
+                                n = vcpu.cs.index(len);
+                                if (typeof n === 'number') {
+                                    len -= n + 1;
+                                    n += 2; // 1 for n, and 1 for the SEG
+                                } else {
+                                    n = 1;
+                                }
+                                vcpu.cs.clear(len, n);
+                                return this.EXEC();
                             } else {
                                 throw "INVALID OPERAND (IF_ELSE)"; // TODO interrupt handler
                             }

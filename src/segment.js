@@ -51,6 +51,13 @@
                                 return op;
                             }
                         }},
+                        set: {value: function (idx) {
+                            if (typeof idx === 'number' &&
+                                idx >= 0 && idx < segment.length()) {
+                                index = idx;
+                                return undefined;
+                            }
+                        }},
                         isExhausted: {value: function () {
                             return index >= segment.length();
                         }},
