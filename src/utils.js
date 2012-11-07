@@ -41,10 +41,10 @@
                     return vcpu.cs.ip.isExhausted() ? vcpu.cs.dps : vcpu.cs;
                 }},
 
-                isExecutable: {value: function (thing, ops) {
+                isExecutable: {value: function (thing) {
                     return segmentTypes.isSegment(thing) ||
                         nuStack.isStack(thing) ||
-                        (typeof thing === 'function' && thing.ops === ops);
+                        typeof thing === 'function';
                 }}
             });
 

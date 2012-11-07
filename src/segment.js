@@ -38,7 +38,7 @@
                 return Object.create(
                     {},
                     {
-                        fetch: {value: function () {
+                        fetchAndInc: {value: function () {
                             var op;
                             if (index >= segment.length()) {
                                 return segmentExhausted;
@@ -46,7 +46,7 @@
                                 op = segment.index(index);
                                 index += 1;
                                 if (Array.isArray(op)) {
-                                    op = types.nuLexicalAddress(op[0], op[1]);
+                                    return types.nuLexicalAddress(op[0], op[1]);
                                 }
                                 return op;
                             }
@@ -59,6 +59,9 @@
                             } else {
                                 throw "INVALID IP INDEX: " + idx; // TODO interrupt handler
                             }
+                        }},
+                        replaceMostRecent: {value: function (fun) {
+                            return segment.store(index - 1, fun);
                         }},
                         isExhausted: {value: function () {
                             return index >= segment.length();

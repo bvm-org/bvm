@@ -8,7 +8,11 @@
 
         e = function (cmd, context, filename, callback) {
             cmd = cmd.substring(1, cmd.length - 2); // drop the surrounding '( and )';
-            callback(null, bvmRepl.interpret(cmd));
+            try {
+                callback(null, bvmRepl.interpret(cmd));
+            } catch (e) {
+                callback(e, null);
+            }
         };
 
         bvmRepl = function () {

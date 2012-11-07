@@ -24,8 +24,10 @@
                         vcpu.lsps.length = 1;
                         vcpu.running = true;
                         while (vcpu.running) {
-                            op = vcpu.cs.ip.fetch();
-                            if (op === segmentTypes.segmentExhausted) {
+                            op = vcpu.cs.ip.fetchAndInc();
+                            if (typeof op === 'function') {
+                                op();
+                            } else if (op === segmentTypes.segmentExhausted) {
                                 if (vcpu.cs.dps) {
                                     vcpu.enterStack(vcpu.cs.dps); // implicit return with 0 results
                                 } else {
@@ -39,6 +41,7 @@
                                     vcpu.cs.push(op);
                                 } else {
                                     if (op in ops) {
+                                        vcpu.cs.ip.replaceMostRecent(ops[op]);
                                         ops[op]();
                                     } else {
                                         ops['UNKNOWN'](op);
@@ -113,10 +116,14 @@
 
         function adornOps (vcpu) {
             var opsDir = path.join(__dirname, 'ops'),
-                ops = {};
+                ops = {}, opsObj;
             fs.readdirSync(opsDir).forEach(function (opFile) {
                 if (path.extname(opFile) in require.extensions) {
-                    require(path.join(opsDir, opFile))(vcpu, ops);
+                    opsObj = require(path.join(opsDir, opFile))(vcpu);
+                    Object.keys(opsObj).forEach(function (key) {
+                        opsObj[key].value = opsObj[key].value.bind(ops);
+                    });
+                    Object.defineProperties(ops, opsObj);
                 }
             });
             return ops;

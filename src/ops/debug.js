@@ -3,19 +3,16 @@
 
         'use strict';
 
-        return function (vcpu, ops) {
-            Object.defineProperties(
-                ops,
-                {
-                    LOG: {value: function () {
-                        if (vcpu.cs.length() > 0) {
-                            return console.log(vcpu.cs.pop());
-                        } else {
-                            throw "NOT ENOUGH OPERANDS (LOG)"; // TODO interrupt handler
-                        }
-                    }}
-                });
-            return undefined;
+        return function (vcpu) {
+            return {
+                LOG: {value: function () {
+                    if (vcpu.cs.length() > 0) {
+                        return console.log(vcpu.cs.pop());
+                    } else {
+                        throw "NOT ENOUGH OPERANDS (LOG)"; // TODO interrupt handler
+                    }
+                }}
+            };
         };
 
     });

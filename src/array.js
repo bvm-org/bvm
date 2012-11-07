@@ -37,7 +37,7 @@
                     index: {value: function (idx) {
                         var val;
                         if (idx < 0 || array.length <= idx) {
-                            throw "ILLEGAL STACK ADDRESS";
+                            throw "ILLEGAL ARRAY ADDRESS: " + idx;
                         } else {
                             val = array[idx];
                             return val === undefined ? types.undef : val;
@@ -45,7 +45,7 @@
                     }},
                     store: {value: function (idx, val) {
                         if (idx < 0) {
-                            throw "ILLEGAL STACK ADDRESS";
+                            throw "ILLEGAL ARRAY ADDRESS";
                         } else {
                             array[idx] = val;
                             return undefined;

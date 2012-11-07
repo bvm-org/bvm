@@ -23,7 +23,7 @@
         buster.testRunner.timeout = 2000; // 2 seconds
 
         buster.assertions.add('stackConfiguration', {
-            assert: function (stack, expectedStack) {
+            assert: function (stack, expectedStack, vcpu, ops) {
                 if (expectedStack.pre) {
                     expectedStack.pre(stack, expectedStack);
                 }
@@ -34,7 +34,7 @@
                 });
                 if (expectedStack.contents) {
                     expectedStack.contents.forEach(function (value, idx) {
-                        comparator(value, stack.index(idx));
+                        comparator(value, stack.index(idx), vcpu, ops);
                     });
                     assert(expectedStack.contents.length === stack.length());
                 }
@@ -48,19 +48,23 @@
             expectation: 'toBeStackMatching'
         });
 
-        comparator = function (test, found) {
+        comparator = function (test, found, vcpu, ops) {
             if (typeof test === 'string' ||
                 typeof test === 'boolean' ||
                 typeof test === 'number' ||
                 test === types.mark ||
                 test === types.undef ||
                 test === undefined) {
-                assert(test === found);
+                if (typeof found === 'function') {
+                    assert(test in ops && ops[test] === found, test);
+                } else {
+                    assert(test === found, test);
+                }
             } else if (Array.isArray(test)) {
                 assert(nuArray.isArray(found));
                 assert(test.length === found.length());
                 test.forEach(function (value, idx) {
-                    comparator(value, found.index(idx));
+                    comparator(value, found.index(idx), vcpu, ops);
                 });
             } else if (typeof test === 'object' && 'type' in test) {
                 if (test.type === 'dict') {
@@ -68,7 +72,7 @@
                     if ('contents' in test) {
                         assert(Object.keys(test.contents).length === found.keys().length);
                         Object.keys(test.contents).forEach(function (key) {
-                            comparator(test.contents[key], found.load(key));
+                            comparator(test.contents[key], found.load(key), vcpu, ops);
                         });
                     }
                 } else if (test.type === 'seg') {
@@ -76,13 +80,13 @@
                     if ('contents' in test) {
                         assert(test.contents.length === found.length());
                         test.contents.forEach(function (op, idx) {
-                            comparator(op, found.index(idx));
+                            comparator(op, found.index(idx), vcpu, ops);
                         });
                     }
                 } else if (test.type === 'ptr') {
                     assert(types.isPointer(found));
                     if ('target' in test) {
-                        comparator(test.target, found.target);
+                        comparator(test.target, found.target, vcpu, ops);
                     }
                 } else if (test.type === 'lexical') {
                     assert(types.isLexicalAddress(found));
@@ -93,7 +97,7 @@
                     if ('contents' in test) {
                         assert(test.contents.length === found.length());
                         test.contents.forEach(function (op, idx) {
-                            comparator(op, found.index(idx));
+                            comparator(op, found.index(idx), vcpu, ops);
                         });
                     }
                     if ('lsl' in test) {
@@ -119,8 +123,9 @@
                     cpu.installOp(
                         breakpoint,
                         function (vcpu, ops) {
-                            assert.stackConfiguration(vcpu.cs, breakpoints[breakpoint]);
-                            breakpoints[breakpoint].reached = true;;
+                            assert.stackConfiguration(vcpu.cs, breakpoints[breakpoint],
+                                                      vcpu, ops);
+                            breakpoints[breakpoint].reached = true;
                         });
                 });
                 Object.keys(unreachables).forEach(function (unreachable) {
