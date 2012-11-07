@@ -7,11 +7,11 @@
 
         return function (vcpu) {
             return {
-                MARK: {value: function () {
+                MARK: function () {
                     vcpu.cs.push(types.mark);
                     return undefined;
-                }},
-                COUNT_TO_MARK: {value: function () {
+                },
+                COUNT_TO_MARK: function () {
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark);
                     if (mark === -1) {
                         throw "INVALID OPERAND (COUNT_TO_MARK)"; // TODO interrupt handler
@@ -19,8 +19,8 @@
                         vcpu.cs.push((len - mark) - 1);
                         return undefined;
                     }
-                }},
-                CLEAR_TO_MARK: {value: function () {
+                },
+                CLEAR_TO_MARK: function () {
                     var mark = vcpu.cs.lastIndexOf(types.mark);
                     if (mark === -1) {
                         throw "INVALID OPERAND (CLEAR_TO_MARK)"; // TODO interrupt handler
@@ -28,7 +28,7 @@
                         vcpu.cs.clear(mark);
                         return undefined;
                     }
-                }}
+                }
             };
         };
 

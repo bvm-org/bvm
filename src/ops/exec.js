@@ -10,7 +10,7 @@
 
         return function (vcpu) {
             return {
-                EXEC: {value: function () {
+                EXEC: function () {
                     var call = utils.prepareForCall(vcpu, "EXEC"),
                     dps = utils.detectTailCall(vcpu);
 
@@ -33,8 +33,8 @@
                     } else {
                         throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
                     }
-                }},
-                EXIT: {value: function () {
+                },
+                EXIT: function () {
                     var len = vcpu.cs.length(), resultCount, removed;
                     if (len === 0) {
                         removed = [];
@@ -53,8 +53,8 @@
                     }
                     vcpu.enterStack(vcpu.cs.dps, removed);
                     return undefined;
-                }},
-                CALLCC: {value: function () {
+                },
+                CALLCC: function () {
                     var call = utils.prepareForCall(vcpu, "CALLCC");
                     call.args.push(vcpu.cs);
 
@@ -69,7 +69,7 @@
                     } else {
                         throw "INVALID OPERAND (CALLCC)"; // TODO interrupt handler
                     }
-                }}
+                }
             };
         };
 

@@ -7,11 +7,11 @@
 
         return function (vcpu) {
             return {
-                SEG_START: {value: function () {
+                SEG_START: function () {
                     this.MARK();
                     return undefined;
-                }},
-                SEG_END: {value: function () {
+                },
+                SEG_END: function () {
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
                     removed;
                     if (mark === -1) {
@@ -22,7 +22,7 @@
                         vcpu.cs.push(vcpu.cs.nuSegment(removed, vcpu.cs));
                         return undefined;
                     }
-                }}
+                }
             };
         };
 

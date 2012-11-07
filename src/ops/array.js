@@ -8,11 +8,11 @@
 
         return function (vcpu) {
             return {
-                ARRAY_START: {value: function () {
+                ARRAY_START: function () {
                     this.MARK();
                     return undefined;
-                }},
-                ARRAY_END: {value: function () {
+                },
+                ARRAY_END: function () {
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
                     removed;
                     if (mark === -1) {
@@ -23,12 +23,12 @@
                         vcpu.cs.push(nuArray(removed));
                         return undefined;
                     }
-                }},
-                ARRAY_NEW: {value: function () {
+                },
+                ARRAY_NEW: function () {
                     vcpu.cs.push(nuArray());
                     return undefined;
-                }},
-                ARRAY_STORE: {value: function () {
+                },
+                ARRAY_STORE: function () {
                     var array, idx, value;
                     if (vcpu.cs.length() > 2) {
                         value = vcpu.cs.pop();
@@ -44,8 +44,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (ARRAY_STORE)"; // TODO interrupt handler
                     }
-                }},
-                ARRAY_LOAD: {value: function () {
+                },
+                ARRAY_LOAD: function () {
                     var array, idx;
                     if (vcpu.cs.length() > 1) {
                         idx = vcpu.cs.pop();
@@ -60,8 +60,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (ARRAY_LOAD)"; // TODO interrupt handler
                     }
-                }},
-                ARRAY_LENGTH: {value: function () {
+                },
+                ARRAY_LENGTH: function () {
                     var array;
                     if (vcpu.cs.length() > 0) {
                         array = vcpu.cs.pop();
@@ -75,8 +75,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (ARRAY_LENGTH)"; // TODO interrupt handler
                     }
-                }},
-                ARRAY_TRUNCATE: {value: function () {
+                },
+                ARRAY_TRUNCATE: function () {
                     var len, array;
                     if (vcpu.cs.length() > 1) {
                         len = vcpu.cs.pop();
@@ -91,7 +91,7 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (ARRAY_TRUNCATE)"; // TODO interrupt handler
                     }
-                }}
+                }
             };
         };
 

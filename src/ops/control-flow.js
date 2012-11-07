@@ -9,7 +9,7 @@
 
         return function (vcpu) {
             return {
-                IF: {value: function () {
+                IF: function () {
                     var len = vcpu.cs.length(), val, n;
                     if (len > 1) {
                         val = vcpu.cs.pop();
@@ -32,8 +32,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (IF)"; // TODO interrupt handler
                     }
-                }},
-                IF_ELSE: {value: function () {
+                },
+                IF_ELSE: function () {
                     var len = vcpu.cs.length(), val, n;
                     if (len > 2) {
                         val = vcpu.cs.pop();
@@ -71,8 +71,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (IF_ELSE)"; // TODO interrupt handler
                     }
-                }},
-                JUMP: {value: function () {
+                },
+                JUMP: function () {
                     var val;
                     if (vcpu.cs.length() > 0) {
                         val = vcpu.cs.pop();
@@ -85,8 +85,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (JUMP)"; // TODO interrupt handler
                     }
-                }},
-                JUMP_IF: {value: function () {
+                },
+                JUMP_IF: function () {
                     var val;
                     if (vcpu.cs.length() > 1) {
                         val = vcpu.cs.pop();
@@ -107,7 +107,7 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (JUMP_IF)"; // TODO interrupt handler
                     }
-                }}
+                }
             };
         };
 

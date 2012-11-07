@@ -9,11 +9,11 @@
 
         return function (vcpu) {
             return {
-                DICT_START: {value: function () {
+                DICT_START: function () {
                     this.MARK();
                     return undefined;
-                }},
-                DICT_END: {value: function () {
+                },
+                DICT_END: function () {
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
                     dict = {}, removed, idx, key, val;
                     if (mark === -1) {
@@ -33,12 +33,12 @@
                             return undefined;
                         }
                     }
-                }},
-                DICT_NEW: {value: function () {
+                },
+                DICT_NEW: function () {
                     vcpu.cs.push(nuDict());
                     return undefined;
-                }},
-                DICT_STORE: {value: function () {
+                },
+                DICT_STORE: function () {
                     var dict, key, value;
                     if (vcpu.cs.length() > 2) {
                         value = vcpu.cs.pop();
@@ -54,8 +54,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DICT_STORE)"; // TODO interrupt handler
                     }
-                }},
-                DICT_CONTAINS: {value: function () {
+                },
+                DICT_CONTAINS: function () {
                     var dict, key;
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
@@ -70,8 +70,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DICT_CONTAINS)"; // TODO interrupt handler
                     }
-                }},
-                DICT_REMOVE: {value: function () {
+                },
+                DICT_REMOVE: function () {
                     var dict, key;
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
@@ -86,8 +86,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DICT_HAS)"; // TODO interrupt handler
                     }
-                }},
-                DICT_LOAD: {value: function () {
+                },
+                DICT_LOAD: function () {
                     var dict, key;
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
@@ -102,8 +102,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DICT_STORE)"; // TODO interrupt handler
                     }
-                }},
-                DICT_KEYS: {value: function () {
+                },
+                DICT_KEYS: function () {
                     var dict, keys;
                     if (vcpu.cs.length() > 0) {
                         dict = vcpu.cs.pop();
@@ -116,12 +116,12 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DICT_KEYS)"; // TODO interrupt handler
                     }
-                }},
-                DICT_CUR_GET: {value: function () {
+                },
+                DICT_CUR_GET: function () {
                     vcpu.cs.push(vcpu.cd);
                     return undefined;
-                }},
-                DICT_CUR_SET: {value: function () {
+                },
+                DICT_CUR_SET: function () {
                     var dict;
                     if (vcpu.cs.length() > 0) {
                         dict = vcpu.cs.pop();
@@ -135,7 +135,7 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DICT_CUR_SET)"; // TODO interrupt handler
                     }
-                }}
+                }
             };
         };
 

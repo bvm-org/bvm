@@ -121,7 +121,11 @@
                 if (path.extname(opFile) in require.extensions) {
                     opsObj = require(path.join(opsDir, opFile))(vcpu);
                     Object.keys(opsObj).forEach(function (key) {
-                        opsObj[key].value = opsObj[key].value.bind(ops);
+                        opsObj[key] = { configurable: false,
+                                        writable: false,
+                                        enumerable: false,
+                                        value: opsObj[key].bind(ops)
+                                      };
                     });
                     Object.defineProperties(ops, opsObj);
                 }

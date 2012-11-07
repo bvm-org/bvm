@@ -12,7 +12,7 @@
 
         return function (vcpu) {
             return {
-                LOAD: {value: function () {
+                LOAD: function () {
                     var reference, found;
                     if (vcpu.cs.length() > 0) {
                         reference = vcpu.cs.pop();
@@ -35,8 +35,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (LOAD)"; // TODO interrupt handler
                     }
-                }},
-                STORE: {value: function () {
+                },
+                STORE: function () {
                     var value, reference;
                     if (vcpu.cs.length() > 1) {
                         value = vcpu.cs.pop();
@@ -53,8 +53,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (STORE)"; // TODO interrupt handler
                     }
-                }},
-                LEXICAL_ADDRESS: {value: function () {
+                },
+                LEXICAL_ADDRESS: function () {
                     var lsl, index;
                     if (vcpu.cs.length() > 1) {
                         index = vcpu.cs.pop();
@@ -69,8 +69,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (LEXICAL_ADDRESS)"; // TODO interrupt handler
                     }
-                }},
-                UNKNOWN: {value: function (op) {
+                },
+                UNKNOWN: function (op) {
                     var thing;
                     if (types.isLexicalAddress(op)) {
                         thing = vcpu.dereferenceScope(op.lsl).index(op.index);
@@ -85,7 +85,7 @@
                         return this.EXEC();
                     }
                     return undefined;
-                }}
+                }
             };
         };
 

@@ -7,18 +7,18 @@
 
         return function (vcpu) {
             return {
-                PUSH: {value: function () {
+                PUSH: function () {
                     vcpu.cs.push(vcpu.cs.ip.fetchAndInc());
                     return undefined;
-                }},
-                POP: {value: function () {
+                },
+                POP: function () {
                     if (vcpu.cs.length() > 0) {
                         return vcpu.cs.pop();
                     } else {
                         throw "NOT ENOUGH OPERANDS (POP)"; // TODO interrupt handler
                     }
-                }},
-                DUPLICATE: {value: function () {
+                },
+                DUPLICATE: function () {
                     var len = vcpu.cs.length();
                     if (len > 0) {
                         vcpu.cs.push(vcpu.cs.index(len - 1));
@@ -26,8 +26,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DUPLICATE)"; // TODO interrupt handler
                     }
-                }},
-                EXCHANGE: {value: function () {
+                },
+                EXCHANGE: function () {
                     var len = vcpu.cs.length(), tmp;
                     if (len > 1) {
                         len -= 1;
@@ -38,12 +38,12 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (EXCHANGE)"; // TODO interrupt handler
                     }
-                }},
-                COUNT: {value: function () {
+                },
+                COUNT: function () {
                     vcpu.cs.push(vcpu.cs.length());
                     return undefined;
-                }},
-                COPY: {value: function () {
+                },
+                COPY: function () {
                     var len = vcpu.cs.length(), count, idx;
                     if (len > 0) {
                         count = vcpu.cs.pop();
@@ -59,8 +59,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (COPY)"; // TODO interrupt handler
                     }
-                }},
-                INDEX: {value: function () {
+                },
+                INDEX: function () {
                     var len = vcpu.cs.length(), idx;
                     if (len > 0) {
                         idx = vcpu.cs.pop();
@@ -74,8 +74,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler
                     }
-                }},
-                ROLL: {value: function () {
+                },
+                ROLL: function () {
                     var len = vcpu.cs.length(), shift, count, removed, split;
                     if (len > 1) {
                         shift = vcpu.cs.pop();
@@ -98,8 +98,8 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
                     }
-                }},
-                CLONE: {value: function () {
+                },
+                CLONE: function () {
                     var len = vcpu.cs.length(), thing, thingT;
                     if (len > 0) {
                         thing = vcpu.cs.index(len - 1);
@@ -121,23 +121,23 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (CLONE)"; // TODO interrupt handler
                     }
-                }},
-                CLEAR: {value: function () {
+                },
+                CLEAR: function () {
                     vcpu.cs.clear();
                     return undefined;
-                }},
-                TRUE: {value: function () {
+                },
+                TRUE: function () {
                     vcpu.cs.push(true);
                     return undefined;
-                }},
-                FALSE: {value: function () {
+                },
+                FALSE: function () {
                     vcpu.cs.push(false);
                     return undefined;
-                }},
-                UNDEF: {value: function () {
+                },
+                UNDEF: function () {
                     vcpu.cs.push(types.undef);
                     return undefined;
-                }}
+                }
             };
         };
 

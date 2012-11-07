@@ -34,7 +34,7 @@
             gte = function (a, b) { return a >= b; };
 
             return {
-                EQ: {value: function () {
+                EQ: function () {
                     var a, b, aType, bType;
                     if (vcpu.cs.length() > 1) {
                         b = vcpu.cs.pop();
@@ -68,16 +68,16 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (EQ)"; // TODO interrupt handler
                     }
-                }},
-                NEQ: {value: function () {
+                },
+                NEQ: function () {
                     this.EQ();
                     vcpu.cs.push(! vcpu.cs.pop());
                     return undefined;
-                }},
-                LT:  {value: function () { return binaryCmpNumStr(lt,  'LT' ); }},
-                LTE: {value: function () { return binaryCmpNumStr(lte, 'LTE'); }},
-                GT:  {value: function () { return binaryCmpNumStr(gt,  'GT' ); }},
-                GTE: {value: function () { return binaryCmpNumStr(gte, 'GTE'); }}
+                },
+                LT:  function () { return binaryCmpNumStr(lt,  'LT' ); },
+                LTE: function () { return binaryCmpNumStr(lte, 'LTE'); },
+                GT:  function () { return binaryCmpNumStr(gt,  'GT' ); },
+                GTE: function () { return binaryCmpNumStr(gte, 'GTE'); }
             };
         };
 
