@@ -25,9 +25,7 @@
             return Object.create(
                 dictBase,
                 {
-                    has: {value: function (key) {
-                        return dict.hasOwnProperty(key);
-                    }},
+                    has: {value: Object.prototype.hasOwnProperty.bind(dict)},
                     keys: {value: function () { return Object.keys(dict); }},
                     load: {value: function (key) {
                         if (dict.hasOwnProperty(key)) {
