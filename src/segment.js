@@ -35,7 +35,7 @@
                 if (! index) {
                     index = 0;
                 }
-                return Object.create(
+                return Object.defineProperties(
                     {},
                     {
                         fetchAndInc: {value: function () {

@@ -60,8 +60,8 @@
             return Object.create(
                 lexicalAddressBase,
                 {
-                    lsl: {value: lsl, writable: true},
-                    index: {value: index, writable: true},
+                    lsl: {value: lsl},
+                    index: {value: index},
                 });
         };
         Object.defineProperty(types, 'nuLexicalAddress', {value: nuLexicalAddress, enumerable: true});

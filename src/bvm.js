@@ -14,7 +14,7 @@
         return function nuVCPU (segment) {
             var vcpu = adornRegistersAndHelpers(),
                 ops = adornOps(vcpu);
-            return Object.create(
+            return Object.defineProperties(
                 {},
                 {
                     boot: {value: function () {
@@ -65,7 +65,7 @@
         };
 
         function adornRegistersAndHelpers () {
-            return Object.create(
+            return Object.defineProperties(
                 {},
                 {
                     deferred: {value: 0, writable: true},

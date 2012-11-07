@@ -7,7 +7,7 @@
             segmentTypes = require('./segment'),
             nuStack = require('./stack');
 
-        return Object.create(
+        return Object.defineProperties(
             {},
             {
                 prepareForCall: {value: function (vcpu, opName) {

@@ -5,6 +5,7 @@
 
         var types = require('./types'),
             id = {},
+            arrayBase = {id: id},
             nuArray;
 
         nuArray = function (array) {
@@ -22,9 +23,8 @@
 
         function adornArrayOps (array) {
             return Object.create(
-                {},
+                arrayBase,
                 {
-                    id: {value: id},
                     push: {value: array.push.bind(array)},
                     pop: {value: array.pop.bind(array)},
                     length: {value: function (num) {

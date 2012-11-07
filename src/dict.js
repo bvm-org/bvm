@@ -5,6 +5,7 @@
 
         var types = require('./types'),
             id = {},
+            dictBase = {id: id},
             nuDict;
 
         nuDict = function (dict) {
@@ -22,9 +23,8 @@
 
         function adornDictOps (dict) {
             return Object.create(
-                {},
+                dictBase,
                 {
-                    id: {value: id},
                     has: {value: function (key) {
                         return dict.hasOwnProperty(key);
                     }},
