@@ -5,41 +5,23 @@
 
         var types = require('./types'),
             id = {},
-            arrayBase = {id: id},
-            nuArray;
-
-        nuArray = function (array) {
-            if (! array) {
-                array = [];
-            }
-            return adornArrayOps(array);
-        };
-        nuArray.isArray = function (thing) {
-            return thing &&
-                typeof thing === 'object' &&
-                id === thing.id;
-        };
-        return nuArray;
-
-        function adornArrayOps (array) {
-            return Object.create(
-                arrayBase,
+            arrayBase = Object.defineProperties(
+                {},
                 {
-                    push: {value: array.push.bind(array)},
-                    pop: {value: array.pop.bind(array)},
+                    id: {value: id},
                     length: {value: function (num) {
-                        var len = array.length;
+                        var len = this.array.length;
                         if (typeof num === 'number' && num >= 0) {
-                            array.length = num;
+                            this.array.length = num;
                         }
-                        return len
+                        return len;
                     }},
                     index: {value: function (idx) {
                         var val;
-                        if (idx < 0 || array.length <= idx) {
+                        if (idx < 0 || this.array.length <= idx) {
                             throw "ILLEGAL ARRAY ADDRESS: " + idx;
                         } else {
-                            val = array[idx];
+                            val = this.array[idx];
                             return val === undefined ? types.undef : val;
                         }
                     }},
@@ -47,7 +29,7 @@
                         if (idx < 0) {
                             throw "ILLEGAL ARRAY ADDRESS";
                         } else {
-                            array[idx] = val;
+                            this.array[idx] = val;
                             return undefined;
                         }
                     }},
@@ -56,16 +38,45 @@
                             from = 0;
                         }
                         if (typeof count !== 'number') {
-                            count = array.length - from;
+                            count = this.array.length - from;
                         }
-                        return array.splice(from, count);
+                        return this.array.splice(from, count);
                     }},
-                    lastIndexOf: {value: array.lastIndexOf.bind(array)},
                     clone: {value: function () {
-                        return nuArray(array.slice(0));
+                        return nuArray(this.array.slice(0));
+                    }},
+                    resetTo: {value: function (ary) {
+                        Object.defineProperties(
+                            this,
+                            {array: {value: ary, configurable: true},
+                             lastIndexOf: {value: ary.lastIndexOf.bind(ary), configurable: true},
+                             push: {value: ary.push.bind(ary), configurable: true},
+                             pop: {value: ary.pop.bind(ary), configurable: true}});
+                        return this;
+                    }},
+                    appendArray: {value: function (ary) {
+                        // Irritatingly, because there's a possibility
+                        // the underlying array may be shared, we
+                        // can't use array.concat because it returns a
+                        // new array, which would break the sharing.
+                        this.array.push.apply(this.array, ary);
+                        return this;
                     }}
-                });
-        }
+                }),
+            nuArray;
+
+        nuArray = function (array) {
+            if (! array) {
+                array = [];
+            }
+            return Object.create(arrayBase).resetTo(array);
+        };
+        nuArray.isArray = function (thing) {
+            return thing &&
+                typeof thing === 'object' &&
+                id === thing.id;
+        };
+        return nuArray;
 
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));

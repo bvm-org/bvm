@@ -88,9 +88,7 @@
                             } else if (shift < 0) {
                                 shift = Math.abs(shift) % count;
                             }
-                            removed.splice(shift).concat(removed).forEach(function (elem) {
-                                vcpu.cs.push(elem);
-                            });
+                            vcpu.cs.appendArray(removed.splice(shift).concat(removed));
                             return undefined;
                         } else {
                             throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler

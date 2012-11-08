@@ -12,45 +12,18 @@
         var path = require('path');
 
         return function nuVCPU (segment) {
-            var vcpu = adornRegistersAndHelpers(),
-                ops = adornOps(vcpu);
+            var ops = {}, vcpu = adornRegistersAndHelpers(ops);
+            adornOps(vcpu, ops);
             return Object.defineProperties(
                 {},
                 {
                     boot: {value: function () {
-                        var op;
                         vcpu.cs = nuStack(undefined, undefined, segment, 0);
                         vcpu.lsps[0] = vcpu.cs;
                         vcpu.lsps.length = 1;
                         vcpu.running = true;
                         while (vcpu.running) {
-                            op = vcpu.cs.ip.fetchAndInc();
-                            if (typeof op === 'function') {
-                                op();
-                            } else if (op === segmentTypes.segmentExhausted) {
-                                if (vcpu.cs.dps) {
-                                    vcpu.enterStack(vcpu.cs.dps); // implicit return with 0 results
-                                } else {
-                                    vcpu.running = false;
-                                }
-                            } else {
-                                if (op === 'SEG_END') {
-                                    vcpu.deferred -= 1;
-                                }
-                                if (vcpu.deferred > 0) {
-                                    vcpu.cs.push(op);
-                                } else {
-                                    if (op in ops) {
-                                        vcpu.cs.ip.replaceMostRecent(ops[op]);
-                                        ops[op]();
-                                    } else {
-                                        ops['UNKNOWN'](op);
-                                    }
-                                }
-                                if (op === 'SEG_START') {
-                                    vcpu.deferred += 1;
-                                }
-                            }
+                            vcpu.dispatch(vcpu.cs.ip.fetchAndInc());
                         }
                         return vcpu.result;
                     }},
@@ -64,10 +37,42 @@
             });
         };
 
-        function adornRegistersAndHelpers () {
+        function adornRegistersAndHelpers (ops) {
             return Object.defineProperties(
                 {},
                 {
+                    dispatch: {value: function (op) {
+                        if (op === segmentTypes.segmentExhausted) {
+                            if (this.cs.dps) {
+                                this.enterStack(this.cs.dps); // implicit return with 0 results
+                            } else {
+                                this.running = false;
+                            }
+                        } else {
+                            if (op === 'SEG_END' || op === ops['SEG_END']) {
+                                this.deferred -= 1;
+                                if (this.deferred < 0) {
+                                    throw "TOO MANY SEG_ENDS"; // TODO interrupt handler
+                                }
+                            }
+                            if (this.deferred > 0) {
+                                this.cs.push(op);
+                            } else {
+                                if (typeof op === 'function') {
+                                    op();
+                                } else if (op in ops) {
+                                    op = ops[op];
+                                    this.cs.ip.replaceMostRecent(op);
+                                    op();
+                                } else {
+                                    ops['UNKNOWN'](op);
+                                }
+                            }
+                            if (op === 'SEG_START' || op === ops['SEG_START']) {
+                                this.deferred += 1;
+                            }
+                        }
+                    }},
                     deferred: {value: 0, writable: true},
                     lsps: {value: []},
                     cd: {value: nuDict(), writable: true},
@@ -99,9 +104,7 @@
                         if (nuStack.isStack(stack)) {
                             this.setStackAndLSPs(stack);
                             if (resultsAry) {
-                                resultsAry.forEach(function (elem) {
-                                    stack.push(elem);
-                                });
+                                stack.appendArray(resultsAry);
                             }
                         } else if (stack === undefined) {
                             this.running = false;
@@ -114,9 +117,8 @@
                 });
         }
 
-        function adornOps (vcpu) {
-            var opsDir = path.join(__dirname, 'ops'),
-                ops = {}, opsObj;
+        function adornOps (vcpu, ops) {
+            var opsDir = path.join(__dirname, 'ops'), opsObj;
             fs.readdirSync(opsDir).forEach(function (opFile) {
                 if (path.extname(opFile) in require.extensions) {
                     opsObj = require(path.join(opsDir, opFile))(vcpu);
@@ -130,7 +132,6 @@
                     Object.defineProperties(ops, opsObj);
                 }
             });
-            return ops;
         }
 
     });

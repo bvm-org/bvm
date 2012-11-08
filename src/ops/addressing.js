@@ -30,7 +30,7 @@
                                 return undefined;
                             }
                         } else {
-                            throw "INVALID OPERAND (LOAD)"; // TODO interrupt handler
+                            throw "INVALID OPERAND (LOAD)" + typeof reference; // TODO interrupt handler
                         }
                     } else {
                         throw "NOT ENOUGH OPERANDS (LOAD)"; // TODO interrupt handler

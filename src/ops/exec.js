@@ -27,9 +27,9 @@
                         vcpu.enterStack(call.seg, call.args);
                         return undefined;
                     } else if (typeof call.seg === 'function') {
-                        // TODO this will break SEG_START and SEG_END. FIXME
-                        call.args.forEach(function (item) { vcpu.cs.push(item); });
-                        return call.seg.apply(this);
+                        vcpu.cs.appendArray(call.args);
+                        vcpu.dispatch(call.seg);
+                        return undefined;
                     } else {
                         throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
                     }
