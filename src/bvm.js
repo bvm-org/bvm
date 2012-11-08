@@ -18,14 +18,8 @@
                 {},
                 {
                     boot: {value: function () {
-                        vcpu.cs = nuStack(undefined, undefined, segment, 0);
-                        vcpu.lsps[0] = vcpu.cs;
-                        vcpu.lsps.length = 1;
-                        vcpu.running = true;
-                        while (vcpu.running) {
-                            vcpu.dispatch(vcpu.cs.ip.fetchAndInc());
-                        }
-                        return vcpu.result;
+                        vcpu.enterSegment(segment, undefined, undefined);
+                        return vcpu.run();
                     }},
 
                     // means to install hooks for use by testing.
@@ -41,6 +35,14 @@
             return Object.defineProperties(
                 {},
                 {
+                    run: {value: function () {
+                        delete this.result;
+                        this.running = true;
+                        while (this.running) {
+                            this.dispatch(this.cs.ip.fetchAndInc());
+                        }
+                        return this.result;
+                    }},
                     dispatch: {value: function (op) {
                         if (op === segmentTypes.segmentExhausted) {
                             if (this.cs.dps) {
