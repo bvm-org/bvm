@@ -9,14 +9,16 @@
         e = function (cmd, context, filename, callback) {
             cmd = cmd.substring(1, cmd.length - 2); // drop the surrounding '( and )';
             try {
-                callback(null, bvmRepl.interpret(cmd));
+                callback(null, JSON.stringify(bvmRepl.interpret(cmd)));
             } catch (e) {
-                callback(e, null);
+                // Temp fix because syntax errors are getting lost /
+                // wrecked by the repl
+                callback(null, 'Error: ' + (e && (e.toString() || '' + e)));
             }
         };
 
         bvmRepl = function () {
-            return repl.start({eval: e, prompt: 'bvm> '});
+            return repl.start({eval: e, prompt: 'bvm> ', useColors: false});
         };
 
         // Doing requires in here because of the change in the context

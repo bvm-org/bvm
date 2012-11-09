@@ -5,7 +5,28 @@
 
         var id = {},
             nuArray = require('./array'),
-            nuStack;
+            stackTemplate = {
+                id:        {value: id},
+                dps:       {value: undefined, writable: true},
+                lps:       {value: undefined},
+                lsl:       {value: undefined},
+                ip:        {value: undefined},
+                segment:   {value: undefined},
+                clone:     {value: function (cloneStack) {
+                    var stack = Object.getPrototypeOf(this);
+                    return adornStackOps(
+                        cloneStack ? stack.clone() : stack,
+                        this.dps, this.segment, this.ip.clone());
+                }},
+                toJSON:    {value: function () {
+                    return {type: 'stack',
+                            dps: this.dps,
+                            lps: this.lps,
+                            lsl: this.lsl,
+                            ip: this.ip,
+                            contents: Object.getPrototypeOf(this)};
+                }}
+            }, nuStack;
 
         // segment here is the new segment being entered.
         nuStack = function (stackBase, oldStack, segment, index) {
@@ -13,20 +34,12 @@
         }
 
         function adornStackOps (stack, oldStack, segment, ip) {
-            return Object.create(
-                stack,
-                {
-                    id: {value: id},
-                    dps: {value: oldStack, writable: true},
-                    lps: {value: segment.ls},
-                    lsl: {value: segment.ls ? segment.ls.lsl + 1 : 0},
-                    ip: {value: ip},
-                    nuSegment: {value: segment.nuSegment},
-                    clone: {value: function (cloneStack) {
-                        return adornStackOps(cloneStack ? stack.clone() : stack,
-                                             this.dps, segment, this.ip.clone());
-                    }}
-                });
+            stackTemplate.dps.value = oldStack;
+            stackTemplate.lps.value = segment.ls;
+            stackTemplate.lsl.value = segment.ls ? segment.ls.lsl + 1 : 0;
+            stackTemplate.ip.value = ip;
+            stackTemplate.segment.value = segment;
+            return Object.create(stack, stackTemplate);
         }
 
         nuStack.isStack = function (thing) {

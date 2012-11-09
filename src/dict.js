@@ -6,6 +6,14 @@
         var types = require('./types'),
             id = {},
             dictBase = {id: id},
+            dictTemplate = {
+                has:    {value: undefined},
+                keys:   {value: undefined},
+                load:   {value: undefined},
+                store:  {value: undefined},
+                remove: {value: undefined},
+                clone:  {value: undefined}
+            },
             nuDict;
 
         nuDict = function (dict) {
@@ -22,34 +30,31 @@
         return nuDict;
 
         function adornDictOps (dict) {
-            return Object.create(
-                dictBase,
-                {
-                    has: {value: Object.prototype.hasOwnProperty.bind(dict)},
-                    keys: {value: function () { return Object.keys(dict); }},
-                    load: {value: function (key) {
-                        if (dict.hasOwnProperty(key)) {
-                            return dict[key];
-                        } else {
-                            return types.undef;
-                        }
-                    }},
-                    store: {value: function (key, value) {
-                        dict[key] = value;
-                        return undefined;
-                    }},
-                    remove: {value: function (key) {
-                        delete dict[key];
-                        return undefined;
-                    }},
-                    clone: {value: function () {
-                        var d = {};
-                        Object.keys(dict).forEach(function (key) {
-                            d[key] = dict[key];
-                        });
-                        return nuDict(d);
-                    }}
+            dictTemplate.has.value = Object.prototype.hasOwnProperty.bind(dict);
+            dictTemplate.keys.value = function () { return Object.keys(dict); };
+            dictTemplate.load.value = function (key) {
+                if (dict.hasOwnProperty(key)) {
+                    return dict[key];
+                } else {
+                    return types.undef;
+                }
+            };
+            dictTemplate.store.value = function (key, value) {
+                dict[key] = value;
+                return undefined;
+            };
+            dictTemplate.remove.value = function (key) {
+                delete dict[key];
+                return undefined;
+            };
+            dictTemplate.clone.value = function () {
+                var d = {};
+                Object.keys(dict).forEach(function (key) {
+                    d[key] = dict[key];
                 });
+                return nuDict(d);
+            };
+            return Object.create(dictBase, dictTemplate);
         }
 
 

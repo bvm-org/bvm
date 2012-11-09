@@ -9,7 +9,7 @@
 
         var types = {},
             plain = {
-                toString: function () {
+                toJSON: function () {
                     if ('name' in this) {
                         return '' + this.name;
                     } else {
@@ -21,21 +21,26 @@
                 }
             },
             lexicalAddressId = {},
+            lexicalAddressTemplate = {
+                lsl: {value: 0},
+                index: {value: 0}
+            },
             lexicalAddressBase, nuLexicalAddress, mark, undef;
 
-        mark = Object.create(plain, {name: {value: 'mark', enumerable: true}});
-        Object.defineProperty(types, 'mark', {value: mark, enumerable: true});
+        mark = Object.create(plain, {name: {value: 'mark'}});
+        Object.defineProperty(types, 'mark', {value: mark});
 
-        undef = Object.create(plain, {name: {value: 'undef', enumerable: true}});
-        Object.defineProperty(types, 'undef', {value: undef, enumerable: true});
+        undef = Object.create(plain, {name: {value: 'undef'}});
+        Object.defineProperty(types, 'undef', {value: undef});
 
         lexicalAddressBase = Object.create(
             plain,
             {
                 id: {value: lexicalAddressId},
-                name: {value: 'lexical address', enumerable: true},
-                clone: {value: function () {
-                    return nuLexicalAddress(this.lsl, this.index);
+                toJSON: {value: function () {
+                    return {type: 'lexical address',
+                            lsl: this.lsl,
+                            index: this.index};
                 }},
                 transitiveDereference: {value: function (vcpu) {
                     var seen = {}, obj = this;
@@ -57,20 +62,17 @@
             });
 
         nuLexicalAddress = function (lsl, index) {
-            return Object.create(
-                lexicalAddressBase,
-                {
-                    lsl: {value: lsl},
-                    index: {value: index},
-                });
+            lexicalAddressTemplate.lsl.value = lsl;
+            lexicalAddressTemplate.index.value = index;
+            return Object.create(lexicalAddressBase, lexicalAddressTemplate);
         };
-        Object.defineProperty(types, 'nuLexicalAddress', {value: nuLexicalAddress, enumerable: true});
+        Object.defineProperty(types, 'nuLexicalAddress', {value: nuLexicalAddress});
         Object.defineProperty(types, 'isLexicalAddress',
                               {value: function (thing) {
                                   return thing &&
                                       typeof thing === 'object' &&
                                       lexicalAddressId === thing.id;
-                              }, enumerable: true});
+                              }});
 
         return types;
     });

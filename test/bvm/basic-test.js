@@ -199,7 +199,7 @@
                                      var idx;
                                      for (idx = 0; idx < stack.length(); idx += 3) {
                                          assert(stack.index(idx) !== stack.index(idx+1) ||
-                                                idx >= 12);
+                                                idx >= 9);
                                          assert(stack.index(idx+1) === stack.index(idx+2));
                                      }
                                  }}))

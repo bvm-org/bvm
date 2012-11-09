@@ -48,6 +48,7 @@
                             if (this.cs.dps) {
                                 this.enterStack(this.cs.dps); // implicit return with 0 results
                             } else {
+                                this.result = this.cs;
                                 this.running = false;
                             }
                         } else {
@@ -120,15 +121,17 @@
         }
 
         function adornOps (vcpu, ops) {
-            var opsDir = path.join(__dirname, 'ops'), opsObj;
+            var opsDir = path.join(__dirname, 'ops'), opsObj, fun;
             fs.readdirSync(opsDir).forEach(function (opFile) {
                 if (path.extname(opFile) in require.extensions) {
                     opsObj = require(path.join(opsDir, opFile))(vcpu);
                     Object.keys(opsObj).forEach(function (key) {
+                        fun = opsObj[key].bind(ops);
+                        fun.toJSON = function () { return key + '!'; };
                         opsObj[key] = { configurable: false,
                                         writable: false,
                                         enumerable: false,
-                                        value: opsObj[key].bind(ops)
+                                        value: fun
                                       };
                     });
                     Object.defineProperties(ops, opsObj);

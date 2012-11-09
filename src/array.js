@@ -61,6 +61,9 @@
                         // new array, which would break the sharing.
                         this.array.push.apply(this.array, ary);
                         return this;
+                    }},
+                    toJSON: {value: function () {
+                        return this.array;
                     }}
                 }),
             nuArray;

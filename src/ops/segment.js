@@ -19,7 +19,7 @@
                     } else {
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark
-                        vcpu.cs.push(vcpu.cs.nuSegment(removed, vcpu.cs));
+                        vcpu.cs.push(vcpu.cs.segment.nuSegment(removed, vcpu.cs));
                         return undefined;
                     }
                 }

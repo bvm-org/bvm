@@ -3,13 +3,19 @@
 
         'use strict';
 
-        var types = require('../types');
+        var types = require('../types'),
+            segmentTypes = require('../segment');
 
         return function (vcpu) {
             return {
                 PUSH: function () {
-                    vcpu.cs.push(vcpu.cs.ip.fetchAndInc());
-                    return undefined;
+                    var op = vcpu.cs.ip.fetchAndInc();
+                    if (op === segmentTypes.segmentExhausted) {
+                        throw "NOT ENOUGH OPERANDS (PUSH)"; // TODO interrupt handler
+                    } else {
+                        vcpu.cs.push(op);
+                        return undefined;
+                    }
                 },
                 POP: function () {
                     if (vcpu.cs.length() > 0) {
