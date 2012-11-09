@@ -20,11 +20,28 @@ Statements
     }
 
 Statement
-  = Section
+  = Push
+  / Section
   / LexicalAddress
   / SignedNumericLiteral
   / QuotedStringLiteral
   / Opcode
+
+Push "push"
+  = "PUSH"i __ operand:PushOperand {
+      return {
+        type: "PUSH",
+        operand: operand
+      };
+    }
+
+PushOperand
+    = start:SectionStart { return start.type + "_START"; }
+    / end:SectionEnd { return end.type + "_END"; }
+    / Opcode
+    / SignedNumericLiteral
+    / QuotedStringLiteral
+    / "PUSH"i
 
 Section "section"
   = start:SectionStart __
@@ -40,14 +57,17 @@ Section "section"
     }
 
 SectionStart
-  = type:SectionPrefix "_START"i { type = type.toUpperCase();
-                                   return { type: type, text: type }; }
+  = type:SectionPrefix "_START"i {
+      type = type.toUpperCase(); return { type: type, text: type };
+    }
   / "[" { return { type: "ARRAY", text: 0 }; }
   / "<" { return { type: "DICT", text: 1 }; }
   / "{" { return { type: "SEG", text: 2 }; }
 
 SectionEnd
-  = type:SectionPrefix "_END"i { type = type.toUpperCase(); return { type: type, text: type }; }
+  = type:SectionPrefix "_END"i {
+      type = type.toUpperCase(); return { type: type, text: type };
+    }
   / "]" { return { type: "ARRAY", text: 0 }; }
   / ">" { return { type: "DICT", text: 1 }; }
   / "}" { return { type: "SEG", text: 2 }; }
@@ -144,7 +164,7 @@ NonEscapeCharacter
   = !SingleEscapeCharacter char:Char { return char; }
 
 Opcode
-  = !SectionPrefix chars:OpcodeCharset+ { return chars.join(""); }
+  = !SectionPrefix !Push chars:OpcodeCharset+ { return chars.join(""); }
 
 OpcodeCharset "opcode"
   = [A-Za-z_]

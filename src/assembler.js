@@ -63,7 +63,12 @@
                                     }
                                     result.push(elem.subtype + '_START');
                                     worklist.unshift(elem.subtype + '_END');
-                                    worklist = elem.statements.slice(0).concat(worklist)
+                                    worklist = elem.statements.slice(0).concat(worklist);
+                                } else if (elem.type === 'PUSH') {
+                                    result.push('PUSH');
+                                    worklist.unshift(elem.operand);
+                                } else {
+                                    throw "Unrecognised program element: " + elem;
                                 }
                             } else {
                                 throw "Unrecognised program element: " + elem;
