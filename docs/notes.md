@@ -373,3 +373,35 @@ can't(?)  violate the type sigs.
 
 - For the fib example, need to work out returning values and the tail
 calls...
+
+
+Dict stack issues
+=================
+
+- If stack and if errors just look up functions, trivial way to catch
+  errors - just install new dict with appropriate functions in it,
+  when out of the catch block, just pop the dict stack.
+- Simple, elegant.
+
+- However, complicates the dict API somewhat
+- default lookup would traverse stack
+
+Expected use case would be to construct dict locally then push onto
+stack. Then ops, then pop stack. Existing dict api would be
+sufficient.
+
+If default store is in the top stack (i.e. not replace if found lower)
+then could do the push first - greater flexibility.
+
+Useful additional API:
+- where (key): returns undef or the highest dict containing key.
+- replace (key, value): finds key and replaces anywhere in stack. If
+      not found, instert into top.
+- push/pop: obv
+- dup_to_op_stack: [rename!] puts the entire dict stack onto the opstack.
+- [inverse of above]
+
+Only push/pop are strictly unnecessary (could be rewritten as
+dup_to_op_stack followed by normal PUSH), which feels right.
+
+There is no delete that acts on the dict stack.
