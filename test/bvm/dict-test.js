@@ -122,28 +122,6 @@
                                              {type: 'dict', contents: {}},
                                              {type: 'dict', contents: {}}]})),
                             ]).run();
-            },
-
-            'current': function (done) {
-                var cpu = runner(done);
-                cpu.setCode(['DICT_CUR_GET',
-                             'DICT_NEW',
-                             cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'dict'},
-                                             {type: 'dict', contents: {}}]})),
-                             'PUSH', 'a', 5, 'DICT_STORE',
-                             'DICT_CUR_SET', 'PUSH', 'a', 'LOAD',
-                             cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'dict'},
-                                             {type: 'dict', contents: {'a': 5}},
-                                             5]})),
-                             'POP', 'PUSH', 'b', 17, 'STORE',
-                             cpu.addBreakPoint(runner.baseStackConfigDiff(
-                                 {contents: [{type: 'dict'},
-                                             {type: 'dict', contents: {'a': 5,
-                                                                       'b': 17}}]})),
-                             'POP', 'DICT_CUR_SET'
-                            ]).run();
             }
         });
     });

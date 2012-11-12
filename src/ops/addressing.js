@@ -20,9 +20,8 @@
                             vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
                             return undefined;
                         } else if (typeof reference === 'string') {
-                            found = vcpu.cd.load(reference);
-                            if (found === types.undef &&
-                                reference in this) {
+                            found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
+                            if (found === undefined && reference in this) {
                                 vcpu.cs.push(this[reference]);
                                 return undefined;
                             } else {
@@ -45,7 +44,7 @@
                             vcpu.dereferenceScope(reference.lsl).store(reference.index, value);
                             return undefined;
                         } else if (typeof reference === 'string') {
-                            vcpu.cd.store(reference, value);
+                            vcpu.ds.index(vcpu.ds.length() - 1).store(reference, value);
                             return undefined;
                         } else {
                             throw "INVALID OPERAND (STORE)"; // TODO interrupt handler
@@ -75,7 +74,7 @@
                     if (types.isLexicalAddress(op)) {
                         thing = vcpu.dereferenceScope(op.lsl).index(op.index);
                     } else if (typeof op === 'string') {
-                        thing = vcpu.cd.load(op);
+                        thing = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
                     } else {
                         vcpu.cs.push(op);
                         return undefined;

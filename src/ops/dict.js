@@ -116,25 +116,6 @@
                     } else {
                         throw "NOT ENOUGH OPERANDS (DICT_KEYS)"; // TODO interrupt handler
                     }
-                },
-                DICT_CUR_GET: function () {
-                    vcpu.cs.push(vcpu.cd);
-                    return undefined;
-                },
-                DICT_CUR_SET: function () {
-                    var dict;
-                    if (vcpu.cs.length() > 0) {
-                        dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict)) {
-                            vcpu.cd = dict;
-                            vcpu.cs.push(dict);
-                            return undefined;
-                        } else {
-                            throw "INVALID OPERAND (DICT_CUR_SET)"; // TODO interrupt handler
-                        }
-                    } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_CUR_SET)"; // TODO interrupt handler
-                    }
                 }
             };
         };

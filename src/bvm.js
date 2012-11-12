@@ -78,7 +78,7 @@
                     }},
                     deferred: {value: 0, writable: true},
                     lsps: {value: []},
-                    cd: {value: nuDict(), writable: true},
+                    ds: {value: nuArray([nuDict()]), writable: true},
                     cs: {value: undefined, writable: true},
                     dereferenceScope: {value: function (lsl) {
                         if (0 <= lsl && lsl < this.lsps.length) {
