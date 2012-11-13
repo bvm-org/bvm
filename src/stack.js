@@ -5,13 +5,14 @@
 
         var id = {},
             nuArray = require('./array'),
+            undef,
             stackTemplate = {
                 id:        {value: id},
-                dps:       {value: undefined, writable: true},
-                lps:       {value: undefined},
-                lsl:       {value: undefined},
-                ip:        {value: undefined},
-                segment:   {value: undefined},
+                dps:       {value: undef, writable: true},
+                lps:       {value: undef},
+                lsl:       {value: undef},
+                ip:        {value: undef},
+                segment:   {value: undef},
                 clone:     {value: function (cloneStack) {
                     var stack = Object.getPrototypeOf(this);
                     return adornStackOps(

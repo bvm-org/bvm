@@ -7,7 +7,8 @@
             return {
                 LOG: function () {
                     if (vcpu.cs.length() > 0) {
-                        return console.log(vcpu.cs.pop());
+                        console.log(vcpu.cs.pop());
+                        return;
                     } else {
                         throw "NOT ENOUGH OPERANDS (LOG)"; // TODO interrupt handler
                     }

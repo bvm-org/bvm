@@ -25,7 +25,7 @@
                                 n = 1;
                             }
                             vcpu.cs.clear(len, n);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (IF)"; // TODO interrupt handler
                         }
@@ -78,7 +78,7 @@
                         val = vcpu.cs.pop();
                         if (typeof val === 'number') {
                             vcpu.cs.ip.set(val);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (JUMP)"; // TODO interrupt handler
                         }
@@ -94,13 +94,13 @@
                             val = vcpu.cs.pop();
                             if (typeof val === 'number') {
                                 vcpu.cs.ip.set(val);
-                                return undefined;
+                                return;
                             } else {
                                 throw "INVALID OPERAND (JUMP_IF)"; // TODO interrupt handler
                             }
                         } else if (val === false) {
                             vcpu.cs.pop();
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (JUMP_IF)"; // TODO interrupt handler
                         }

@@ -6,13 +6,14 @@
         var types = require('./types'),
             id = {},
             dictBase = {id: id},
+            undef,
             dictTemplate = {
-                has:    {value: undefined},
-                keys:   {value: undefined},
-                load:   {value: undefined},
-                store:  {value: undefined},
-                remove: {value: undefined},
-                clone:  {value: undefined}
+                has:    {value: undef},
+                keys:   {value: undef},
+                load:   {value: undef},
+                store:  {value: undef},
+                remove: {value: undef},
+                clone:  {value: undef}
             },
             nuDict;
 
@@ -41,11 +42,11 @@
             };
             dictTemplate.store.value = function (key, value) {
                 dict[key] = value;
-                return undefined;
+                return;
             };
             dictTemplate.remove.value = function (key) {
                 delete dict[key];
-                return undefined;
+                return;
             };
             dictTemplate.clone.value = function () {
                 var d = {};

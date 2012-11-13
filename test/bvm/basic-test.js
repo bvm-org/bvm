@@ -176,9 +176,11 @@
                              'SEG_START', 'SEG_END', 'CLONE', 'DUPLICATE',
                              0, 0, 'LEXICAL_ADDRESS', 'CLONE', 'DUPLICATE',
                              5, 'CLONE', 'DUPLICATE',
+                             'PUSH', new String('a'), 'CLONE', 'DUPLICATE',
                              'PUSH', 'hello', 'CLONE', 'DUPLICATE',
                              'TRUE', 'CLONE', 'DUPLICATE',
                              'UNDEF', 'CLONE', 'DUPLICATE',
+                             'MARK', 'CLONE', 'DUPLICATE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[], [], [],
                                              {type: 'dict', contents: {}},
@@ -191,13 +193,15 @@
                                                {type: 'lexical', lsl: 0, index: 0},
                                                  {type: 'lexical', lsl: 0, index: 0},
                                              5, 5, 5,
+                                             new String('a'), 'a', new String('a'),
                                              'hello', 'hello', 'hello',
                                              true, true, true,
-                                             types.undef, types.undef, types.undef
+                                             types.undef, types.undef, types.undef,
+                                             types.mark, types.mark, types.mark
                                             ],
                                  post: function (stack) {
-                                     var idx;
-                                     for (idx = 0; idx < stack.length(); idx += 3) {
+                                     var idx = 0, len = stack.length();
+                                     for (; idx < len; idx += 3) {
                                          assert(stack.index(idx) !== stack.index(idx+1) ||
                                                 idx >= 9);
                                          assert(stack.index(idx+1) === stack.index(idx+2));

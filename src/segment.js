@@ -7,7 +7,8 @@
             types = require('./types'),
             segmentTypes = {},
             id = {},
-            segmentExhausted = {};
+            segmentExhausted = {},
+            undef;
 
         (function jsonSegment () {
 
@@ -17,7 +18,7 @@
 
             var segmentTemplate = {
                 id:        {value: id},
-                ls:        {value: undefined},
+                ls:        {value: undef},
                 nuIP:      {value: function (index) { return nuIP(this, index); }},
                 nuSegment: {value: segmentTypes.json},
                 clone:     {value: function () {
@@ -30,12 +31,12 @@
                             instructions: Object.getPrototypeOf(this)};
                 }}
             }, ipTemplate = {
-                fetchAndInc:       {value: undefined},
-                set:               {value: undefined},
-                replaceMostRecent: {value: undefined},
-                isExhausted:       {value: undefined},
-                clone:             {value: undefined},
-                toJSON:            {value: undefined}
+                fetchAndInc:       {value: undef},
+                set:               {value: undef},
+                replaceMostRecent: {value: undef},
+                isExhausted:       {value: undef},
+                clone:             {value: undef},
+                toJSON:            {value: undef}
             };
 
             function adornSegmentFields (segment, stackOfCurrentLexicalScope) {
@@ -64,7 +65,7 @@
                     if (typeof idx === 'number' &&
                         idx >= 0 && idx < segment.length()) {
                         index = idx;
-                        return undefined;
+                        return;
                     } else {
                         throw "INVALID IP: " + idx; // TODO interrupt handler
                     }

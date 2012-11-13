@@ -3,15 +3,15 @@
 
         'use strict';
 
-        var types = require('../types');
-        var nuDict = require('../dict');
-        var nuArray = require('../array');
+        var types = require('../types'),
+            nuDict = require('../dict'),
+            nuArray = require('../array');
 
         return function (vcpu) {
             return {
                 DICT_START: function () {
                     this.MARK();
-                    return undefined;
+                    return;
                 },
                 DICT_END: function () {
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
@@ -28,7 +28,7 @@
                                 dict[key] = val;
                             }
                             vcpu.cs.push(nuDict(dict));
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_END)"; // TODO interrupt handler
                         }
@@ -36,7 +36,7 @@
                 },
                 DICT_NEW: function () {
                     vcpu.cs.push(nuDict());
-                    return undefined;
+                    return;
                 },
                 DICT_STORE: function () {
                     var dict, key, value;
@@ -44,10 +44,10 @@
                         value = vcpu.cs.pop();
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && typeof key === 'string') {
+                        if (nuDict.isDict(dict) && types.isString(key)) {
                             dict.store(key, value);
                             vcpu.cs.push(dict);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_STORE)"; // TODO interrupt handler
                         }
@@ -60,10 +60,10 @@
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && typeof key === 'string') {
+                        if (nuDict.isDict(dict) && types.isString(key)) {
                             vcpu.cs.push(dict);
                             vcpu.cs.push(dict.has(key));
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_CONTAINS)"; // TODO interrupt handler
                         }
@@ -76,10 +76,10 @@
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && typeof key === 'string') {
+                        if (nuDict.isDict(dict) && types.isString(key)) {
                             dict.remove(key);
                             vcpu.cs.push(dict);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_HAS)"; // TODO interrupt handler
                         }
@@ -92,10 +92,10 @@
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && typeof key === 'string') {
+                        if (nuDict.isDict(dict) && types.isString(key)) {
                             vcpu.cs.push(dict);
                             vcpu.cs.push(dict.load(key));
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_STORE)"; // TODO interrupt handler
                         }

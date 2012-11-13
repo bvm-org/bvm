@@ -11,7 +11,7 @@
                     a = vcpu.cs.pop();
                     if (typeof a === 'boolean' && typeof b === 'boolean') {
                         vcpu.cs.push(fun(a, b) ? true : false);
-                        return undefined;
+                        return;
                     } else {
                         throw "INVALID OPERAND (" + opStr + ")"; // TODO interrupt handler
                     }
@@ -33,7 +33,7 @@
                         a = vcpu.cs.pop();
                         if (typeof a === 'boolean') {
                             vcpu.cs.push((! a) ? true : false);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (NOT)"; // TODO interrupt handler
                         }

@@ -12,15 +12,14 @@
         return function (vcpu) {
 
             var binaryCmpNumStr = function (fun, opStr) {
-                var a, b, aType, bType;
+                var a, b;
                 if (vcpu.cs.length() > 1) {
                     b = vcpu.cs.pop();
                     a = vcpu.cs.pop();
-                    aType = typeof a;
-                    bType = typeof b;
-                    if (aType === bType && (aType === 'number' || aType === 'string')) {
+                    if ((typeof a === 'number' && typeof b === 'number') ||
+                        (types.isString(a) && types.isString(b))) {
                         vcpu.cs.push(fun(a, b));
-                        return undefined;
+                        return;
                     } else {
                         throw "INVALID OPERAND (" + opStr + ")"; // TODO interrupt handler
                     }
@@ -48,22 +47,25 @@
                                 a === types.mark ||
                                 a === types.undef) {
                                 vcpu.cs.push(a === b);
-                                return undefined;
+                                return;
                             } else if (types.isLexicalAddress(a)) {
                                 vcpu.cs.push(types.isLexicalAddress(b) &&
                                              a.lsl === b.lsl && a.index === b.index);
-                                return undefined;
+                                return;
                             } else if (nuArray.isArray(a) || nuDict.isDict(a) ||
                                        segmentTypes.isSegment(a) || nuStack.isStack(a) ||
                                        typeof a === 'function') {
                                 vcpu.cs.push(a === b);
-                                return undefined;
+                                return;
                             } else {
                                 throw "INTERNAL ERROR (EQ)"; // TODO interrupt handler
                             }
+                        } else if (types.isString(a) && types.isString(b)) {
+                            // this will convert both to the primitive repr.
+                            vcpu.cs.push(('' + a) === ('' + b));
                         } else {
                             vcpu.cs.push(false);
-                            return undefined;
+                            return;
                         }
                     } else {
                         throw "NOT ENOUGH OPERANDS (EQ)"; // TODO interrupt handler
@@ -72,7 +74,7 @@
                 NEQ: function () {
                     this.EQ();
                     vcpu.cs.push(! vcpu.cs.pop());
-                    return undefined;
+                    return;
                 },
                 LT:  function () { return binaryCmpNumStr(lt,  'LT' ); },
                 LTE: function () { return binaryCmpNumStr(lte, 'LTE'); },

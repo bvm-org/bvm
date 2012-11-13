@@ -10,7 +10,7 @@
             return {
                 ARRAY_START: function () {
                     this.MARK();
-                    return undefined;
+                    return;
                 },
                 ARRAY_END: function () {
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
@@ -21,12 +21,12 @@
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark
                         vcpu.cs.push(nuArray(removed));
-                        return undefined;
+                        return;
                     }
                 },
                 ARRAY_NEW: function () {
                     vcpu.cs.push(nuArray());
-                    return undefined;
+                    return;
                 },
                 ARRAY_STORE: function () {
                     var array, idx, value;
@@ -37,7 +37,7 @@
                         if (nuArray.isArray(array) && typeof idx === 'number') {
                             array.store(idx, value);
                             vcpu.cs.push(array);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (ARRAY_STORE)"; // TODO interrupt handler
                         }
@@ -53,7 +53,7 @@
                         if (nuArray.isArray(array) && typeof idx === 'number') {
                             vcpu.cs.push(array);
                             vcpu.cs.push(array.index(idx));
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (ARRAY_LOAD)"; // TODO interrupt handler
                         }
@@ -68,7 +68,7 @@
                         if (nuArray.isArray(array)) {
                             vcpu.cs.push(array);
                             vcpu.cs.push(array.length());
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (ARRAY_LENGTH)"; // TODO interrupt handler
                         }
@@ -84,7 +84,7 @@
                         if (nuArray.isArray(array) && typeof len === 'number' && len >= 0) {
                             array.length(len);
                             vcpu.cs.push(array);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (ARRAY_TRUNCATE)"; // TODO interrupt handler
                         }

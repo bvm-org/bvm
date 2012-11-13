@@ -8,7 +8,8 @@
             assert = buster.assertions.assert,
             refute = buster.assertions.refute,
             runner = require('./cpuRunner'),
-            types = runner.types;
+            types = runner.types,
+            undef;
 
         buster.testCase('segment/exec/exit ops', {
             'literal empty': function (done) {
@@ -251,7 +252,7 @@
                                    contents: [7,
                                               {type: 'stack', lsl: 2, contents:
                                                [{type: 'stack', contents: [123, 'goodbye'], lsl: 0}]}],
-                                   dps: undefined, lsl: 1}),
+                                   dps: undef, lsl: 1}),
                              'SEG_END', 0, 'CALLCC',
                              cpu.addBreakPoint({contents: [123, 'goodbye'], lsl: 0}),
                              7, 1, 'EXIT'
@@ -261,7 +262,7 @@
             'callcc loop': function (done) {
                 var cpu = runner(done), results = [5];
                 cpu.setCode(['SEG_START', 'DUPLICATE', 1, 'EXEC',
-                               cpu.addBreakPoint({lsl: 1, dps: undefined, contents: [5, 6]}),
+                               cpu.addBreakPoint({lsl: 1, dps: undef, contents: [5, 6]}),
                                // We actually stop (eventually) here.
                              'SEG_END',
                              0, 'CALLCC',

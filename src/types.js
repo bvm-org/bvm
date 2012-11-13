@@ -25,7 +25,8 @@
                 lsl: {value: 0},
                 index: {value: 0}
             },
-            lexicalAddressBase, nuLexicalAddress, mark, undef;
+            lexicalAddressBase, nuLexicalAddress, mark, undef,
+            toString = Object.prototype.toString;
 
         mark = Object.create(plain, {name: {value: 'mark'}});
         Object.defineProperty(types, 'mark', {value: mark});
@@ -73,6 +74,12 @@
                                       typeof thing === 'object' &&
                                       lexicalAddressId === thing.id;
                               }});
+
+        Object.defineProperty(types, 'isString', {value: function (thing) {
+            return (typeof thing === 'string') ||
+                (typeof thing === 'object' &&
+                 toString.call(thing) === '[object String]');
+        }});
 
         return types;
     });

@@ -16,7 +16,7 @@
 
                     if (segmentTypes.isSegment(call.seg)) {
                         vcpu.enterSegment(call.seg, call.args, dps);
-                        return undefined;
+                        return;
                     } else if (nuStack.isStack(call.seg)) {
                         call.seg = call.seg.clone(false);
                         // It is vitally important we do this dps
@@ -25,11 +25,11 @@
                         // doing the clone first avoids a loop.
                         call.seg.dps = dps;
                         vcpu.enterStack(call.seg, call.args);
-                        return undefined;
+                        return;
                     } else if (typeof call.seg === 'function') {
                         vcpu.cs.appendArray(call.args);
                         vcpu.dispatch(call.seg);
-                        return undefined;
+                        return;
                     } else {
                         throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
                     }
@@ -52,20 +52,20 @@
                         }
                     }
                     vcpu.enterStack(vcpu.cs.dps, removed);
-                    return undefined;
+                    return;
                 },
                 CALLCC: function () {
                     var call = utils.prepareForCall(vcpu, "CALLCC");
                     call.args.push(vcpu.cs);
 
                     if (segmentTypes.isSegment(call.seg)) {
-                        vcpu.enterSegment(call.seg, call.args, undefined);
-                        return undefined;
+                        vcpu.enterSegment(call.seg, call.args);
+                        return;
                     } else if (nuStack.isStack(call.seg)) {
                         // NB we do not do the same dps
                         // modifications here as in EXEC
                         vcpu.enterStack(call.seg.clone(false), call.args);
-                        return undefined;
+                        return;
                     } else {
                         throw "INVALID OPERAND (CALLCC)"; // TODO interrupt handler
                     }

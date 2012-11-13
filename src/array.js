@@ -5,10 +5,11 @@
 
         var types = require('./types'),
             id = {},
-            arrayResetTemplate = {array: {value: undefined, configurable: true},
-                                  lastIndexOf: {value: undefined, configurable: true},
-                                  push: {value: undefined, configurable: true},
-                                  pop: {value: undefined, configurable: true}},
+            undef,
+            arrayResetTemplate = {array: {value: undef, configurable: true},
+                                  lastIndexOf: {value: undef, configurable: true},
+                                  push: {value: undef, configurable: true},
+                                  pop: {value: undef, configurable: true}},
             arrayBase = Object.defineProperties(
                 {},
                 {
@@ -26,7 +27,7 @@
                             throw "ILLEGAL ARRAY ADDRESS: " + idx;
                         } else {
                             val = this.array[idx];
-                            return val === undefined ? types.undef : val;
+                            return val === undef ? types.undef : val;
                         }
                     }},
                     store: {value: function (idx, val) {
@@ -34,7 +35,7 @@
                             throw "ILLEGAL ARRAY ADDRESS";
                         } else {
                             this.array[idx] = val;
-                            return undefined;
+                            return;
                         }
                     }},
                     clear: {value: function (from, count) {

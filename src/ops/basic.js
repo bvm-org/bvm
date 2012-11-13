@@ -14,7 +14,7 @@
                         throw "NOT ENOUGH OPERANDS (PUSH)"; // TODO interrupt handler
                     } else {
                         vcpu.cs.push(op);
-                        return undefined;
+                        return;
                     }
                 },
                 POP: function () {
@@ -28,7 +28,7 @@
                     var len = vcpu.cs.length();
                     if (len > 0) {
                         vcpu.cs.push(vcpu.cs.index(len - 1));
-                        return undefined;
+                        return;
                     } else {
                         throw "NOT ENOUGH OPERANDS (DUPLICATE)"; // TODO interrupt handler
                     }
@@ -40,14 +40,14 @@
                         tmp = vcpu.cs.index(len);
                         vcpu.cs.store(len, vcpu.cs.index(len - 1));
                         vcpu.cs.store(len - 1, tmp);
-                        return undefined;
+                        return;
                     } else {
                         throw "NOT ENOUGH OPERANDS (EXCHANGE)"; // TODO interrupt handler
                     }
                 },
                 COUNT: function () {
                     vcpu.cs.push(vcpu.cs.length());
-                    return undefined;
+                    return;
                 },
                 COPY: function () {
                     var len = vcpu.cs.length(), count, idx;
@@ -58,7 +58,7 @@
                             for (idx = len - count; idx < len; idx += 1) {
                                 vcpu.cs.push(vcpu.cs.index(idx));
                             }
-                            return undefined;
+                            return;
                         } else {
                             throw "NOT ENOUGH OPERANDS (COPY)"; // TODO interrupt handler
                         }
@@ -73,7 +73,7 @@
                         len -= 1;
                         if (len > idx) {
                             vcpu.cs.push(vcpu.cs.index(len - idx - 1));
-                            return undefined;
+                            return;
                         } else {
                             throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler
                         }
@@ -95,7 +95,7 @@
                                 shift = Math.abs(shift) % count;
                             }
                             vcpu.cs.appendArray(removed.splice(shift).concat(removed));
-                            return undefined;
+                            return;
                         } else {
                             throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
                         }
@@ -110,15 +110,15 @@
                         thingT = typeof thing;
                         if (thingT === 'number' ||
                             thingT === 'boolean' ||
-                            thingT === 'string' ||
+                            types.isString(thing) || // We treat ALL strings as primitives
                             thing === types.isLexicalAddress(thing) ||
                             thing === types.undef ||
                             thing === types.mark) {
                             vcpu.cs.push(thing);
-                            return undefined;
+                            return;
                         } else if (thing.clone && Function === thing.clone.constructor) {
                             vcpu.cs.push(thing.clone());
-                            return undefined;
+                            return;
                         } else {
                             throw "INTERNAL ERROR (CLONE)"; // TODO interrupt handler
                         }
@@ -128,19 +128,19 @@
                 },
                 CLEAR: function () {
                     vcpu.cs.clear();
-                    return undefined;
+                    return;
                 },
                 TRUE: function () {
                     vcpu.cs.push(true);
-                    return undefined;
+                    return;
                 },
                 FALSE: function () {
                     vcpu.cs.push(false);
-                    return undefined;
+                    return;
                 },
                 UNDEF: function () {
                     vcpu.cs.push(types.undef);
-                    return undefined;
+                    return;
                 }
             };
         };

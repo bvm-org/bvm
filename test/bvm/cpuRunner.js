@@ -14,8 +14,9 @@
             nuStack = require('../../src/stack'),
             segmentTypes = require('../../src/segment'),
             breakpointBase = 'BREAKPOINT',
-            baseStackConfig = {dps: undefined,
-                               lps: undefined,
+            undef,
+            baseStackConfig = {dps: undef,
+                               lps: undef,
                                lsl: 0,
                                contents: []},
             runnerBase, result, comparator;
@@ -49,16 +50,22 @@
         });
 
         comparator = function (test, found, vcpu, ops) {
-            if (typeof test === 'string' ||
-                typeof test === 'boolean' ||
+            if (typeof test === 'boolean' ||
                 typeof test === 'number' ||
                 test === types.mark ||
                 test === types.undef ||
-                test === undefined) {
+                test === undef) {
                 if (typeof found === 'function') {
                     assert(test in ops && ops[test] === found, test);
                 } else {
                     assert(test === found, test);
+                }
+            } else if (types.isString(test)) {
+                if (typeof found === 'function') {
+                    assert(test in ops && ops[test] === found, test);
+                } else {
+                    assert(types.isString(found));
+                    assert(('' + test) === ('' + found), test);
                 }
             } else if (Array.isArray(test)) {
                 assert(nuArray.isArray(found));
@@ -107,7 +114,7 @@
                     throw 'Non-understood type to compare in contents: ' + test;
                 }
             } else if (test === result.breakpoint) {
-                assert(typeof found === 'string' &&
+                assert(types.isString(found) &&
                        found.substr(0, breakpointBase.length) === breakpointBase);
             } else {
                 throw 'Non-understood type to compare in contents: ' + test;

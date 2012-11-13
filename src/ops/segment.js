@@ -9,18 +9,18 @@
             return {
                 SEG_START: function () {
                     this.MARK();
-                    return undefined;
+                    return;
                 },
                 SEG_END: function () {
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
-                    removed;
+                        removed;
                     if (mark === -1) {
                         throw "INVALID OPERAND (SEG_END)"; // TODO interrupt handler
                     } else {
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark
                         vcpu.cs.push(vcpu.cs.segment.nuSegment(removed, vcpu.cs));
-                        return undefined;
+                        return;
                     }
                 }
             };

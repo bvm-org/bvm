@@ -8,7 +8,8 @@
             nuArray = require('../array'),
             nuDict = require('../dict'),
             nuStack = require('../stack'),
-            utils = require('../utils');
+            utils = require('../utils'),
+            undef;
 
         return function (vcpu) {
             return {
@@ -18,15 +19,15 @@
                         reference = vcpu.cs.pop();
                         if (types.isLexicalAddress(reference)) {
                             vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
-                            return undefined;
-                        } else if (typeof reference === 'string') {
+                            return;
+                        } else if (types.isString(reference)) {
                             found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
-                            if (found === undefined && reference in this) {
+                            if (found === undef && reference in this) {
                                 vcpu.cs.push(this[reference]);
-                                return undefined;
+                                return;
                             } else {
                                 vcpu.cs.push(found);
-                                return undefined;
+                                return;
                             }
                         } else {
                             throw "INVALID OPERAND (LOAD)" + typeof reference; // TODO interrupt handler
@@ -42,10 +43,10 @@
                         reference = vcpu.cs.pop();
                         if (types.isLexicalAddress(reference)) {
                             vcpu.dereferenceScope(reference.lsl).store(reference.index, value);
-                            return undefined;
-                        } else if (typeof reference === 'string') {
+                            return;
+                        } else if (types.isString(reference)) {
                             vcpu.ds.index(vcpu.ds.length() - 1).store(reference, value);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (STORE)"; // TODO interrupt handler
                         }
@@ -61,7 +62,7 @@
                         if (typeof index === 'number' &&
                             typeof lsl === 'number') {
                             vcpu.cs.push(types.nuLexicalAddress(lsl, index));
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (LEXICAL_ADDRESS)"; // TODO interrupt handler
                         }
@@ -73,17 +74,17 @@
                     var thing;
                     if (types.isLexicalAddress(op)) {
                         thing = vcpu.dereferenceScope(op.lsl).index(op.index);
-                    } else if (typeof op === 'string') {
+                    } else if (types.isString(op)) {
                         thing = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
                     } else {
                         vcpu.cs.push(op);
-                        return undefined;
+                        return;
                     }
                     vcpu.cs.push(thing);
                     if (utils.isExecutable(thing)) {
                         return this.EXEC();
                     }
-                    return undefined;
+                    return;
                 }
             };
         };

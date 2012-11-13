@@ -4,6 +4,7 @@
         'use strict';
 
         var parser = require('./assembler-parser'),
+            types = require('./types'),
             fs = require('fs'),
             pd = require('pretty-data').pd,
             base = {
@@ -39,8 +40,8 @@
                         worklist = this.parsed.statements.slice(0);
                         while (worklist.length) {
                             elem = worklist.shift();
-                            if (typeof elem === 'string') {
-                                if (elem === 'SEG_END') {
+                            if (types.isString(elem)) {
+                                if (('' + elem) === 'SEG_END') {
                                     lsl -= 1;
                                 }
                                 result.push(elem);

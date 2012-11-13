@@ -3,9 +3,9 @@
 
         'use strict';
 
-        var types = require('../types');
-        var nuDict = require('../dict');
-        var nuArray = require('../array');
+        var types = require('../types'),
+            nuDict = require('../dict'),
+            nuArray = require('../array');
 
         return function (vcpu) {
             return {
@@ -15,7 +15,7 @@
                         dict = vcpu.cs.pop();
                         if (nuDict.isDict(dict)) {
                             vcpu.ds.push(dict);
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_STACK_PUSH)"; // TODO interrupt handler
                         }
@@ -29,19 +29,20 @@
                     } else {
                         vcpu.cs.push(types.undef);
                     }
+                    return;
                 },
                 DICT_STACK_WHERE: function () {
                     var key, dict;
                     if (vcpu.cs.length() > 0) {
                         key = vcpu.cs.pop();
-                        if (typeof key === 'string') {
+                        if (types.isString(key)) {
                             dict = utils.searchDicts({key: key, dicts: vcpu.ds}).dict;
                             if (nuDict.isDict(dict)) {
                                 vcpu.cs.push(dict)
                             } else {
                                 vcpu.cs.push(types.undef);
                             }
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_STACK_WHERE)"; // TODO interrupt handler
                         }
@@ -54,14 +55,14 @@
                     if (vcpu.cs.length() > 1) {
                         value = vcpu.cs.pop();
                         key = vcpu.cs.pop();
-                        if (typeof key === 'string') {
+                        if (types.isString(key)) {
                             dict = utils.searchDicts({key: key, dicts: vcpu.ds}).dict;
                             if (nuDict.isDict(dict)) {
                                 dict.store(key, value);
                             } else {
                                 vcpu.ds.index(vcpu.ds.length() - 1).store(key, value);
                             }
-                            return undefined;
+                            return;
                         } else {
                             throw "INVALID OPERAND (DICT_STACK_REPLACE)"; // TODO interrupt handler
                         }

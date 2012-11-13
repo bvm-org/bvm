@@ -3,13 +3,14 @@
 
         'use strict';
 
-        var types = require('./types');
-        var nuArray = require('./array');
-        var nuDict = require('./dict');
-        var nuStack = require('./stack');
-        var segmentTypes = require('./segment');
-        var fs = require('fs');
-        var path = require('path');
+        var types = require('./types'),
+            nuArray = require('./array'),
+            nuDict = require('./dict'),
+            nuStack = require('./stack'),
+            segmentTypes = require('./segment'),
+            fs = require('fs'),
+            path = require('path'),
+            undef;
 
         return function nuVCPU (segment) {
             var ops = {}, vcpu = adornRegistersAndHelpers(ops);
@@ -18,7 +19,7 @@
                 {},
                 {
                     boot: {value: function () {
-                        vcpu.enterSegment(segment, undefined, undefined);
+                        vcpu.enterSegment(segment);
                         return vcpu.run();
                     }},
 
@@ -79,7 +80,7 @@
                     deferred: {value: 0, writable: true},
                     lsps: {value: []},
                     ds: {value: nuArray([nuDict()]), writable: true},
-                    cs: {value: undefined, writable: true},
+                    cs: {value: undef, writable: true},
                     dereferenceScope: {value: function (lsl) {
                         if (0 <= lsl && lsl < this.lsps.length) {
                             return this.lsps[lsl];
@@ -97,11 +98,11 @@
                             lps = lps.lps;
                         }
                         this.cs = stack;
-                        return undefined;
+                        return;
                     }},
                     enterSegment: {value: function (segment, argsAry, parentStack) {
                         this.setStackAndLSPs(nuStack(argsAry, parentStack, segment, 0));
-                        return undefined;
+                        return;
                     }},
                     enterStack: {value: function (stack, resultsAry) {
                         if (nuStack.isStack(stack)) {
@@ -109,13 +110,13 @@
                             if (resultsAry) {
                                 stack.appendArray(resultsAry);
                             }
-                        } else if (stack === undefined) {
+                        } else if (stack === undef) {
                             this.running = false;
                             this.result = resultsAry;
                         } else {
                             throw 'ILLEGAL MANOEUVRE'; // TODO interrupt handler
                         }
-                        return undefined;
+                        return;
                     }}
                 });
         }
