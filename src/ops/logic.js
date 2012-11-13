@@ -4,29 +4,30 @@
         'use strict';
 
         return function (vcpu) {
-            var binaryOp = function (fun, opStr) {
+            var binaryOp = function () {
                 var a, b;
                 if (vcpu.cs.length() > 1) {
                     b = vcpu.cs.pop();
                     a = vcpu.cs.pop();
                     if (typeof a === 'boolean' && typeof b === 'boolean') {
-                        vcpu.cs.push(fun(a, b) ? true : false);
+                        vcpu.cs.push(this(a, b) ? true : false);
                         return;
                     } else {
-                        throw "INVALID OPERAND (" + opStr + ")"; // TODO interrupt handler
+                        throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
                     }
                 } else {
-                    throw "NOT ENOUGH OPERANDS (" + opStr + ")"; // TODO interrupt handler
+                    throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
                 }
             },
             and = function (a, b) { return a && b; },
             or =  function (a, b) { return a || b; },
-            xor =  function (a, b) { return a ^ b; };
+            xor = function (a, b) { return a ^ b; };
+            and.name = 'AND', or.name = 'OR', xor.name = 'XOR';
 
             return {
-                AND: function () { return binaryOp(and, 'AND'); },
-                OR:  function () { return binaryOp(or, 'OR'); },
-                XOR: function () { return binaryOp(xor, 'XOR'); },
+                AND: binaryOp.bind(and),
+                OR:  binaryOp.bind(or),
+                XOR: binaryOp.bind(xor),
                 NOT: function () {
                     var a;
                     if (vcpu.cs.length() > 0) {

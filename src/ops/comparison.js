@@ -11,26 +11,27 @@
 
         return function (vcpu) {
 
-            var binaryCmpNumStr = function (fun, opStr) {
+            var binaryCmpNumStr = function () {
                 var a, b;
                 if (vcpu.cs.length() > 1) {
                     b = vcpu.cs.pop();
                     a = vcpu.cs.pop();
                     if ((typeof a === 'number' && typeof b === 'number') ||
                         (types.isString(a) && types.isString(b))) {
-                        vcpu.cs.push(fun(a, b));
+                        vcpu.cs.push(this(a, b));
                         return;
                     } else {
-                        throw "INVALID OPERAND (" + opStr + ")"; // TODO interrupt handler
+                        throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
                     }
                 } else {
-                    throw "NOT ENOUGH OPERANDS (" + opStr + ")"; // TODO interrupt handler
+                    throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
                 }
             },
             lt = function (a, b) { return a < b; },
             lte = function (a, b) { return a <= b; },
             gt = function (a, b) { return a > b; },
             gte = function (a, b) { return a >= b; };
+            lt.name = 'LT', lte.name = 'LTE', gt.name = 'GT', gte.name = 'GTE';
 
             return {
                 EQ: function () {
@@ -76,10 +77,10 @@
                     vcpu.cs.push(! vcpu.cs.pop());
                     return;
                 },
-                LT:  function () { return binaryCmpNumStr(lt,  'LT' ); },
-                LTE: function () { return binaryCmpNumStr(lte, 'LTE'); },
-                GT:  function () { return binaryCmpNumStr(gt,  'GT' ); },
-                GTE: function () { return binaryCmpNumStr(gte, 'GTE'); }
+                LT:  binaryCmpNumStr.bind(lt),
+                LTE: binaryCmpNumStr.bind(lte),
+                GT:  binaryCmpNumStr.bind(gt),
+                GTE: binaryCmpNumStr.bind(gte),
             };
         };
 
