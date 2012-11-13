@@ -21,16 +21,16 @@
                     } else {
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark
-                        if (removed.length % 2 !== 0) {
-                            throw "INVALID OPERAND (DICT_END)"; // TODO interrupt handler
-                        } else {
-                            for (idx = 0; idx < removed.length; idx += 2) {
+                        if (removed.length % 2 === 0) {
+                            for (idx = 0, len = removed.length; idx < len; idx += 2) {
                                 key = removed[idx];
                                 val = removed[idx + 1];
                                 dict[key] = val;
                             }
                             vcpu.cs.push(nuDict(dict));
                             return undefined;
+                        } else {
+                            throw "INVALID OPERAND (DICT_END)"; // TODO interrupt handler
                         }
                     }
                 },
