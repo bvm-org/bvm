@@ -5,6 +5,10 @@
 
         var types = require('./types'),
             id = {},
+            arrayResetTemplate = {array: {value: undefined, configurable: true},
+                                  lastIndexOf: {value: undefined, configurable: true},
+                                  push: {value: undefined, configurable: true},
+                                  pop: {value: undefined, configurable: true}},
             arrayBase = Object.defineProperties(
                 {},
                 {
@@ -46,12 +50,11 @@
                         return nuArray(this.array.slice(0));
                     }},
                     resetTo: {value: function (ary) {
-                        Object.defineProperties(
-                            this,
-                            {array: {value: ary, configurable: true},
-                             lastIndexOf: {value: ary.lastIndexOf.bind(ary), configurable: true},
-                             push: {value: ary.push.bind(ary), configurable: true},
-                             pop: {value: ary.pop.bind(ary), configurable: true}});
+                        arrayResetTemplate.array.value = ary;
+                        arrayResetTemplate.lastIndexOf.value = ary.lastIndexOf.bind(ary);
+                        arrayResetTemplate.push.value = ary.push.bind(ary);
+                        arrayResetTemplate.pop.value = ary.pop.bind(ary);
+                        Object.defineProperties(this, arrayResetTemplate);
                         return this;
                     }},
                     appendArray: {value: function (ary) {
