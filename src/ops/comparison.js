@@ -18,7 +18,7 @@
                     a = vcpu.cs.pop();
                     if ((typeof a === 'number' && typeof b === 'number') ||
                         (types.isString(a) && types.isString(b))) {
-                        vcpu.cs.push(this(a, b));
+                        vcpu.cs.push(this.fun(a, b));
                         return;
                     } else {
                         throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
@@ -27,13 +27,13 @@
                     throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
                 }
             },
-            lt = function (a, b) { return a < b; },
-            lte = function (a, b) { return a <= b; },
-            gt = function (a, b) { return a > b; },
-            gte = function (a, b) { return a >= b; };
-            lt.name = 'LT', lte.name = 'LTE', gt.name = 'GT', gte.name = 'GTE';
+            lt  = {fun: function (a, b) { return a < b;  }, name: 'LT' },
+            lte = {fun: function (a, b) { return a <= b; }, name: 'LTE'},
+            gt  = {fun: function (a, b) { return a > b;  }, name: 'GT' },
+            gte = {fun: function (a, b) { return a >= b; }, name: 'GTE'},
+            result;
 
-            return {
+            result = {
                 EQ: function () {
                     var a, b, aType, bType;
                     if (vcpu.cs.length() > 1) {
@@ -76,12 +76,13 @@
                     this.EQ();
                     vcpu.cs.push(! vcpu.cs.pop());
                     return;
-                },
-                LT:  binaryCmpNumStr.bind(lt),
-                LTE: binaryCmpNumStr.bind(lte),
-                GT:  binaryCmpNumStr.bind(gt),
-                GTE: binaryCmpNumStr.bind(gte),
+                }
             };
+
+            [lt, lte, gt, gte].forEach(
+                function (binFun) { result[binFun.name] = binaryCmpNumStr.bind(binFun); });
+
+            return result;
         };
 
     });

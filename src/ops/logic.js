@@ -10,7 +10,7 @@
                     b = vcpu.cs.pop();
                     a = vcpu.cs.pop();
                     if (typeof a === 'boolean' && typeof b === 'boolean') {
-                        vcpu.cs.push(this(a, b) ? true : false);
+                        vcpu.cs.push(this.fun(a, b) ? true : false);
                         return;
                     } else {
                         throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
@@ -19,15 +19,12 @@
                     throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
                 }
             },
-            and = function (a, b) { return a && b; },
-            or =  function (a, b) { return a || b; },
-            xor = function (a, b) { return a ^ b; };
-            and.name = 'AND', or.name = 'OR', xor.name = 'XOR';
+            and = {fun: function (a, b) { return a && b; }, name: 'AND'},
+            or  = {fun: function (a, b) { return a || b; }, name: 'OR' },
+            xor = {fun: function (a, b) { return a ^ b;  }, name: 'XOR'},
+            result;
 
-            return {
-                AND: binaryOp.bind(and),
-                OR:  binaryOp.bind(or),
-                XOR: binaryOp.bind(xor),
+            result = {
                 NOT: function () {
                     var a;
                     if (vcpu.cs.length() > 0) {
@@ -43,6 +40,11 @@
                     }
                 }
             };
+
+            [and, or, xor].forEach(
+                function (binFun) {result[binFun.name] = binaryOp.bind(binFun); });
+
+            return result;
         };
 
     });
