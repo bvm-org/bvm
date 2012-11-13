@@ -49,16 +49,17 @@
 
                 searchDicts: {value: function (obj) {
                     var key = obj.key, dicts = obj.dicts, idx = dicts.length() - 1,
-                        found, dict;
+                        dict;
+                    obj.found = types.undef;
+                    obj.dict = types.undef;
                     for (; idx >= 0; idx -= 1) {
                         dict = dicts.index(idx);
                         if (dict.has(key)) {
-                            found = dict.load(key);
+                            obj.found = dict.load(key);
+                            obj.dict = dict;
                             break;
                         }
                     }
-                    obj.dict = dict;
-                    obj.found = found;
                     return obj;
                 }},
             });

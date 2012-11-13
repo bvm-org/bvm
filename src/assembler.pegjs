@@ -164,10 +164,10 @@ NonEscapeCharacter
   = !SingleEscapeCharacter char:Char { return char; }
 
 Opcode
-  = !SectionPrefix !Push chars:OpcodeCharset+ { return chars.join(""); }
+  = !SectionPrefix !Push chars:OpcodeCharset { return chars; }
 
 OpcodeCharset "opcode"
-  = [A-Za-z_]
+  = start:[A-Za-z] rest:[A-Za-z0-9_]+ { return '' + start + rest.join(""); }
 
 Char
   = .

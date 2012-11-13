@@ -71,20 +71,16 @@
                     }
                 },
                 UNKNOWN: function (op) {
-                    var thing;
                     if (types.isLexicalAddress(op)) {
-                        thing = vcpu.dereferenceScope(op.lsl).index(op.index);
+                        vcpu.cs.push(vcpu.dereferenceScope(op.lsl).index(op.index));
+                        return;
                     } else if (types.isString(op)) {
-                        thing = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
+                        vcpu.cs.push(utils.searchDicts({key: op, dicts: vcpu.ds}).found);
+                        return;
                     } else {
                         vcpu.cs.push(op);
                         return;
                     }
-                    vcpu.cs.push(thing);
-                    if (utils.isExecutable(thing)) {
-                        return this.EXEC();
-                    }
-                    return;
                 }
             };
         };

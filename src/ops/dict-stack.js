@@ -36,12 +36,7 @@
                     if (vcpu.cs.length() > 0) {
                         key = vcpu.cs.pop();
                         if (types.isString(key)) {
-                            dict = utils.searchDicts({key: key, dicts: vcpu.ds}).dict;
-                            if (nuDict.isDict(dict)) {
-                                vcpu.cs.push(dict)
-                            } else {
-                                vcpu.cs.push(types.undef);
-                            }
+                            vcpu.cs.push(utils.searchDicts({key: key, dicts: vcpu.ds}).dict);
                             return;
                         } else {
                             throw "INVALID OPERAND (DICT_STACK_WHERE)"; // TODO interrupt handler
