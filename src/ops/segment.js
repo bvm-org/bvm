@@ -3,7 +3,8 @@
 
         'use strict';
 
-        var types = require('../types');
+        var types = require('../types'),
+            nuError = require('../errors');
 
         return function (vcpu) {
             return {
@@ -15,7 +16,7 @@
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
                         removed;
                     if (mark === -1) {
-                        throw "INVALID OPERAND (SEG_END)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     } else {
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark

@@ -3,14 +3,16 @@
 
         'use strict';
 
+        var nuError = require('../errors');
+
         return function (vcpu) {
             return {
                 LOG: function () {
                     if (vcpu.cs.length() > 0) {
-                        console.log(vcpu.cs.pop());
+                        console.log(JSON.stringify(vcpu.cs.pop()));
                         return;
                     } else {
-                        throw "NOT ENOUGH OPERANDS (LOG)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 }
             };

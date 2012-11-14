@@ -4,6 +4,7 @@
         'use strict';
 
         var types = require('./types'),
+            nuError = require('./errors'),
             id = {},
             undef,
             arrayResetTemplate = {array: {value: undef, configurable: true},
@@ -24,7 +25,7 @@
                     index: {value: function (idx) {
                         var val;
                         if (idx < 0 || this.array.length <= idx) {
-                            throw "ILLEGAL ARRAY ADDRESS: " + idx;
+                            nuError.invalidOperand(this, idx);
                         } else {
                             val = this.array[idx];
                             return val === undef ? types.undef : val;
@@ -32,7 +33,7 @@
                     }},
                     store: {value: function (idx, val) {
                         if (idx < 0) {
-                            throw "ILLEGAL ARRAY ADDRESS";
+                            nuError.invalidOperand(this, idx);
                         } else {
                             this.array[idx] = val;
                             return;

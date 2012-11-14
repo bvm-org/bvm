@@ -3,8 +3,9 @@
 
         'use strict';
 
-        var types = require('../types');
-        var nuArray = require('../array');
+        var types = require('../types'),
+            nuArray = require('../array'),
+            nuError = require('../errors');
 
         return function (vcpu) {
             return {
@@ -16,7 +17,7 @@
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
                     removed;
                     if (mark === -1) {
-                        throw "INVALID OPERAND (ARRAY_END)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     } else {
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark
@@ -39,10 +40,10 @@
                             vcpu.cs.push(array);
                             return;
                         } else {
-                            throw "INVALID OPERAND (ARRAY_STORE)"; // TODO interrupt handler
+                            nuError.invalidOperand(array, idx);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (ARRAY_STORE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 ARRAY_LOAD: function () {
@@ -55,10 +56,10 @@
                             vcpu.cs.push(array.index(idx));
                             return;
                         } else {
-                            throw "INVALID OPERAND (ARRAY_LOAD)"; // TODO interrupt handler
+                            nuError.invalidOperand(array, idx);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (ARRAY_LOAD)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 ARRAY_LENGTH: function () {
@@ -70,10 +71,10 @@
                             vcpu.cs.push(array.length());
                             return;
                         } else {
-                            throw "INVALID OPERAND (ARRAY_LENGTH)"; // TODO interrupt handler
+                            nuError.invalidOperand(array);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (ARRAY_LENGTH)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 ARRAY_TRUNCATE: function () {
@@ -86,10 +87,10 @@
                             vcpu.cs.push(array);
                             return;
                         } else {
-                            throw "INVALID OPERAND (ARRAY_TRUNCATE)"; // TODO interrupt handler
+                            nuError.invalidOperand(array, len);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (ARRAY_TRUNCATE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 }
             };

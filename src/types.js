@@ -26,7 +26,8 @@
                 index: {value: 0}
             },
             lexicalAddressBase, nuLexicalAddress, mark, undef,
-            toString = Object.prototype.toString;
+            toString = Object.prototype.toString,
+            nuError = require('./errors');
 
         mark = Object.create(plain, {name: {value: 'mark'}});
         Object.defineProperty(types, 'mark', {value: mark});
@@ -51,7 +52,7 @@
                         obj = vcpu.dereferenceScope(obj.lsl).index(obj.index);
                         if (types.isLexicalAddress(obj)) {
                             if (seen[obj.lsl] && seen[obj.lsl][obj.index]) {
-                                throw "CYCLICAL LEXICAL ADDRESSES"; // TODO interrupt handler
+                                nuError('CYCLICAL LEXICAL ADDRESSES', this);
                             } else {
                                 (seen[obj.lsl] ? seen[obj.lsl] : seen[obj.lsl] = {})[obj.index] = true;
                             }

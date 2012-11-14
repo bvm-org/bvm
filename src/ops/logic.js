@@ -3,6 +3,8 @@
 
         'use strict';
 
+        var nuError = require('../errors');
+
         return function (vcpu) {
             var binaryOp = function () {
                 var a, b;
@@ -13,10 +15,10 @@
                         vcpu.cs.push(this.fun(a, b) ? true : false);
                         return;
                     } else {
-                        throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
+                        nuError.invalidOperand(a, b);
                     }
                 } else {
-                    throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
+                    nuError.notEnoughOperands();
                 }
             },
             and = {fun: function (a, b) { return a && b; }, name: 'AND'},
@@ -33,10 +35,10 @@
                             vcpu.cs.push((! a) ? true : false);
                             return;
                         } else {
-                            throw "INVALID OPERAND (NOT)"; // TODO interrupt handler
+                            nuError.invalidOperand(a);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (NOT)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 }
             };

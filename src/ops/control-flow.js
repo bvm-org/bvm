@@ -5,7 +5,8 @@
 
         var types = require('../types'),
             segmentTypes = require('../segment'),
-            utils = require('../utils');
+            utils = require('../utils'),
+            nuError = require('../errors');
 
         return function (vcpu) {
             return {
@@ -27,10 +28,10 @@
                             vcpu.cs.clear(len, n);
                             return;
                         } else {
-                            throw "INVALID OPERAND (IF)"; // TODO interrupt handler
+                            nuError.invalidOperand(val);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (IF)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 IF_ELSE: function () {
@@ -46,6 +47,9 @@
                             } else {
                                 n = 1;
                             }
+                            if (len < 1) {
+                                nuError.notEnoughOperands();
+                            }
                             vcpu.cs.clear(len, n);
                             return this.EXEC();
                         } else if (val === false) {
@@ -56,6 +60,9 @@
                                 n = 1;
                             }
                             len -= n;
+                            if (len < 0) {
+                                nuError.notEnoughOperands();
+                            }
                             n = vcpu.cs.index(len);
                             if (typeof n === 'number') {
                                 len -= n + 1;
@@ -63,13 +70,17 @@
                             } else {
                                 n = 1;
                             }
-                            vcpu.cs.clear(len, n);
-                            return this.EXEC();
+                            if (len < 0) {
+                                nuError.notEnoughOperands();
+                            } else {
+                                vcpu.cs.clear(len, n);
+                                return this.EXEC();
+                            }
                         } else {
-                            throw "INVALID OPERAND (IF_ELSE)"; // TODO interrupt handler
+                            nuError.invalidOperand(val);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (IF_ELSE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 JUMP: function () {
@@ -80,32 +91,32 @@
                             vcpu.cs.ip.set(val);
                             return;
                         } else {
-                            throw "INVALID OPERAND (JUMP)"; // TODO interrupt handler
+                            nuError.invalidOperand(val);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (JUMP)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 JUMP_IF: function () {
-                    var val;
+                    var val, idx;
                     if (vcpu.cs.length() > 1) {
                         val = vcpu.cs.pop();
                         if (val === true) {
-                            val = vcpu.cs.pop();
-                            if (typeof val === 'number') {
-                                vcpu.cs.ip.set(val);
+                            idx = vcpu.cs.pop();
+                            if (typeof idx === 'number') {
+                                vcpu.cs.ip.set(idx);
                                 return;
                             } else {
-                                throw "INVALID OPERAND (JUMP_IF)"; // TODO interrupt handler
+                                nuError.invalidOperand(idx, val);
                             }
                         } else if (val === false) {
                             vcpu.cs.pop();
                             return;
                         } else {
-                            throw "INVALID OPERAND (JUMP_IF)"; // TODO interrupt handler
+                            nuError.invalidOperand(val);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (JUMP_IF)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 }
             };

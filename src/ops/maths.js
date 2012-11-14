@@ -3,7 +3,8 @@
 
         'use strict';
 
-        var types = require('../types');
+        var types = require('../types'),
+            nuError = require('../errors');
 
         return function (vcpu) {
             var result = {},
@@ -16,10 +17,10 @@
                         vcpu.cs.push(this.fun(a, b));
                         return;
                     } else {
-                        throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
+                        nuError.invalidOperand(a, b);
                     }
                 } else {
-                    throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
+                    nuError.notEnoughOperands();
                 }
             },
             unaryOp = function () {
@@ -30,10 +31,10 @@
                         vcpu.cs.push(this.fun(a));
                         return;
                     } else {
-                        throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
+                        nuError.invalidOperand(a);
                     }
                 } else {
-                    throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
+                    nuError.notEnoughOperands();
                 }
             },
             binaries = [

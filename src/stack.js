@@ -13,10 +13,10 @@
                 lsl:       {value: undef},
                 ip:        {value: undef},
                 segment:   {value: undef},
-                clone:     {value: function (cloneStack) {
-                    var stack = Object.getPrototypeOf(this);
+                clone:     {value: function (shareArray) {
+                    var array = Object.getPrototypeOf(this);
                     return adornStackOps(
-                        cloneStack ? stack.clone() : stack,
+                        shareArray ? array : array.clone(),
                         this.dps, this.segment, this.ip.clone());
                 }},
                 toJSON:    {value: function () {

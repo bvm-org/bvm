@@ -4,14 +4,15 @@
         'use strict';
 
         var types = require('../types'),
-            segmentTypes = require('../segment');
+            segmentTypes = require('../segment'),
+            nuError = require('../errors');
 
         return function (vcpu) {
             return {
                 PUSH: function () {
                     var op = vcpu.cs.ip.fetchAndInc();
                     if (op === segmentTypes.segmentExhausted) {
-                        throw "NOT ENOUGH OPERANDS (PUSH)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     } else {
                         vcpu.cs.push(op);
                         return;
@@ -21,7 +22,7 @@
                     if (vcpu.cs.length() > 0) {
                         return vcpu.cs.pop();
                     } else {
-                        throw "NOT ENOUGH OPERANDS (POP)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DUPLICATE: function () {
@@ -30,7 +31,7 @@
                         vcpu.cs.push(vcpu.cs.index(len - 1));
                         return;
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DUPLICATE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 EXCHANGE: function () {
@@ -42,7 +43,7 @@
                         vcpu.cs.store(len - 1, tmp);
                         return;
                     } else {
-                        throw "NOT ENOUGH OPERANDS (EXCHANGE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 COUNT: function () {
@@ -60,10 +61,10 @@
                             }
                             return;
                         } else {
-                            throw "NOT ENOUGH OPERANDS (COPY)"; // TODO interrupt handler
+                            nuError.notEnoughOperands();
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (COPY)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 INDEX: function () {
@@ -75,10 +76,10 @@
                             vcpu.cs.push(vcpu.cs.index(len - idx - 1));
                             return;
                         } else {
-                            throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler
+                            nuError.notEnoughOperands();
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (INDEX)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 ROLL: function () {
@@ -97,10 +98,10 @@
                             vcpu.cs.appendArray(removed.splice(shift).concat(removed));
                             return;
                         } else {
-                            throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
+                            nuError.notEnoughOperands();
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (ROLL)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 CLONE: function () {
@@ -120,10 +121,10 @@
                             vcpu.cs.push(thing.clone());
                             return;
                         } else {
-                            throw "INTERNAL ERROR (CLONE)"; // TODO interrupt handler
+                            nuError.internalError();
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (CLONE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 CLEAR: function () {

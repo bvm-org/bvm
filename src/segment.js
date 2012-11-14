@@ -5,6 +5,7 @@
 
         var nuArray = require('./array'),
             types = require('./types'),
+            nuError = require('./errors'),
             segmentTypes = {},
             id = {},
             segmentExhausted = {},
@@ -67,7 +68,7 @@
                         index = idx;
                         return;
                     } else {
-                        throw "INVALID IP: " + idx; // TODO interrupt handler
+                        nuError.invalidOperand(idx);
                     }
                 };
                 ipTemplate.replaceMostRecent.value = function (fun) {

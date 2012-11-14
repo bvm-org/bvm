@@ -8,6 +8,7 @@
             nuDict = require('./dict'),
             nuStack = require('./stack'),
             segmentTypes = require('./segment'),
+            nuError = require('./errors'),
             fs = require('fs'),
             path = require('path'),
             undef;
@@ -28,6 +29,7 @@
                         ops[name] = function () {
                             fun(vcpu, ops);
                         };
+                        ops[name].opCodeName = name;
                     }}
             });
         };
@@ -37,10 +39,27 @@
                 {},
                 {
                     run: {value: function () {
+                        var op;
                         delete this.result;
                         this.running = true;
+                        // double loop to avoid entering try-catch on every opcode.
                         while (this.running) {
-                            this.dispatch(this.cs.ip.fetchAndInc());
+                            try {
+                                while (this.running) {
+                                    this.dispatch(op = this.cs.ip.fetchAndInc());
+                                }
+                            } catch (e) {
+                                if (nuError.isError(e)) {
+                                    if (typeof op === 'function') {
+                                        e.opCodeName = op.opCodeName;
+                                    } else {
+                                        e.opCodeName = op;
+                                    }
+                                    nuError.handle(this, e);
+                                } else {
+                                    throw e;
+                                }
+                            }
                         }
                         return this.result;
                     }},
@@ -53,10 +72,10 @@
                                 this.running = false;
                             }
                         } else {
-                            if (op === 'SEG_END' || op === ops['SEG_END']) {
+                            if (op == 'SEG_END' || op === ops['SEG_END']) {
                                 this.deferred -= 1;
                                 if (this.deferred < 0) {
-                                    throw "TOO MANY SEG_ENDS"; // TODO interrupt handler
+                                    nuError('TOO MANY SEG_ENDS');
                                 }
                             }
                             if (this.deferred > 0) {
@@ -72,7 +91,7 @@
                                     ops['UNKNOWN'](op);
                                 }
                             }
-                            if (op === 'SEG_START' || op === ops['SEG_START']) {
+                            if (op == 'SEG_START' || op === ops['SEG_START']) {
                                 this.deferred += 1;
                             }
                         }
@@ -85,7 +104,7 @@
                         if (0 <= lsl && lsl < this.lsps.length) {
                             return this.lsps[lsl];
                         } else {
-                            throw "ILLEGAL LEXICAL STACK LEVEL";
+                            nuError.invalidOperand(lsl);
                         }
                     }},
                     setStackAndLSPs: {value: function (stack) {
@@ -114,7 +133,7 @@
                             this.running = false;
                             this.result = resultsAry;
                         } else {
-                            throw 'ILLEGAL MANOEUVRE'; // TODO interrupt handler
+                            nuError.invalidOperand(stack, resultsAry);
                         }
                         return;
                     }}
@@ -128,6 +147,7 @@
                     opsObj = require(path.join(opsDir, opFile))(vcpu);
                     Object.keys(opsObj).forEach(function (key) {
                         fun = opsObj[key].bind(ops);
+                        fun.opCodeName = key;
                         fun.toJSON = function () { return key + '!'; };
                         opsObj[key] = { configurable: false,
                                         writable: false,

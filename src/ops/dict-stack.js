@@ -5,7 +5,9 @@
 
         var types = require('../types'),
             nuDict = require('../dict'),
-            nuArray = require('../array');
+            nuArray = require('../array'),
+            nuError = require('../errors'),
+            undef;
 
         return function (vcpu) {
             return {
@@ -17,10 +19,10 @@
                             vcpu.ds.push(dict);
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_STACK_PUSH)"; // TODO interrupt handler
+                            nuError.invalidOperand(dict);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_STACK_PUSH)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DICT_STACK_POP: function () {
@@ -36,13 +38,14 @@
                     if (vcpu.cs.length() > 0) {
                         key = vcpu.cs.pop();
                         if (types.isString(key)) {
-                            vcpu.cs.push(utils.searchDicts({key: key, dicts: vcpu.ds}).dict);
+                            dict = utils.searchDicts({key: key, dicts: vcpu.ds}).dict;
+                            vcpu.cs.push(dict === undef ? types.undef : dict);
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_STACK_WHERE)"; // TODO interrupt handler
+                            nuError.invalidOperand(key);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_STACK_WHERE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DICT_STACK_REPLACE: function () {
@@ -54,15 +57,17 @@
                             dict = utils.searchDicts({key: key, dicts: vcpu.ds}).dict;
                             if (nuDict.isDict(dict)) {
                                 dict.store(key, value);
-                            } else {
+                            } else if (vcpu.ds.length() !== 0) {
                                 vcpu.ds.index(vcpu.ds.length() - 1).store(key, value);
+                            } else {
+                                nuError.notEnoughOperands();
                             }
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_STACK_REPLACE)"; // TODO interrupt handler
+                            nuError.invalidOperand(key, value);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_STACK_REPLACE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DICT_STACK_LOAD: function () {
@@ -80,13 +85,13 @@
                             if (ok) {
                                 vcpu.ds = dicts;
                             } else {
-                                throw "INVALID OPERAND (DICT_STACK_SET)"; // TODO interrupt handler
+                                nuError.invalidOperand(dicts);
                             }
                         } else {
-                            throw "INVALID OPERAND (DICT_STACK_SET)"; // TODO interrupt handler
+                            nuError.invalidOperand(dicts);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_STACK_SET)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 }
             };

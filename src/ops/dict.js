@@ -5,7 +5,8 @@
 
         var types = require('../types'),
             nuDict = require('../dict'),
-            nuArray = require('../array');
+            nuArray = require('../array'),
+            nuError = require('../errors');
 
         return function (vcpu) {
             return {
@@ -17,7 +18,7 @@
                     var len = vcpu.cs.length(), mark = vcpu.cs.lastIndexOf(types.mark),
                     dict = {}, removed, idx, key, val;
                     if (mark === -1) {
-                        throw "INVALID OPERAND (DICT_END)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     } else {
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark
@@ -25,12 +26,16 @@
                             for (idx = 0, len = removed.length; idx < len; idx += 2) {
                                 key = removed[idx];
                                 val = removed[idx + 1];
-                                dict[key] = val;
+                                if (types.isString(key)) {
+                                    dict[key] = val;
+                                } else {
+                                    nuError.invalidOperand(key);
+                                }
                             }
                             vcpu.cs.push(nuDict(dict));
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_END)"; // TODO interrupt handler
+                            nuError.invalidOperand(nuArray(removed));
                         }
                     }
                 },
@@ -49,10 +54,10 @@
                             vcpu.cs.push(dict);
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_STORE)"; // TODO interrupt handler
+                            nuError.invalidOperand(dict, key, value);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_STORE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DICT_CONTAINS: function () {
@@ -65,10 +70,10 @@
                             vcpu.cs.push(dict.has(key));
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_CONTAINS)"; // TODO interrupt handler
+                            nuError.invalidOperand(dict, key);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_CONTAINS)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DICT_REMOVE: function () {
@@ -81,10 +86,10 @@
                             vcpu.cs.push(dict);
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_HAS)"; // TODO interrupt handler
+                            nuError.invalidOperand(dict, key);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_HAS)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DICT_LOAD: function () {
@@ -97,10 +102,10 @@
                             vcpu.cs.push(dict.load(key));
                             return;
                         } else {
-                            throw "INVALID OPERAND (DICT_STORE)"; // TODO interrupt handler
+                            nuError.invalidOperand(dict, key);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_STORE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 DICT_KEYS: function () {
@@ -111,10 +116,10 @@
                             vcpu.cs.push(dict);
                             vcpu.cs.push(nuArray(dict.keys()));
                         } else {
-                            throw "INVALID OPERAND (DICT_KEYS)"; // TODO interrupt handler
+                            nuError.invalidOperand(dict);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (DICT_KEYS)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 }
             };

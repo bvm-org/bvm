@@ -7,7 +7,8 @@
             nuArray = require('../array'),
             nuDict = require('../dict'),
             nuStack = require('../stack'),
-            segmentTypes = require('../segment');
+            segmentTypes = require('../segment'),
+            nuError = require('../errors');
 
         return function (vcpu) {
 
@@ -21,10 +22,10 @@
                         vcpu.cs.push(this.fun(a, b));
                         return;
                     } else {
-                        throw "INVALID OPERAND (" + this.name + ")"; // TODO interrupt handler
+                        nuError.invalidOperand(a, b);
                     }
                 } else {
-                    throw "NOT ENOUGH OPERANDS (" + this.name + ")"; // TODO interrupt handler
+                    nuError.notEnoughOperands();
                 }
             },
             lt  = {fun: function (a, b) { return a < b;  }, name: 'LT' },
@@ -59,7 +60,7 @@
                                 vcpu.cs.push(a === b);
                                 return;
                             } else {
-                                throw "INTERNAL ERROR (EQ)"; // TODO interrupt handler
+                                nuError.internalError();
                             }
                         } else if (types.isString(a) && types.isString(b)) {
                             // this will convert both to the primitive repr.
@@ -69,7 +70,7 @@
                             return;
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (EQ)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 NEQ: function () {

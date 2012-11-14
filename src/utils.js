@@ -5,19 +5,21 @@
 
         var types = require('./types'),
             segmentTypes = require('./segment'),
-            nuStack = require('./stack');
+            nuStack = require('./stack'),
+            nuError = require('./errors'),
+            undef;
 
         return Object.defineProperties(
             {},
             {
-                prepareForCall: {value: function (vcpu, opName) {
+                prepareForCall: {value: function (vcpu) {
                     var len = vcpu.cs.length(), arity, removed, segment;
                     if (len > 0) {
                         arity = vcpu.cs.pop();
                         len -= 1;
                         if (typeof arity === 'number') {
                             if (len < (arity+1) || arity < 0) {
-                                throw "NOT ENOUGH OPERANDS (" + opName + ")"; // TODO interrupt handler
+                                nuError.notEnoughOperands();
                             } else {
                                 removed = vcpu.cs.clear(len - arity);
                                 segment = vcpu.cs.pop();
@@ -33,7 +35,7 @@
 
                         return {seg: segment, args: removed};
                     } else {
-                        throw "NOT ENOUGH OPERANDS (" + opName + ")"; // TODO interrupt handler
+                        nuError.notEnoughOperands()
                     }
                 }},
 
@@ -50,8 +52,8 @@
                 searchDicts: {value: function (obj) {
                     var key = obj.key, dicts = obj.dicts, idx = dicts.length() - 1,
                         dict;
-                    obj.found = types.undef;
-                    obj.dict = types.undef;
+                    obj.found = undef;
+                    obj.dict = undef;
                     for (; idx >= 0; idx -= 1) {
                         dict = dicts.index(idx);
                         if (dict.has(key)) {

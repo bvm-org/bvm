@@ -9,6 +9,7 @@
             nuDict = require('../dict'),
             nuStack = require('../stack'),
             utils = require('../utils'),
+            nuError = require('../errors'),
             undef;
 
         return function (vcpu) {
@@ -22,18 +23,22 @@
                             return;
                         } else if (types.isString(reference)) {
                             found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
-                            if (found === undef && reference in this) {
-                                vcpu.cs.push(this[reference]);
-                                return;
+                            if (found === undef) {
+                                if (reference in this) {
+                                    vcpu.cs.push(this[reference]);
+                                    return;
+                                } else {
+                                    vcpu.cs.push(types.undef);
+                                    return;
+                                }
                             } else {
                                 vcpu.cs.push(found);
-                                return;
                             }
                         } else {
-                            throw "INVALID OPERAND (LOAD)" + typeof reference; // TODO interrupt handler
+                            nuError.invalidOperand(reference);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (LOAD)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 STORE: function () {
@@ -48,10 +53,10 @@
                             vcpu.ds.index(vcpu.ds.length() - 1).store(reference, value);
                             return;
                         } else {
-                            throw "INVALID OPERAND (STORE)"; // TODO interrupt handler
+                            nuError.invalidOperand(reference);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (STORE)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 LEXICAL_ADDRESS: function () {
@@ -64,18 +69,20 @@
                             vcpu.cs.push(types.nuLexicalAddress(lsl, index));
                             return;
                         } else {
-                            throw "INVALID OPERAND (LEXICAL_ADDRESS)"; // TODO interrupt handler
+                            nuError.invalidOperand(lsl, index);
                         }
                     } else {
-                        throw "NOT ENOUGH OPERANDS (LEXICAL_ADDRESS)"; // TODO interrupt handler
+                        nuError.notEnoughOperands();
                     }
                 },
                 UNKNOWN: function (op) {
+                    var found;
                     if (types.isLexicalAddress(op)) {
                         vcpu.cs.push(vcpu.dereferenceScope(op.lsl).index(op.index));
                         return;
                     } else if (types.isString(op)) {
-                        vcpu.cs.push(utils.searchDicts({key: op, dicts: vcpu.ds}).found);
+                        found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
+                        vcpu.cs.push(found === undef ? types.undef : found);
                         return;
                     } else {
                         vcpu.cs.push(op);

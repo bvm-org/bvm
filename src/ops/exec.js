@@ -6,19 +6,20 @@
         var segmentTypes = require('../segment'),
             nuStack = require('../stack'),
             types = require('../types'),
-            utils = require('../utils');
+            utils = require('../utils'),
+            nuError = require('../errors');
 
         return function (vcpu) {
             return {
                 EXEC: function () {
-                    var call = utils.prepareForCall(vcpu, "EXEC"),
+                    var call = utils.prepareForCall(vcpu),
                     dps = utils.detectTailCall(vcpu);
 
                     if (segmentTypes.isSegment(call.seg)) {
                         vcpu.enterSegment(call.seg, call.args, dps);
                         return;
                     } else if (nuStack.isStack(call.seg)) {
-                        call.seg = call.seg.clone(false);
+                        call.seg = call.seg.clone(true);
                         // It is vitally important we do this dps
                         // assigment *after* the clone as it's
                         // possible vcpu.cs === segment. Thus
@@ -31,7 +32,7 @@
                         vcpu.dispatch(call.seg);
                         return;
                     } else {
-                        throw "INVALID OPERAND (EXEC)"; // TODO interrupt handler
+                        nuError.invalidOperand(call.seg);
                     }
                 },
                 EXIT: function () {
@@ -43,7 +44,7 @@
                         if (typeof resultCount === 'number') {
                             len -= 1;
                             if (len < resultCount) {
-                                throw "NOT ENOUGH OPERANDS (EXIT)"; // TODO interrupt handler
+                                nuError.notEnoughOperands();
                             } else {
                                 removed = vcpu.cs.clear(len - resultCount);
                             }
@@ -55,7 +56,7 @@
                     return;
                 },
                 CALLCC: function () {
-                    var call = utils.prepareForCall(vcpu, "CALLCC");
+                    var call = utils.prepareForCall(vcpu);
                     call.args.push(vcpu.cs);
 
                     if (segmentTypes.isSegment(call.seg)) {
@@ -64,10 +65,10 @@
                     } else if (nuStack.isStack(call.seg)) {
                         // NB we do not do the same dps
                         // modifications here as in EXEC
-                        vcpu.enterStack(call.seg.clone(false), call.args);
+                        vcpu.enterStack(call.seg.clone(true), call.args);
                         return;
                     } else {
-                        throw "INVALID OPERAND (CALLCC)"; // TODO interrupt handler
+                        nuError.invalidOperand(call.seg);
                     }
                 }
             };
