@@ -16,6 +16,7 @@
         return function nuVCPU (segment) {
             var ops = {}, vcpu = adornRegistersAndHelpers(ops);
             adornOps(vcpu, ops);
+            nuError.vcpu = vcpu;
             return Object.defineProperties(
                 {},
                 {
@@ -39,32 +40,18 @@
                 {},
                 {
                     run: {value: function () {
-                        var op;
                         delete this.result;
                         this.running = true;
                         // double loop to avoid entering try-catch on every opcode.
                         while (this.running) {
-                            try {
-                                while (this.running) {
-                                    this.dispatch(op = this.cs.ip.fetchAndInc());
-                                }
-                            } catch (e) {
-                                if (nuError.isError(e)) {
-                                    if (typeof op === 'function') {
-                                        e.opCodeName = op.opCodeName;
-                                    } else {
-                                        e.opCodeName = op;
-                                    }
-                                    nuError.handle(this, e);
-                                } else {
-                                    throw e;
-                                }
-                            }
+                            this.dispatch(this.cs.ip.fetchAndInc());
                         }
+                        delete this.op;
                         return this.result;
                     }},
                     dispatch: {value: function (op) {
                         if (op === segmentTypes.segmentExhausted) {
+                            delete this.op;
                             if (this.cs.dps) {
                                 this.enterStack(this.cs.dps); // implicit return with 0 results
                             } else {
@@ -72,7 +59,8 @@
                                 this.running = false;
                             }
                         } else {
-                            if (op == 'SEG_END' || op === ops['SEG_END']) {
+                            this.op = op;
+                            if (op === 'SEG_END' || op === ops['SEG_END']) {
                                 this.deferred -= 1;
                                 if (this.deferred < 0) {
                                     nuError('TOO MANY SEG_ENDS');
@@ -91,7 +79,7 @@
                                     ops['UNKNOWN'](op);
                                 }
                             }
-                            if (op == 'SEG_START' || op === ops['SEG_START']) {
+                            if (op === 'SEG_START' || op === ops['SEG_START']) {
                                 this.deferred += 1;
                             }
                         }
