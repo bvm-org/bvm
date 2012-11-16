@@ -52,7 +52,7 @@
                                 return;
                             } else if (types.isLexicalAddress(a)) {
                                 vcpu.cs.push(types.isLexicalAddress(b) &&
-                                             a.lsl === b.lsl && a.index === b.index);
+                                             a.ls === b.ls && a.index === b.index);
                                 return;
                             } else if (nuArray.isArray(a) || nuDict.isDict(a) ||
                                        segmentTypes.isSegment(a) || nuStack.isStack(a) ||

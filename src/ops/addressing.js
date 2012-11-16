@@ -19,7 +19,7 @@
                     if (vcpu.cs.length() > 0) {
                         reference = vcpu.cs.pop();
                         if (types.isLexicalAddress(reference)) {
-                            vcpu.cs.push(vcpu.dereferenceScope(reference.lsl).index(reference.index));
+                            vcpu.cs.push(reference.ls.index(reference.index));
                             return;
                         } else if (types.isString(reference)) {
                             found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
@@ -47,7 +47,7 @@
                         value = vcpu.cs.pop();
                         reference = vcpu.cs.pop();
                         if (types.isLexicalAddress(reference)) {
-                            vcpu.dereferenceScope(reference.lsl).store(reference.index, value);
+                            reference.ls.store(reference.index, value);
                             return;
                         } else if (types.isString(reference)) {
                             vcpu.ds.index(vcpu.ds.length() - 1).store(reference, value);
@@ -60,13 +60,15 @@
                     }
                 },
                 LEXICAL_ADDRESS: function () {
-                    var lsl, index;
+                    var lsl, index, addy;
                     if (vcpu.cs.length() > 1) {
                         index = vcpu.cs.pop();
                         lsl = vcpu.cs.pop();
                         if (typeof index === 'number' && index >= 0 &&
                             typeof lsl === 'number' && lsl >= 0) {
-                            vcpu.cs.push(types.nuLexicalAddress(lsl, index));
+                            addy = types.nuLexicalAddress(lsl, index);
+                            addy.dereferenceScope(vcpu); // fix it / make it portable
+                            vcpu.cs.push(addy);
                             return;
                         } else {
                             nuError.invalidOperand(lsl, index);
@@ -78,7 +80,7 @@
                 UNKNOWN: function (op) {
                     var found;
                     if (types.isLexicalAddress(op)) {
-                        found = vcpu.dereferenceScope(op.lsl).index(op.index);
+                        found = op.dereferenceScope(vcpu).index(op.index);
                     } else if (types.isString(op)) {
                         found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
                         found = found === undef ? types.undef : found;

@@ -15,6 +15,9 @@
                         nuError.notEnoughOperands();
                     } else {
                         vcpu.cs.push(op);
+                        if (types.isLexicalAddress(op)) {
+                            op.dereferenceScope(vcpu); // fix it / make it portable
+                        }
                         return;
                     }
                 },
