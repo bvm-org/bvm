@@ -35,7 +35,7 @@
                         value = vcpu.cs.pop();
                         idx = vcpu.cs.pop();
                         array = vcpu.cs.pop();
-                        if (nuArray.isArray(array) && typeof idx === 'number') {
+                        if (nuArray.isArray(array) && typeof idx === 'number' && idx >= 0) {
                             array.store(idx, value);
                             vcpu.cs.push(array);
                             return;
@@ -51,7 +51,7 @@
                     if (vcpu.cs.length() > 1) {
                         idx = vcpu.cs.pop();
                         array = vcpu.cs.pop();
-                        if (nuArray.isArray(array) && typeof idx === 'number') {
+                        if (nuArray.isArray(array) && typeof idx === 'number' && idx >= 0) {
                             vcpu.cs.push(array);
                             vcpu.cs.push(array.index(idx));
                             return;

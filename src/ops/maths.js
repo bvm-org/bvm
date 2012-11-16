@@ -52,7 +52,9 @@
                 {fun: Math.ceil, name: 'CEILING'},
                 {fun: Math.floor, name: 'FLOOR'},
                 {fun: Math.round, name: 'ROUND'},
-                {fun: Math.log, name: 'LOG_E'}];
+                {fun: Math.log, name: 'LOG_E'},
+                {fun: function (a) { return a + 1; }, name: 'INC'},
+                {fun: function (a) { return a - 1; }, name: 'DEC'}];
 
             binaries.forEach(
                 function (binFun) { result[binFun.name] = binaryOp.bind(binFun); });

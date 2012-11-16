@@ -24,19 +24,19 @@
                     }},
                     index: {value: function (idx) {
                         var val;
-                        if (idx < 0 || this.array.length <= idx) {
-                            nuError.invalidOperand(this, idx);
-                        } else {
+                        if (0 <= idx && idx < this.array.length) {
                             val = this.array[idx];
                             return val === undef ? types.undef : val;
+                        } else {
+                            nuError.invalidOperand(idx);
                         }
                     }},
                     store: {value: function (idx, val) {
-                        if (idx < 0) {
-                            nuError.invalidOperand(this, idx);
-                        } else {
+                        if (0 <= idx) {
                             this.array[idx] = val;
                             return;
+                        } else {
+                            nuError.invalidOperand(idx);
                         }
                     }},
                     clear: {value: function (from, count) {

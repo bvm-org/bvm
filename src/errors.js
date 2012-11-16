@@ -5,8 +5,8 @@
 
         var undef, result;
         result = function (/* ...args... */) {
-            var extra = Array.prototype.slice.call(arguments, 0),
-                errorName = extra.shift(),
+            var args = Array.prototype.slice.call(arguments, 0),
+                errorName = args[args.length - 1],
                 handler = require('./utils').searchDicts({key: errorName, dicts: result.vcpu.ds}).found,
                 opCodeName = result.vcpu.op;
             if (typeof opCodeName === 'function') {
@@ -16,7 +16,9 @@
                 opCodeName = require('./types').undef;
             }
             if (require('./segment').isSegment(handler)) {
-                result.vcpu.enterSegment(handler, [errorName, result.vcpu.cs, opCodeName].concat(extra));
+                args.push(opCodeName, result.vcpu.cs);
+                result.vcpu.cs.appendArray(args),
+                result.vcpu.enterSegment(handler, Object.getPrototypeOf(result.vcpu.cs));
                 return;
             } else {
                 throw ('Unhandled error in ' + JSON.stringify(opCodeName) +
@@ -29,16 +31,16 @@
             {
                 vcpu: {value: undef, writable: true},
                 notEnoughOperands: {value: function () {
-                    result.apply(undef, ['ERROR NOT ENOUGH OPERANDS'].concat(
-                        Array.prototype.slice.call(arguments, 0)));
+                    result.apply(undef, Array.prototype.slice.call(arguments, 0).concat(
+                        ['ERROR NOT ENOUGH OPERANDS']));
                 }},
                 invalidOperand: {value: function () {
-                    result.apply(undef, ['ERROR INVALID OPERAND'].concat(
-                        Array.prototype.slice.call(arguments, 0)));
+                    result.apply(undef, Array.prototype.slice.call(arguments, 0).concat(
+                        ['ERROR INVALID OPERAND']));
                 }},
                 internalError: {value: function () {
-                    result.apply(undef, ['ERROR INTERNAL ERROR'].concat(
-                        Array.prototype.slice.call(arguments, 0)));
+                    result.apply(undef, Array.prototype.slice.call(arguments, 0).concat(
+                        ['ERROR INTERNAL ERROR']));
                 }}
             });
 

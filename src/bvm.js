@@ -107,8 +107,8 @@
                         this.cs = stack;
                         return;
                     }},
-                    enterSegment: {value: function (segment, argsAry, parentStack) {
-                        this.setStackAndLSPs(nuStack(argsAry, parentStack, segment, 0));
+                    enterSegment: {value: function (segment, takeStack, parentStack) {
+                        this.setStackAndLSPs(nuStack(undef, takeStack, parentStack, segment, 0));
                         return;
                     }},
                     enterStack: {value: function (stack, resultsAry) {
@@ -121,7 +121,7 @@
                             this.running = false;
                             this.result = resultsAry;
                         } else {
-                            nuError.invalidOperand(stack, resultsAry);
+                            nuError.invalidOperand(stack);
                         }
                         return;
                     }}

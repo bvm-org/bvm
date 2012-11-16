@@ -54,7 +54,7 @@
                             vcpu.cs.push(dict);
                             return;
                         } else {
-                            nuError.invalidOperand(dict, key, value);
+                            nuError.invalidOperand(dict, key);
                         }
                     } else {
                         nuError.notEnoughOperands();

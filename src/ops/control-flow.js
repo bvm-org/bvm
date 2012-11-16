@@ -84,31 +84,19 @@
                     }
                 },
                 JUMP: function () {
-                    var val;
                     if (vcpu.cs.length() > 0) {
-                        val = vcpu.cs.pop();
-                        if (typeof val === 'number') {
-                            vcpu.cs.ip.set(val);
-                            return;
-                        } else {
-                            nuError.invalidOperand(val);
-                        }
+                        vcpu.cs.ip.set(vcpu.cs.pop());
                     } else {
                         nuError.notEnoughOperands();
                     }
                 },
                 JUMP_IF: function () {
-                    var val, idx;
+                    var val;
                     if (vcpu.cs.length() > 1) {
                         val = vcpu.cs.pop();
                         if (val === true) {
-                            idx = vcpu.cs.pop();
-                            if (typeof idx === 'number') {
-                                vcpu.cs.ip.set(idx);
-                                return;
-                            } else {
-                                nuError.invalidOperand(idx, val);
-                            }
+                            vcpu.cs.ip.set(vcpu.cs.pop());
+                            return;
                         } else if (val === false) {
                             vcpu.cs.pop();
                             return;

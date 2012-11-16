@@ -64,8 +64,8 @@
                     if (vcpu.cs.length() > 1) {
                         index = vcpu.cs.pop();
                         lsl = vcpu.cs.pop();
-                        if (typeof index === 'number' &&
-                            typeof lsl === 'number') {
+                        if (typeof index === 'number' && index >= 0 &&
+                            typeof lsl === 'number' && lsl >= 0) {
                             vcpu.cs.push(types.nuLexicalAddress(lsl, index));
                             return;
                         } else {
@@ -78,15 +78,17 @@
                 UNKNOWN: function (op) {
                     var found;
                     if (types.isLexicalAddress(op)) {
-                        vcpu.cs.push(vcpu.dereferenceScope(op.lsl).index(op.index));
-                        return;
+                        found = vcpu.dereferenceScope(op.lsl).index(op.index);
                     } else if (types.isString(op)) {
                         found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
-                        vcpu.cs.push(found === undef ? types.undef : found);
-                        return;
+                        found = found === undef ? types.undef : found;
                     } else {
                         vcpu.cs.push(op);
                         return;
+                    }
+                    vcpu.cs.push(found);
+                    if (utils.isExecutable(found)) {
+                        this.EXEC();
                     }
                 }
             };

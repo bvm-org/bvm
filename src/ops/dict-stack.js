@@ -64,7 +64,7 @@
                             }
                             return;
                         } else {
-                            nuError.invalidOperand(key, value);
+                            nuError.invalidOperand(key);
                         }
                     } else {
                         nuError.notEnoughOperands();

@@ -13,27 +13,15 @@
             {},
             {
                 prepareForCall: {value: function (vcpu) {
-                    var len = vcpu.cs.length(), arity, removed, segment;
-                    if (len > 0) {
-                        arity = vcpu.cs.pop();
-                        len -= 1;
-                        if (typeof arity === 'number') {
-                            if (len < (arity+1) || arity < 0) {
-                                nuError.notEnoughOperands();
-                            } else {
-                                removed = vcpu.cs.clear(len - arity);
-                                segment = vcpu.cs.pop();
-                            }
-                        } else {
-                            removed = [];
-                            segment = arity;
-                        }
+                    var segment;
+                    if (vcpu.cs.length() > 0) {
+                        segment = vcpu.cs.pop();
 
                         if (types.isLexicalAddress(segment)) {
                             segment = segment.transitiveDereference(vcpu);
                         }
 
-                        return {seg: segment, args: removed};
+                        return segment;
                     } else {
                         nuError.notEnoughOperands()
                     }

@@ -7,32 +7,33 @@
             nuStack = require('../stack'),
             types = require('../types'),
             utils = require('../utils'),
-            nuError = require('../errors');
+            nuError = require('../errors'),
+            undef;
 
         return function (vcpu) {
             return {
                 EXEC: function () {
-                    var call = utils.prepareForCall(vcpu),
-                    dps = utils.detectTailCall(vcpu);
+                    var segment = utils.prepareForCall(vcpu),
+                        dps = utils.detectTailCall(vcpu);
 
-                    if (segmentTypes.isSegment(call.seg)) {
-                        vcpu.enterSegment(call.seg, call.args, dps);
+                    if (segmentTypes.isSegment(segment)) {
+                        vcpu.enterSegment(segment, Object.getPrototypeOf(vcpu.cs), dps);
                         return;
-                    } else if (nuStack.isStack(call.seg)) {
-                        call.seg = call.seg.clone(true);
+                    } else if (nuStack.isStack(segment)) {
+                        segment = segment.clone(true);
                         // It is vitally important we do this dps
                         // assigment *after* the clone as it's
                         // possible vcpu.cs === segment. Thus
                         // doing the clone first avoids a loop.
-                        call.seg.dps = dps;
-                        vcpu.enterStack(call.seg, call.args);
+                        segment.dps = dps;
+                        segment.ts = Object.getPrototypeOf(vcpu.cs);
+                        vcpu.enterStack(segment);
                         return;
-                    } else if (typeof call.seg === 'function') {
-                        vcpu.cs.appendArray(call.args);
-                        vcpu.dispatch(call.seg);
+                    } else if (typeof segment === 'function') {
+                        vcpu.dispatch(segment);
                         return;
                     } else {
-                        nuError.invalidOperand(call.seg);
+                        nuError.invalidOperand(segment);
                     }
                 },
                 RETURN: function () {
@@ -56,19 +57,36 @@
                     return;
                 },
                 CALLCC: function () {
-                    var call = utils.prepareForCall(vcpu);
-                    call.args.push(vcpu.cs);
+                    var segment = utils.prepareForCall(vcpu);
+                    vcpu.cs.push(vcpu.cs);
 
-                    if (segmentTypes.isSegment(call.seg)) {
-                        vcpu.enterSegment(call.seg, call.args);
+                    if (segmentTypes.isSegment(segment)) {
+                        vcpu.enterSegment(segment, Object.getPrototypeOf(vcpu.cs));
                         return;
-                    } else if (nuStack.isStack(call.seg)) {
+                    } else if (nuStack.isStack(segment)) {
                         // NB we do not do the same dps
                         // modifications here as in EXEC
-                        vcpu.enterStack(call.seg.clone(true), call.args);
+                        segment = segment.clone(true);
+                        segment.ts = Object.getPrototypeOf(vcpu.cs);
+                        vcpu.enterStack(segment);
                         return;
                     } else {
-                        nuError.invalidOperand(call.seg);
+                        nuError.invalidOperand(segment);
+                    }
+                },
+                TAKE: function () {
+                    var n, plen;
+                    if (vcpu.cs.length() > 0) {
+                        n = vcpu.cs.pop();
+                        if (typeof n === 'number' &&
+                            n >= 0 && vcpu.cs.ts !== undef &&
+                            (plen = vcpu.cs.ts.length()) >= n) {
+                            vcpu.cs.appendArray(vcpu.cs.ts.clear(plen - n));
+                        } else {
+                            nuError.invalidOperand(n);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
                     }
                 }
             };
