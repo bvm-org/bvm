@@ -35,7 +35,7 @@
                         nuError.invalidOperand(call.seg);
                     }
                 },
-                EXIT: function () {
+                RETURN: function () {
                     var len = vcpu.cs.length(), resultCount, removed;
                     if (len === 0) {
                         removed = [];

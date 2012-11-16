@@ -98,7 +98,7 @@
                 var cpu = runner(done);
                 cpu.setCode(['SEG_START', 0,
                              cpu.addBreakPoint({lsl: 1, contents: [0]}),
-                             'EXIT', 'SEG_END', 0, 'EXEC',
+                             'RETURN', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff())
                             ]).run();
             },
@@ -107,7 +107,7 @@
                 var cpu = runner(done);
                 cpu.setCode(['SEG_START', 3, 1,
                              cpu.addBreakPoint({lsl: 1, contents: [3, 1]}),
-                             'EXIT', 'SEG_END', 0, 'EXEC',
+                             'RETURN', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [3]}))
                             ]).run();
@@ -117,7 +117,7 @@
                 var cpu = runner(done);
                 cpu.setCode(['SEG_START', 6, 3, 17, 2,
                              cpu.addBreakPoint({lsl: 1, contents: [6, 3, 17, 2]}),
-                             'EXIT', 'SEG_END', 0, 'EXEC',
+                             'RETURN', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [3, 17]}))
                             ]).run();
@@ -134,15 +134,15 @@
                                  'SEG_START',
                                    cpu.addBreakPoint({lsl: 3, contents: [3, 6, 9],
                                                       post: function () { assert(x === 3); x += 1; }}),
-                                   12, 1, 'EXIT',
+                                   12, 1, 'RETURN',
                                  'SEG_END', 3, 1, 'ROLL', 9, 3, 'EXEC',
                                  cpu.addBreakPoint({lsl: 2, contents: [12],
                                                     post: function () { assert(x === 4); x += 1; }}),
-                                 15, 1, 'EXIT',
+                                 15, 1, 'RETURN',
                                  'SEG_END', 'EXCHANGE', 6, 2, 'EXEC',
                                cpu.addBreakPoint({lsl: 1, contents: [15],
                                                   post: function () { assert(x === 5); x += 1; }}),
-                               18, 1, 'EXIT', 'SEG_END',
+                               18, 1, 'RETURN', 'SEG_END',
                              cpu.addBreakPoint({post: function () { assert(x === 0); x += 1; }}),
                              3, 1, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -153,12 +153,12 @@
             'closure capture via return': function (done) {
                 var cpu = runner(done);
                 cpu.setCode([456, 'SEG_START', 'PUSH', 'hello',
-                             'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT', 'SEG_END',
-                             1, 'EXIT', 'SEG_END', 0, 'EXEC',
+                             'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'RETURN', 'SEG_END',
+                             1, 'RETURN', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
                                              {type: 'seg',
-                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT']
+                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'RETURN']
                                              }]})),
                              0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -169,11 +169,11 @@
             'closure capture via store': function (done) {
                 var cpu = runner(done);
                 cpu.setCode([456, 'SEG_START', 'PUSH', 'hello',
-                             'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT', 'SEG_END',
+                             'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'RETURN', 'SEG_END',
                              0, 0, 'LEXICAL_ADDRESS', 'EXCHANGE', 'STORE', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'seg',
-                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'EXIT']
+                                              contents: [1, 0, 'LEXICAL_ADDRESS', 'LOAD', 1, 'RETURN']
                                              }]})),
                              0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -185,20 +185,20 @@
                 var cpu = runner(done);
                 cpu.setCode([456, 'SEG_START', 'PUSH', 'hello',
                              'SEG_START', 1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
-                             'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT', 'SEG_END',
+                             'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'RETURN', 'SEG_END',
                              0, 1, 'LEXICAL_ADDRESS', 'EXCHANGE', 'STORE', 'SEG_END', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
                                              {type: 'seg',
                                               contents: [1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
-                                                         'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
+                                                         'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'RETURN']
                                              }]})),
                              'CLONE', 0, 'EXEC',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [456,
                                              {type: 'seg',
                                               contents: [1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
-                                                         'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
+                                                         'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'RETURN']
                                              },
                                              'hello'
                                             ]})),
@@ -207,7 +207,7 @@
                                  {contents: [456,
                                              {type: 'seg',
                                               contents: [1, 0, 'LEXICAL_ADDRESS', 'DUPLICATE', 'LOAD',
-                                                         'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'EXIT']
+                                                         'EXCHANGE', 'PUSH', 'goodbye', 'STORE', 1, 'RETURN']
                                              },
                                              'goodbye']})),
                              'POP', 0, 'EXEC',
@@ -255,7 +255,7 @@
                                    dps: undef, lsl: 1}),
                              'SEG_END', 0, 'CALLCC',
                              cpu.addBreakPoint({contents: [123, 'goodbye'], lsl: 0}),
-                             7, 1, 'EXIT'
+                             7, 1, 'RETURN'
                             ]).run();
             },
 
@@ -285,13 +285,13 @@
                              // to the above breakpoint. Hence the 7,
                              // 6 appearing on the stack - the 7
                              // directly and demonstrates it's the
-                             // same stack, the 6 via the EXIT opcode
+                             // same stack, the 6 via the RETURN opcode
                              // (along with the 5, but then the
                              // EXCHANGE+POP happens). When we get
                              // here the 2nd time, the return pointer
                              // is actually back to the inner segment,
                              // hence 5 and 6 being passed up there.
-                             7, 5, 6, 2, 'EXIT',
+                             7, 5, 6, 2, 'RETURN',
                              cpu.addUnreachablePoint()
                             ]).run();
             }
