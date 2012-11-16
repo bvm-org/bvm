@@ -60,7 +60,7 @@
                     }
                 },
                 LEXICAL_ADDRESS: function () {
-                    var lsl, index, addy;
+                    var lsl, index;
                     if (vcpu.cs.length() > 1) {
                         index = vcpu.cs.pop();
                         lsl = vcpu.cs.pop();
