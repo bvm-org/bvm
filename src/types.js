@@ -24,7 +24,10 @@
             lexicalAddressTemplate = {
                 lsl:   {value: 0},
                 index: {value: 0},
-                ls:    {value: undef, writable: true}
+            },
+            fixedLexicalAddressTemplate = {
+                ls:    {value: undef},
+                fix:   {value: function () { return this; }}
             },
             lexicalAddressBase,
             toString = Object.prototype.toString,
@@ -42,18 +45,16 @@
                             lsl: this.lsl,
                             index: this.index};
                 }},
-                dereferenceScope: {value: function (vcpu) {
-                    if (this.ls === undef) {
-                        this.ls = vcpu.dereferenceScope(this.lsl);
-                    }
-                    return this.ls;
+                fix: {value: function (vcpu) {
+                    fixedLexicalAddressTemplate.ls.value = vcpu.dereferenceScope(this.lsl);
+                    return Object.create(this, fixedLexicalAddressTemplate);
                 }},
                 transitiveDereference: {value: function (vcpu) {
-                    var seen = {}, obj = this;
+                    var seen = {}, obj = this.fix();
                     seen[obj.lsl] = {};
                     seen[obj.lsl][obj.index] = true;
                     while (true) {
-                        obj = vcpu.dereferenceScope(obj.lsl).index(obj.index);
+                        obj = obj.ls.index(obj.index);
                         if (types.isLexicalAddress(obj)) {
                             if (seen[obj.lsl] && seen[obj.lsl][obj.index]) {
                                 nuError('CYCLICAL LEXICAL ADDRESSES', this);

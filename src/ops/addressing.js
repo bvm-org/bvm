@@ -66,9 +66,7 @@
                         lsl = vcpu.cs.pop();
                         if (typeof index === 'number' && index >= 0 &&
                             typeof lsl === 'number' && lsl >= 0) {
-                            addy = types.nuLexicalAddress(lsl, index);
-                            addy.dereferenceScope(vcpu); // fix it / make it portable
-                            vcpu.cs.push(addy);
+                            vcpu.cs.push(types.nuLexicalAddress(lsl, index).fix(vcpu));
                             return;
                         } else {
                             nuError.invalidOperand(lsl, index);
@@ -80,7 +78,7 @@
                 UNKNOWN: function (op) {
                     var found;
                     if (types.isLexicalAddress(op)) {
-                        found = op.dereferenceScope(vcpu).index(op.index);
+                        found = op.fix(vcpu).ls.index(op.index);
                     } else if (types.isString(op)) {
                         found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
                         found = found === undef ? types.undef : found;

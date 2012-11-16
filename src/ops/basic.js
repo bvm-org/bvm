@@ -14,10 +14,10 @@
                     if (op === segmentTypes.segmentExhausted) {
                         nuError.notEnoughOperands();
                     } else {
-                        vcpu.cs.push(op);
                         if (types.isLexicalAddress(op)) {
-                            op.dereferenceScope(vcpu); // fix it / make it portable
+                            op = op.fix(vcpu); // fix it / make it portable. Does not alter segment
                         }
+                        vcpu.cs.push(op);
                         return;
                     }
                 },
