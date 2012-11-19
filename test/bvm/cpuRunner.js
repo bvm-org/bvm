@@ -144,7 +144,7 @@
                 Object.keys(breakpoints).forEach(function (breakpoint) {
                     assert('reached' in breakpoints[breakpoint]);
                 });
-                this.done();
+                return cpu.result;
             },
             setCode: function (code) {
                 this.code = code;
@@ -164,7 +164,7 @@
             }
         };
 
-        result = function (done) {
+        result = function () {
             return Object.create(
                 runnerBase,
                 {
@@ -172,7 +172,6 @@
                     breakpoints: {value: {}},
                     unreachableCount: {value: 0, writable: true},
                     unreachables: {value: {}},
-                    done: {value: done}
                 });
         };
 

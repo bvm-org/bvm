@@ -12,21 +12,23 @@
 
         buster.testCase('array ops', {
             'literal empty': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['ARRAY_START', 'ARRAY_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[]]}))]).run();
+                done();
             },
 
             'literal non-empty non-deferred': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['ARRAY_START', 'PUSH', 'hello', 5, 7, 'POP', 8, 'ARRAY_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [['hello', 5, 8]]}))]).run();
+                done();
             },
 
             'literal nested': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['ARRAY_START',
                              'ARRAY_START', 5, 'PUSH', 'inner', 'ARRAY_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -43,10 +45,11 @@
                                      assert(ary.index(5) !== ary.index(6));
                                  }}))
                             ]).run();
+                done();
             },
 
             'new, store, load, length, truncate': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['ARRAY_NEW',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[]]})),
@@ -73,10 +76,11 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [['goodbye', types.undef]]}))
                             ]).run();
+                done();
             },
 
             'references': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['ARRAY_NEW', 0, 47389, 'ARRAY_STORE',
                              'CLONE', 1, 347, 'ARRAY_STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -96,6 +100,7 @@
                                              [0],
                                              [0]]})),
                             ]).run();
+                done();
             }
         });
     });

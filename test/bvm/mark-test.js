@@ -12,7 +12,7 @@
 
         buster.testCase('mark ops', {
             'single mark': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'hello', 'MARK', 'COUNT_TO_MARK',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello', types.mark, 0]})),
@@ -24,10 +24,11 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello']}))
                             ]).run();
+                done();
             },
 
             'multiple marks': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'a', 'MARK',
                              'PUSH', 'b', 'PUSH', 'c', 'MARK',
                              'PUSH', 'd', 'PUSH', 'e', 'PUSH', 'f', 'MARK',
@@ -56,6 +57,7 @@
                                  {contents: ['a']}))
 
                             ]).run();
+                done();
             }
         });
 

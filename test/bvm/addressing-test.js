@@ -12,7 +12,7 @@
 
         buster.testCase('addressing ops', {
             'load, store, lexical addresses, unknown': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode([0, 0, 'LEXICAL_ADDRESS', 7, 'EXCHANGE', 'DUPLICATE', 'LOAD',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [7, {type: 'lexical', lsl: 0, index: 0},
@@ -46,6 +46,7 @@
                              'POP', 'bar',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [[1]]}))
                             ]).run();
+                done();
             }
         });
 

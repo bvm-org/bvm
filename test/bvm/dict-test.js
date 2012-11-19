@@ -12,21 +12,23 @@
 
         buster.testCase('dict ops', {
             'literal empty': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['DICT_START', 'DICT_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict', contents: {}}]}))]).run();
+                done();
             },
 
             'literal non-empty non-deferred': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['DICT_START', 'PUSH', 'a', 5, 7, 'POP', 76, 'PUSH', 'b', 'EXCHANGE', 'DICT_END',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict', contents: {'a': 5, 'b': 76}}]}))]).run();
+                done();
             },
 
             'literal nested': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['DICT_START', 'PUSH', 'a', 5, 'PUSH', 'b',
                              'DICT_START', 'PUSH', 'c', 'PUSH', 'd', 2, 'COPY', 'EXCHANGE', 'DICT_END',
                              'CLONE', 'PUSH', 'e', 'EXCHANGE',
@@ -49,10 +51,11 @@
                                       assert(dict.load('b') !== dict.load('e'));
                                       assert(dict.load('e') === dict.load('f'));
                                   }}))]).run();
+                done();
             },
 
             'new, store, load, keys, contains, remove': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['DICT_NEW',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [{type: 'dict', contents: {}}]})),
@@ -85,10 +88,11 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [false, {type: 'dict', contents: {'b': 17}}, true]}))
                             ]).run();
+                done();
             },
 
             'references': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['DICT_NEW', 'PUSH', 'a', 7, 'DICT_STORE',
                              'CLONE', 'PUSH', 'a', 8, 'DICT_STORE',
                              'EXCHANGE', 'PUSH', 'b', 9, 'DICT_STORE',
@@ -122,6 +126,7 @@
                                              {type: 'dict', contents: {}},
                                              {type: 'dict', contents: {}}]})),
                             ]).run();
+                done();
             }
         });
     });

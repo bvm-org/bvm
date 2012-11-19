@@ -13,43 +13,48 @@
         buster.testCase('basic stack ops', {
 
             'can push one': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'hello',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello']}))]).run();
+                done();
             },
 
             'can push two': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'hello', 'PUSH', 'goodbye',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello', 'goodbye']}))]).run();
+                done();
             },
 
             'can push three': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'hello', 'PUSH', 'goodbye', 'PUSH', 7,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello', 'goodbye', 7]}))]).run();
+                done();
             },
 
             'can push implicit': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode([2, 'PUSH', 'goodbye', 7,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [2, 'goodbye', 7]}))]).run();
+                done();
             },
 
             'can push and pop one': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'hello',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: ['hello']})),
                              'POP',
                              cpu.addBreakPoint(runner.baseStackConfigDiff())]).run();
+                done();
             },
 
             'can push and pop three': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'hello', 'PUSH', 'goodbye', 17,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello', 'goodbye', 17]})),
@@ -61,10 +66,11 @@
                                  {contents: ['hello']})),
                              'POP',
                              cpu.addBreakPoint(runner.baseStackConfigDiff())]).run();
+                done();
             },
 
             'duplicate': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode([3, 8,
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [3, 8]})),
@@ -74,10 +80,11 @@
                              'DUPLICATE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [3, 8, 8, 8]}))]).run();
+                done();
             },
 
             'count': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['COUNT',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [0]})),
@@ -87,10 +94,11 @@
                              'COUNT',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [0, 1, 2]}))]).run();
+                done();
             },
 
             'exchange': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode([5, 'PUSH', 'hello',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [5, 'hello']})),
@@ -106,10 +114,11 @@
                              'EXCHANGE', 'EXCHANGE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello', 3489, 5]}))]).run();
+                done();
             },
 
             'copy': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode([5, 'PUSH', 'hello', 1, 'COPY',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [5, 'hello', 'hello']})),
@@ -120,10 +129,11 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [5, 'hello', 'hello', 5, 'hello', 'hello', 7, 'hello', 7]}))
                             ]).run();
+                done();
             },
 
             'index': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode([5, 0, 'INDEX',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [5, 5]})),
@@ -134,10 +144,11 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [5, 5, 3, 2, 2, 3]}))
                             ]).run();
+                done();
             },
 
             'roll': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['PUSH', 'a', 'PUSH', 'b', 'PUSH', 'c', 'PUSH', 'd',
                              3, 0, 'ROLL',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
@@ -167,10 +178,11 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['a', 'b', 'c', 'd']})),
                             ]).run();
+                done();
             },
 
             'clone, duplicate': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode(['ARRAY_NEW', 'CLONE', 'DUPLICATE',
                              'DICT_NEW', 'CLONE', 'DUPLICATE',
                              'SEG_START', 'SEG_END', 'CLONE', 'DUPLICATE',
@@ -184,14 +196,14 @@
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [[], [], [],
                                              {type: 'dict', contents: {}},
-                                               {type: 'dict', contents: {}},
-                                                 {type: 'dict', contents: {}},
+                                             {type: 'dict', contents: {}},
+                                             {type: 'dict', contents: {}},
                                              {type: 'seg', contents: []},
-                                               {type: 'seg', contents: []},
-                                                 {type: 'seg', contents: []},
+                                             {type: 'seg', contents: []},
+                                             {type: 'seg', contents: []},
                                              {type: 'lexical', lsl: 0, index: 0},
-                                               {type: 'lexical', lsl: 0, index: 0},
-                                                 {type: 'lexical', lsl: 0, index: 0},
+                                             {type: 'lexical', lsl: 0, index: 0},
+                                             {type: 'lexical', lsl: 0, index: 0},
                                              5, 5, 5,
                                              new String('a'), 'a', new String('a'),
                                              'hello', 'hello', 'hello',
@@ -199,25 +211,27 @@
                                              types.undef, types.undef, types.undef,
                                              types.mark, types.mark, types.mark
                                             ],
-                                 post: function (stack) {
-                                     var idx = 0, len = stack.length();
-                                     for (; idx < len; idx += 3) {
-                                         assert(stack.index(idx) !== stack.index(idx+1) ||
-                                                idx >= 9);
-                                         assert(stack.index(idx+1) === stack.index(idx+2));
-                                     }
-                                 }}))
+                                  post: function (stack) {
+                                      var idx = 0, len = stack.length();
+                                      for (; idx < len; idx += 3) {
+                                          assert(stack.index(idx) !== stack.index(idx+1) ||
+                                                 idx >= 9);
+                                          assert(stack.index(idx+1) === stack.index(idx+2));
+                                      }
+                                  }}))
                             ]).run();
+                done();
             },
 
             'clear': function (done) {
-                var cpu = runner(done);
+                var cpu = runner();
                 cpu.setCode([4, 3, 2, 1, 'COUNT',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [4, 3, 2, 1, 4]})),
                              'CLEAR',
                              cpu.addBreakPoint(runner.baseStackConfigDiff())
                             ]).run();
+                done();
             }
 
         });
