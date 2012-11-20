@@ -2,3 +2,5 @@
 /node_modules/
 npm-debug.log
 src/assembler-parser.js
+src/browserAdornOps.js
+bundle.js

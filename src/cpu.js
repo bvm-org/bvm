@@ -9,8 +9,7 @@
             nuStack = require('./stack'),
             segmentTypes = require('./segment'),
             nuError = require('./errors'),
-            fs = require('fs'),
-            path = require('path'),
+            adornOps = require('./adornOps'),
             undef;
 
         return function nuVCPU (segment) {
@@ -126,26 +125,6 @@
                         return;
                     }}
                 });
-        }
-
-        function adornOps (vcpu, ops) {
-            var opsDir = path.join(__dirname, 'ops'), opsObj, fun;
-            fs.readdirSync(opsDir).forEach(function (opFile) {
-                if (path.extname(opFile) in require.extensions) {
-                    opsObj = require(path.join(opsDir, opFile))(vcpu);
-                    Object.keys(opsObj).forEach(function (key) {
-                        fun = opsObj[key].bind(ops);
-                        fun.opCodeName = key;
-                        fun.toJSON = function () { return key + '!'; };
-                        opsObj[key] = { configurable: false,
-                                        writable: false,
-                                        enumerable: false,
-                                        value: fun
-                                      };
-                    });
-                    Object.defineProperties(ops, opsObj);
-                }
-            });
         }
 
     });

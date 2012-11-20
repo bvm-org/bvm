@@ -9,16 +9,22 @@
         "url": "git://github.com/five-eleven/bvm.git"
     },
     "main": "index",
+    "browserify": {
+        "name": "bvm",
+        "main": "./bvm.js"
+    },
     "dependencies": {
         "pegjs": "",
-        "pretty-data": ""
+        "pretty-data": "",
+        "browserify": ""
     },
     "devDependencies": {
         "buster": ""
     },
     "scripts": {
         "pretest": "pegjs --cache --track-line-and-column src/assembler.pegjs src/assembler-parser.js",
-        "test": "buster test --environment node --reporter specification"
+        "test": "buster test --environment node --reporter specification",
+        "browserify": "scripts/browserify"
     }
 
 }

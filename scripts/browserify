@@ -1,0 +1,58 @@
+#! /usr/bin/env node
+
+var browserify = require('browserify'),
+    b = browserify({exports: ['require']}),
+    fs = require('fs'),
+    path = require('path'),
+    bundle = path.join(__dirname, '../bundle.js'),
+    adornOps = path.join(__dirname, '../src/adornOps.js'),
+    browserAdornOps = path.join(__dirname, '../src/browserAdornOps.js'),
+    index = path.join(__dirname, '../bvm.js'),
+    opsDir = path.join(__dirname, '../src/ops'),
+    opsModules = [],
+    body;
+
+body = "(function (define) {\n"+
+"    define(function () {\n"+
+"\n"+
+"        'use strict';\n"+
+"\n"+
+"        return function (vcpu, ops) {\n"+
+"            [\n";
+
+fs.readdirSync(opsDir).forEach(function (opFile) {
+    if (path.extname(opFile) in require.extensions) {
+        opsModules.push(path.join("./ops",opFile));
+        body += "                require('./ops/" + opFile + "'),\n";
+        opFile = path.join(opsDir, opFile);
+        //b.require(opFile);
+    }
+});
+
+body += "            ].forEach(function (fun) {\n"+
+"                var opsObj = fun(vcpu);\n"+
+"                Object.keys(opsObj).forEach(function (key) {\n"+
+"                    fun = opsObj[key].bind(ops);\n"+
+"                    fun.opCodeName = key;\n"+
+"                    fun.toJSON = function () { return key + '!'; };\n"+
+"                    opsObj[key] = { configurable: false,\n"+
+"                                    writable: false,\n"+
+"                                    enumerable: false,\n"+
+"                                    value: fun\n"+
+"                                  };\n"+
+"                });\n"+
+"                Object.defineProperties(ops, opsObj);\n"+
+"            });\n"+
+"        };\n"+
+"    });\n"+
+"}(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));";
+
+fs.writeFileSync(browserAdornOps, body, 'utf8');
+
+b.register('path', function (path) {
+    return path === adornOps ? browserAdornOps : path;
+});
+
+b.addEntry(index);
+
+fs.writeFileSync(bundle, b.bundle(), 'utf8');

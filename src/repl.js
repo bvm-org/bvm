@@ -26,7 +26,7 @@
         bvmRepl.interpret = function (codeStr) {
             var nuAssembler = require('./assembler'),
                 segmentTypes = require('./segment'),
-                bvm = require('./bvm'),
+                bvm = require('./cpu'),
                 assembly = nuAssembler();
             assembly.source = codeStr;
             return bvm(segmentTypes.json(assembly.parse().toJSON().json)).boot();
