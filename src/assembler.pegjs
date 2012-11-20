@@ -91,7 +91,7 @@ LexicalAddress "lexical address"
       };
     }
 
-SignedNumericLiteral
+SignedNumericLiteral "signed numeric literal"
   = sign:Sign? num:(HexInteger / UnsignedReal) {
       return (sign && sign === "-") ? - num : num;
     }
@@ -187,7 +187,7 @@ Opcode
   = !SectionStart !SectionEnd !Push chars:OpcodeCharset { return chars; }
 
 OpcodeCharset "opcode"
-  = start:[A-Za-z] rest:[A-Za-z0-9_]+ { return '' + start + rest.join(""); }
+  = start:[A-Za-z] rest:[A-Za-z0-9_]* { return '' + start + rest.join(""); }
 
 Char
   = .
