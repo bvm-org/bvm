@@ -25,6 +25,7 @@ Statement
   / LexicalAddress
   / SignedNumericLiteral
   / QuotedStringLiteral
+  / Label
   / Opcode
 
 Push "push"
@@ -162,6 +163,25 @@ SingleEscapeCharacter
 
 NonEscapeCharacter
   = !SingleEscapeCharacter char:Char { return char; }
+
+Label
+  = LabelDeclaration / LabelReference
+
+LabelDeclaration "label declaration"
+  = ">" name:Opcode "<" {
+    return {
+      type: "LabelDeclaration",
+      name: name
+    };
+  }
+
+LabelReference "label reference"
+  = "<" name:Opcode ">" {
+    return {
+      type: "LabelReference",
+      name: name
+    };
+  }
 
 Opcode
   = !SectionStart !SectionEnd !Push chars:OpcodeCharset { return chars; }

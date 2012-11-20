@@ -35,7 +35,10 @@
                     return this;
                 },
                 toJSON: function () {
-                    var lsl = 0, result = [], worklist, elem, tmp;
+                    var lsl = 0,
+                        result = [],
+                        labelStack = [{known: {}, unknown: {}, offset: 0}],
+                        worklist, elem, tmp;
                     if (this.parsed && ! this.json) {
                         worklist = this.parsed.statements.slice(0);
                         while (worklist.length) {
@@ -43,6 +46,11 @@
                             if (types.isString(elem)) {
                                 if (('' + elem) === 'SEG_END') {
                                     lsl -= 1;
+                                    tmp = Object.keys(labelStack.shift().unknown);
+                                    if (tmp.length !== 0) {
+                                        throw "Labels referenced but not declared by end of scope: " +
+                                            JSON.stringify(tmp);
+                                    }
                                 }
                                 result.push(elem);
                             } else if (typeof elem === 'number') {
@@ -61,6 +69,7 @@
                                 } else if (elem.type === 'Section') {
                                     if (elem.subtype === 'SEG') {
                                         lsl += 1;
+                                        labelStack.unshift({known: {}, unknown: {}, offset: result.length + 1});
                                     }
                                     result.push(elem.subtype + '_START');
                                     worklist.unshift(elem.subtype + '_END');
@@ -68,12 +77,40 @@
                                 } else if (elem.type === 'PUSH') {
                                     result.push('PUSH');
                                     worklist.unshift(elem.operand);
+                                } else if (elem.type === 'LabelReference') {
+                                    if (elem.name in labelStack[0].known) {
+                                        result.push(labelStack[0].known[elem.name]);
+                                    } else {
+                                        if (! (elem.name in labelStack[0].unknown)) {
+                                            labelStack[0].unknown[elem.name] = [];
+                                        }
+                                        labelStack[0].unknown[elem.name].push(result.length);
+                                        result.push('awaiting label declaration: ' + elem.name);
+                                    }
+                                } else if (elem.type === 'LabelDeclaration') {
+                                    tmp = result.length - labelStack[0].offset;
+                                    if (elem.name in labelStack[0].known) {
+                                        throw "Repeated declaration of label " + elem.name;
+                                    } else {
+                                        labelStack[0].known[elem.name] = tmp;
+                                    }
+                                    if (elem.name in labelStack[0].unknown) {
+                                        labelStack[0].unknown[elem.name].forEach(function (idx) {
+                                            result[idx] = tmp;
+                                        });
+                                        delete labelStack[0].unknown[elem.name];
+                                    }
                                 } else {
                                     throw "Unrecognised program element: " + elem;
                                 }
                             } else {
                                 throw "Unrecognised program element: " + elem;
                             }
+                        }
+                        tmp = Object.keys(labelStack.shift().unknown);
+                        if (tmp.length !== 0) {
+                            throw "Labels referenced but not declared by end of scope: " +
+                                JSON.stringify(tmp);
                         }
                         this.json = result;
                     }

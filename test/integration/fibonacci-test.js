@@ -56,27 +56,27 @@
             'imperative dfn 0': function (done) { runFib(
                 '{ '+
                 '  1 TAKE 0 1 '+
-                '  26 (0) 0 EQ JUMP_IF '+
+                '  <done> (0) 0 EQ JUMP_IF '+
                 '  PUSH (2) (1) (2) PUSH (1) (2) STORE ADD STORE PUSH (0) (0) DEC STORE 4 JUMP '+
-                '  (1) 1 RETURN '+
+                '  >done< (1) 1 RETURN '+
                 '} EXEC',
                 done); },
 
             'imperative dfn 1': function (done) { runFib(
                 '{ '+
                 '  1 TAKE 0 1 '+
-                '  23 (0) 0 EQ JUMP_IF '+
+                '  <done> (0) 0 EQ JUMP_IF '+
                 '  (1) (2) ADD 3 -1 ROLL POP PUSH (0) (0) DEC STORE 4 JUMP '+
-                '  (1) 1 RETURN '+
+                '  >done< (1) 1 RETURN '+
                 '} EXEC',
                 done); },
 
             'imperative dfn 2': function (done) { runFib(
                 '{ '+
                 '  1 TAKE 0 1 '+
-                '  19 (0) 0 EQ JUMP_IF '+
+                '  <done> (0) 0 EQ JUMP_IF '+
                 '  EXCHANGE (1) ADD PUSH (0) (0) DEC STORE 4 JUMP '+
-                '  (1) 1 RETURN '+
+                '  >done< (1) 1 RETURN '+
                 '} EXEC',
                 done); }
         });
