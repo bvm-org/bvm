@@ -66,28 +66,29 @@
   <body>
     <div id="console"></div>
     <script type="text/javascript">
-      var bvm = require('./bvm');
       $(function () {
-          var jqconsole = $('#console').jqconsole('Welcome to the BVM web REPL\n', 'bvm> ');
-          var startPrompt = function () {
-              // Start the prompt with history enabled.
-              jqconsole.Prompt(true, function (input) {
-                  try {
-                      var cpu = bvm.interpret(input);
-                      cpu.log = function () {
-                          jqconsole.Write(Array.prototype.slice.call(arguments,0).join(" ") + "\n",
-                                          'jqconsole-log');
-                      };
-                      jqconsole.Write(JSON.stringify(cpu.boot()) + '\n',
-                                      'jqconsole-output');
-                  } catch (e) {
-                      jqconsole.Write('Error: ' + (e && (e.toString() || '' + e)) + '\n',
-                                      'jqconsole-error');
-                  }
-                  // Restart the prompt.
-                  startPrompt();
-              });
-          };
+          var bvm = require('./bvm'),
+              jqconsole = $('#console').jqconsole('Welcome to the BVM web REPL\n', 'bvm> ');
+              log = function () {
+                  jqconsole.Write(Array.prototype.slice.call(arguments,0).join(" ") + "\n",
+                                  'jqconsole-log');
+              },
+              startPrompt = function () {
+                  // Start the prompt with history enabled.
+                  jqconsole.Prompt(true, function (input) {
+                      try {
+                          var cpu = bvm.interpret(input);
+                          cpu.log = log;
+                          jqconsole.Write(JSON.stringify(cpu.boot()) + '\n',
+                                          'jqconsole-output');
+                      } catch (e) {
+                          jqconsole.Write('Error: ' + (e && (e.toString() || '' + e)) + '\n',
+                                          'jqconsole-error');
+                      }
+                      // Restart the prompt.
+                      startPrompt();
+                  });
+              };
           startPrompt();
       });
     </script>
