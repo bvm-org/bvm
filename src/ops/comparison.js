@@ -7,7 +7,7 @@
             nuArray = require('../array'),
             nuDict = require('../dict'),
             nuStack = require('../stack'),
-            segmentTypes = require('../segment'),
+            nuSegment = require('../segment'),
             nuError = require('../errors');
 
         return function (vcpu) {
@@ -55,7 +55,7 @@
                                              a.ls === b.ls && a.index === b.index);
                                 return;
                             } else if (nuArray.isArray(a) || nuDict.isDict(a) ||
-                                       segmentTypes.isSegment(a) || nuStack.isStack(a) ||
+                                       nuSegment.isSegment(a) || nuStack.isStack(a) ||
                                        typeof a === 'function') {
                                 vcpu.cs.push(a === b);
                                 return;

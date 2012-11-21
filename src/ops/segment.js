@@ -4,6 +4,7 @@
         'use strict';
 
         var types = require('../types'),
+            nuSegment = require('../segment'),
             nuError = require('../errors');
 
         return function (vcpu) {
@@ -20,7 +21,7 @@
                     } else {
                         removed = vcpu.cs.clear(mark);
                         removed.shift(); // drop the initial mark
-                        vcpu.cs.push(vcpu.cs.segment.nuSegment(removed, vcpu.cs));
+                        vcpu.cs.push(nuSegment(removed, vcpu.cs));
                         return;
                     }
                 }

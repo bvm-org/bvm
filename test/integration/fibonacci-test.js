@@ -7,7 +7,7 @@
             fail = buster.assertions.fail,
             assert = buster.assertions.assert,
             refute = buster.assertions.refute,
-            bvm = require('../../index'),
+            bvm = require('../../bvm'),
             results = [];
 
         buster.testRunner.timeout = 2000; // 2 seconds
@@ -30,8 +30,8 @@
                 assert(fib.length === 1);
                 assert(fib[0] === results[n]);
             }
-            done();
             //console.log(Date.now() - start);
+            done();
         }
 
         buster.testCase('fibonacci', {

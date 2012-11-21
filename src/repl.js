@@ -25,11 +25,11 @@
         // - ensures we get pointer equality checks right.
         bvmRepl.interpret = function (codeStr) {
             var nuAssembler = require('./assembler'),
-                segmentTypes = require('./segment'),
-                bvm = require('./cpu'),
+                nuSegment = require('./segment'),
+                nuCPU = require('./cpu'),
                 assembly = nuAssembler();
             assembly.source = codeStr;
-            return bvm(segmentTypes.json(assembly.parse().toJSON().json)).boot();
+            return nuCPU(nuSegment(assembly.parse().toJSON().json)).boot();
         }
 
         return bvmRepl;

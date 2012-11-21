@@ -4,14 +4,14 @@
         'use strict';
 
         var types = require('../types'),
-            segmentTypes = require('../segment'),
+            nuSegment = require('../segment'),
             nuError = require('../errors');
 
         return function (vcpu) {
             return {
                 PUSH: function () {
                     var op = vcpu.cs.ip.fetchAndInc();
-                    if (op === segmentTypes.segmentExhausted) {
+                    if (op === nuSegment.segmentExhausted) {
                         nuError.notEnoughOperands();
                     } else {
                         if (types.isLexicalAddress(op)) {

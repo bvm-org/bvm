@@ -7,7 +7,7 @@
             nuArray = require('./array'),
             nuDict = require('./dict'),
             nuStack = require('./stack'),
-            segmentTypes = require('./segment'),
+            nuSegment = require('./segment'),
             nuError = require('./errors'),
             adornOps = require('./adornOps'),
             undef;
@@ -49,7 +49,7 @@
                         return this.result;
                     }},
                     dispatch: {value: function (op) {
-                        if (op === segmentTypes.segmentExhausted) {
+                        if (op === nuSegment.segmentExhausted) {
                             delete this.op;
                             if (this.cs.dps) {
                                 this.enterStack(this.cs.dps); // implicit return with 0 results

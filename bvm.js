@@ -3,21 +3,28 @@
 
         'use strict';
 
-        var bvm = require('./src/cpu'),
-            segmentTypes = require('./src/segment'),
+        var nuCPU = require('./src/cpu'),
+            nuSegment = require('./src/segment'),
             types = require('./src/types'),
             nuAssembler = require('./src/assembler'),
-            result = {bvm: bvm,
-                      segmentTypes: segmentTypes,
+            result = {nuCPU: nuCPU,
+                      nuSegment: nuSegment,
                       types: types,
                       assembler: nuAssembler,
                       interpret: function (codeStr) {
                           var assembly = nuAssembler();
                           assembly.source = codeStr;
-                          return bvm(segmentTypes.json(assembly.parse().toJSON().json)).boot();
+                          return nuCPU(nuSegment(assembly.parse().toJSON().json)).boot();
                       }
                      };
 
+        try {
+            result.repl = require('./src/repl');
+        } catch (e) {
+            // probably in the browser
+        }
+
         return result;
+
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));

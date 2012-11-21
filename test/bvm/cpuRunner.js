@@ -3,7 +3,7 @@
 
         'use strict';
 
-        var bvm = require('../../index'),
+        var bvm = require('../../bvm'),
             types = bvm.types,
             buster = require('buster'),
             fail = buster.assertions.fail,
@@ -12,7 +12,7 @@
             nuArray = require('../../src/array'),
             nuDict = require('../../src/dict'),
             nuStack = require('../../src/stack'),
-            segmentTypes = require('../../src/segment'),
+            nuSegment = require('../../src/segment'),
             breakpointBase = 'BREAKPOINT',
             undef,
             baseStackConfig = {dps: undef,
@@ -83,7 +83,7 @@
                         });
                     }
                 } else if (test.type === 'seg') {
-                    assert(segmentTypes.isSegment(found));
+                    assert(nuSegment.isSegment(found));
                     if ('contents' in test) {
                         assert(test.contents.length === found.length());
                         test.contents.forEach(function (op, idx) {
@@ -123,7 +123,7 @@
 
         runnerBase = {
             run: function () {
-                var cpu = bvm.bvm(bvm.segmentTypes.json(this.code)),
+                var cpu = bvm.nuCPU(bvm.nuSegment(this.code)),
                     breakpoints = this.breakpoints,
                     unreachables = this.unreachables;
                 Object.keys(breakpoints).forEach(function (breakpoint) {

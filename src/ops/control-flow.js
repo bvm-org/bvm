@@ -4,7 +4,6 @@
         'use strict';
 
         var types = require('../types'),
-            segmentTypes = require('../segment'),
             utils = require('../utils'),
             nuError = require('../errors');
 

@@ -4,7 +4,7 @@
         'use strict';
 
         var types = require('./types'),
-            segmentTypes = require('./segment'),
+            nuSegment = require('./segment'),
             nuStack = require('./stack'),
             nuError = require('./errors'),
             undef;
@@ -32,7 +32,7 @@
                 }},
 
                 isExecutable: {value: function (thing) {
-                    return segmentTypes.isSegment(thing) ||
+                    return nuSegment.isSegment(thing) ||
                         nuStack.isStack(thing) ||
                         typeof thing === 'function';
                 }},

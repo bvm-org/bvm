@@ -3,7 +3,7 @@
 
         'use strict';
 
-        var segmentTypes = require('../segment'),
+        var nuSegment = require('../segment'),
             nuStack = require('../stack'),
             types = require('../types'),
             utils = require('../utils'),
@@ -16,7 +16,7 @@
                     var segment = utils.prepareForCall(vcpu),
                         dps = utils.detectTailCall(vcpu);
 
-                    if (segmentTypes.isSegment(segment)) {
+                    if (nuSegment.isSegment(segment)) {
                         vcpu.enterSegment(segment, Object.getPrototypeOf(vcpu.cs), dps);
                         return;
                     } else if (nuStack.isStack(segment)) {
@@ -60,7 +60,7 @@
                     var segment = utils.prepareForCall(vcpu);
                     vcpu.cs.push(vcpu.cs);
 
-                    if (segmentTypes.isSegment(segment)) {
+                    if (nuSegment.isSegment(segment)) {
                         vcpu.enterSegment(segment, Object.getPrototypeOf(vcpu.cs));
                         return;
                     } else if (nuStack.isStack(segment)) {
