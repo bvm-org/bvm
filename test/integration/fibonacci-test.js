@@ -25,7 +25,7 @@
             var n = 0, fib;
             //var start = Date.now();
             for (; n <= 100; n += 1) {
-                fib = bvm.interpret('' + n + ' ' + body);
+                fib = bvm.interpret('' + n + ' ' + body).boot();
                 assert(Array.isArray(fib));
                 assert(fib.length === 1);
                 assert(fib[0] === results[n]);
@@ -56,8 +56,8 @@
             'imperative dfn 0': function (done) { runFib(
                 '{ '+
                 '  1 TAKE 0 1 '+
-                '  <done> (0) 0 EQ JUMP_IF '+
-                '  PUSH (2) (1) (2) PUSH (1) (2) STORE ADD STORE PUSH (0) (0) DEC STORE 4 JUMP '+
+                '  >again< <done> (0) 0 EQ JUMP_IF '+
+                '  PUSH (2) (1) (2) PUSH (1) (2) STORE ADD STORE PUSH (0) (0) DEC STORE <again> JUMP '+
                 '  >done< (1) 1 RETURN '+
                 '} EXEC',
                 done); },
@@ -65,8 +65,8 @@
             'imperative dfn 1': function (done) { runFib(
                 '{ '+
                 '  1 TAKE 0 1 '+
-                '  <done> (0) 0 EQ JUMP_IF '+
-                '  (1) (2) ADD 3 -1 ROLL POP PUSH (0) (0) DEC STORE 4 JUMP '+
+                '  >again< <done> (0) 0 EQ JUMP_IF '+
+                '  (1) (2) ADD 3 -1 ROLL POP PUSH (0) (0) DEC STORE <again> JUMP '+
                 '  >done< (1) 1 RETURN '+
                 '} EXEC',
                 done); },
@@ -74,8 +74,8 @@
             'imperative dfn 2': function (done) { runFib(
                 '{ '+
                 '  1 TAKE 0 1 '+
-                '  <done> (0) 0 EQ JUMP_IF '+
-                '  EXCHANGE (1) ADD PUSH (0) (0) DEC STORE 4 JUMP '+
+                '  >again< <done> (0) 0 EQ JUMP_IF '+
+                '  EXCHANGE (1) ADD PUSH (0) (0) DEC STORE <again> JUMP '+
                 '  >done< (1) 1 RETURN '+
                 '} EXEC',
                 done); }
