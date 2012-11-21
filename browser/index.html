@@ -50,6 +50,12 @@
     .jqconsole-output {
         color: white;
     }
+    .jqconsole-error {
+        color: firebrick;
+    }
+    .jqconsole-log {
+        color: gold;
+    }
     </style>
     <script type="text/javascript" src="./bundle.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -65,13 +71,18 @@
           var startPrompt = function () {
               // Start the prompt with history enabled.
               jqconsole.Prompt(true, function (input) {
+                  var cpu = bvm.interpret(input);
+                  cpu.log = function () {
+                      jqconsole.Write(Array.prototype.slice.call(arguments,0).join(" ") + "\n",
+                                      'jqconsole-log');
+                  };
                   // Output input with the class jqconsole-output.
                   try {
-                      jqconsole.Write(JSON.stringify(bvm.interpret(input)) + '\n',
+                      jqconsole.Write(JSON.stringify(cpu.boot()) + '\n',
                                       'jqconsole-output');
                   } catch (e) {
                       jqconsole.Write('Error: ' + (e && (e.toString() || '' + e)) + '\n',
-                                      'jqconsole-output');
+                                      'jqconsole-error');
                   }
                   // Restart the prompt.
                   startPrompt();

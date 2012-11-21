@@ -9,7 +9,7 @@
             return {
                 LOG: function () {
                     if (vcpu.cs.length() > 0) {
-                        console.log(JSON.stringify(vcpu.cs.pop()));
+                        vcpu.log(JSON.stringify(vcpu.cs.pop()));
                         return;
                     } else {
                         nuError.notEnoughOperands();

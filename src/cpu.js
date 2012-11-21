@@ -30,8 +30,15 @@
                             fun(vcpu, ops);
                         };
                         ops[name].opCodeName = name;
-                    }}
-            });
+                    }},
+
+                    log: {get: function () { return vcpu.log; },
+                          set: function (val) {
+                              if (typeof val === 'function') {
+                                  vcpu.log = val;
+                              }
+                          }}
+                });
         };
 
         function adornRegistersAndHelpers (ops) {
@@ -123,7 +130,8 @@
                             nuError.invalidOperand(stack);
                         }
                         return;
-                    }}
+                    }},
+                    log: {value: console.log.bind(console), writable: true}
                 });
         }
 
