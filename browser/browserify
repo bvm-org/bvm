@@ -4,6 +4,7 @@ var browserify = require('browserify'),
     b = browserify({exports: ['require']}),
     fs = require('fs'),
     path = require('path'),
+    uglifyjs = require('uglify-js'),
     bundle = path.join(__dirname, './bundle.js'),
     adornOps = path.join(__dirname, '../src/adornOps.js'),
     browserAdornOps = path.join(__dirname, '../src/browserAdornOps.js'),
@@ -48,6 +49,17 @@ fs.writeFileSync(browserAdornOps, body, 'utf8');
 
 b.register('path', function (path) {
     return path === adornOps ? browserAdornOps : path;
+});
+
+b.register('post', function(code) {
+    var parser = uglifyjs.parser,
+        uglify = uglifyjs.uglify,
+        ast;
+
+    ast = parser.parse(code);
+    ast = uglify.ast_mangle(ast);
+    ast = uglify.ast_squeeze(ast);
+    return uglify.gen_code(ast);
 });
 
 b.ignore('./src/repl');

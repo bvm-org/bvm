@@ -13,7 +13,8 @@
     "dependencies": {
         "pegjs": "",
         "pretty-data": "",
-        "browserify": ""
+        "browserify": "",
+        "uglify-js": "<2.0.0"
     },
     "devDependencies": {
         "buster": ""

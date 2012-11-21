@@ -1,6 +1,10 @@
 <html>
 <head>
 <script type="text/javascript" src="./bundle.js"></script>
+<script type="text/javascript">
+var bvm = require('./bvm');
+bvm.interpret('PUSH "Welcome to the BVM." LOG');
+</script>
 <title>BVM</title>
 </head>
 <body>
