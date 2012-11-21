@@ -15,6 +15,7 @@
         height: 95%;
         background-color:black;
         margin: 2.5%;
+        word-wrap: break-word;
     }
     /* The inner console element. */
     .jqconsole {
@@ -71,13 +72,12 @@
           var startPrompt = function () {
               // Start the prompt with history enabled.
               jqconsole.Prompt(true, function (input) {
-                  var cpu = bvm.interpret(input);
-                  cpu.log = function () {
-                      jqconsole.Write(Array.prototype.slice.call(arguments,0).join(" ") + "\n",
-                                      'jqconsole-log');
-                  };
-                  // Output input with the class jqconsole-output.
                   try {
+                      var cpu = bvm.interpret(input);
+                      cpu.log = function () {
+                          jqconsole.Write(Array.prototype.slice.call(arguments,0).join(" ") + "\n",
+                                          'jqconsole-log');
+                      };
                       jqconsole.Write(JSON.stringify(cpu.boot()) + '\n',
                                       'jqconsole-output');
                   } catch (e) {
