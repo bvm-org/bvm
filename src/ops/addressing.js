@@ -12,6 +12,22 @@
             undef;
 
         return function (vcpu) {
+            vcpu.setDefaultOp(function (op) {
+                var found;
+                if (types.isLexicalAddress(op)) {
+                    found = op.fix(vcpu).ls.index(op.index);
+                } else if (types.isString(op)) {
+                    found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
+                    found = found === undef ? types.undef : found;
+                } else {
+                    vcpu.cs.push(op);
+                    return;
+                }
+                vcpu.cs.push(found);
+                if (utils.isExecutable(found)) {
+                    this.EXEC();
+                }
+            });
             return {
                 LOAD: function () {
                     var reference, found;
@@ -72,22 +88,6 @@
                         }
                     } else {
                         nuError.notEnoughOperands();
-                    }
-                },
-                UNKNOWN: function (op) {
-                    var found;
-                    if (types.isLexicalAddress(op)) {
-                        found = op.fix(vcpu).ls.index(op.index);
-                    } else if (types.isString(op)) {
-                        found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
-                        found = found === undef ? types.undef : found;
-                    } else {
-                        vcpu.cs.push(op);
-                        return;
-                    }
-                    vcpu.cs.push(found);
-                    if (utils.isExecutable(found)) {
-                        this.EXEC();
                     }
                 }
             };

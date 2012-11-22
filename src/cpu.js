@@ -84,12 +84,17 @@
                                     this.cs.ip.replaceMostRecent(op);
                                     op();
                                 } else {
-                                    ops['UNKNOWN'](op);
+                                    this.defaultOp(op);
                                 }
                             }
                             if (op === 'SEG_START' || op === ops['SEG_START']) {
                                 this.deferred += 1;
                             }
+                        }
+                    }},
+                    setDefaultOp: {value: function (fun) {
+                        if (typeof fun === 'function') {
+                            Object.defineProperty(this, 'defaultOp', {value: fun.bind(ops)});
                         }
                     }},
                     deferred: {value: 0, writable: true},
