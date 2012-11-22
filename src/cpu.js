@@ -56,7 +56,6 @@
                     run: {value: function () {
                         delete this.result;
                         this.running = true;
-                        // double loop to avoid entering try-catch on every opcode.
                         while (this.running) {
                             this.dispatch(this.cs.ip.fetchAndInc());
                         }

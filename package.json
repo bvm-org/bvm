@@ -20,9 +20,10 @@
         "buster": ""
     },
     "scripts": {
-        "pretest": "pegjs --cache --track-line-and-column src/assembler.pegjs src/assembler-parser.js",
+        "generate-assembler": "pegjs --cache --track-line-and-column src/assembler.pegjs src/assembler-parser.js",
+        "pretest": "npm run-script generate-assembler",
         "test": "buster test --environment node --reporter specification",
-        "browserify": "browser/browserify"
+        "browserify": "npm run-script generate-assembler && browser/browserify && echo done"
     }
 
 }

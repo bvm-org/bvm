@@ -82,11 +82,21 @@
                             n >= 0 && vcpu.cs.ts !== undef &&
                             (plen = vcpu.cs.ts.length()) >= n) {
                             vcpu.cs.appendArray(vcpu.cs.ts.clear(plen - n));
+                            return;
                         } else {
                             nuError.invalidOperand(n);
                         }
                     } else {
                         nuError.notEnoughOperands();
+                    }
+                },
+                TAKE_COUNT: function () {
+                    if (vcpu.cs.ts === undef) {
+                        vcpu.cs.push(0);
+                        return;
+                    } else {
+                        vcpu.cs.push(vcpu.cs.ts.length());
+                        return;
                     }
                 }
             };
