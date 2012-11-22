@@ -37,7 +37,9 @@
                               if (typeof val === 'function') {
                                   vcpu.log = val;
                               }
-                          }}
+                          }},
+
+                    ops: {value: Object.keys(ops) }
                 });
         };
 

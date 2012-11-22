@@ -35,7 +35,7 @@ body += "            ].forEach(function (fun) {\n"+
 "                    fun.toJSON = function () { return key + '!'; };\n"+
 "                    opsObj[key] = { configurable: false,\n"+
 "                                    writable: false,\n"+
-"                                    enumerable: false,\n"+
+"                                    enumerable: true,\n"+
 "                                    value: fun\n"+
 "                                  };\n"+
 "                });\n"+

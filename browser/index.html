@@ -68,7 +68,10 @@
     <script type="text/javascript">
       $(function () {
           var bvm = require('./bvm'),
-              jqconsole = $('#console').jqconsole('Welcome to the BVM web REPL\n', 'bvm> ');
+              ops = bvm.interpret('').ops,
+              jqconsole = $('#console').jqconsole('Welcome to the BVM web REPL\nRecognised opcodes are:\n' +
+                                                  ops.sort().join(' ') + '\n',
+                                                  'bvm> ');
               log = function () {
                   jqconsole.Write(Array.prototype.slice.call(arguments,0).join(" ") + "\n",
                                   'jqconsole-log');

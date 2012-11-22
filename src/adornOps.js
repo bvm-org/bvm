@@ -17,7 +17,7 @@
                         fun.toJSON = function () { return key + '!'; };
                         opsObj[key] = { configurable: false,
                                         writable: false,
-                                        enumerable: false,
+                                        enumerable: true,
                                         value: fun
                                       };
                     });
