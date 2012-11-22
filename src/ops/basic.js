@@ -145,6 +145,10 @@
                 UNDEF: function () {
                     vcpu.cs.push(types.undef);
                     return;
+                },
+                HALT: function () {
+                    vcpu.running = false;
+                    return;
                 }
             };
         };

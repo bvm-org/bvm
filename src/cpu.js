@@ -24,6 +24,12 @@
                         return vcpu.run();
                     }},
 
+                    resume: {value: function () {
+                        if (vcpu.cs !== undef) {
+                            return vcpu.run();
+                        }
+                    }},
+
                     // means to install hooks for use by testing.
                     installOp: {value: function (name, fun) {
                         ops[name] = function () {
