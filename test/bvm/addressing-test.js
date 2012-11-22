@@ -51,14 +51,16 @@
 
             'lexical addresses are stable': function (done) {
                 var cpu = runner();
-                cpu.setCode(['SEG_START', 'PUSH', [1,0], [0,1],
-                             cpu.addBreakPoint({lsl: 1, contents: ['hello']}),
+                cpu.setCode(['SEG_START', 'PUSH', [1,0], 1, 1, 'LEXICAL_ADDRESS', [0,1],
+                             cpu.addBreakPoint({lsl: 1, contents: ['goodbye', 'hello']}),
                              'SEG_END',
-                             'SEG_START', 1, 'TAKE', 'PUSH', 'hello',
+                             'SEG_START', 2, 'TAKE', 'PUSH', 'hello',
                              cpu.addBreakPoint(
                                  {lsl: 1,
-                                  contents: [{type: 'lexical', lsl: 1, index: 0}, 'hello']}),
-                             'STORE',
+                                  contents: [{type: 'lexical', lsl: 1, index: 0},
+                                             {type: 'lexical', lsl: 1, index: 1},
+                                             'hello']}),
+                             'STORE', 'PUSH', 'goodbye', 'STORE',
                              cpu.addBreakPoint({lsl: 1, contents: []}),
                              'SEG_END',
                              [0,0]]).run();
