@@ -18,7 +18,7 @@
             if (require('./segment').isSegment(handler)) {
                 args.push(opCodeName, result.vcpu.cs);
                 result.vcpu.cs.appendArray(args),
-                result.vcpu.enterSegment(handler, Object.getPrototypeOf(result.vcpu.cs));
+                result.vcpu.enterSegment(handler, result.vcpu.cs.asArray());
                 return;
             } else {
                 throw ('Unhandled error in ' + JSON.stringify(opCodeName) +

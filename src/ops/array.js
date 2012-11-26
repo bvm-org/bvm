@@ -5,6 +5,7 @@
 
         var types = require('../types'),
             nuArray = require('../array'),
+            nuSegment = require('../segment'),
             nuError = require('../errors');
 
         return function (vcpu) {
@@ -88,6 +89,19 @@
                             return;
                         } else {
                             nuError.invalidOperand(array, len);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
+                ARRAY_TO_SEG: function () {
+                    var ary;
+                    if (vcpu.cs.length() > 0) {
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            vcpu.cs.push(nuSegment(ary, vcpu.cs));
+                        } else {
+                            nuError.invalidOperand(ary);
                         }
                     } else {
                         nuError.notEnoughOperands();

@@ -24,6 +24,19 @@
                         vcpu.cs.push(nuSegment(removed, vcpu.cs));
                         return;
                     }
+                },
+                SEG_TO_ARRAY: function () {
+                    var seg;
+                    if (vcpu.cs.length() > 0) {
+                        seg = vcpu.cs.pop();
+                        if (nuSegment.isSegment(seg)) {
+                            vcpu.cs.push(seg.asArray());
+                        } else {
+                            nuError.invalidOperand(seg);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
                 }
             };
         };

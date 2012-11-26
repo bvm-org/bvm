@@ -13,14 +13,16 @@
                 id:        {value: id},
                 ls:        {value: undef},
                 nuIP:      {value: function (index) { return nuIP(this, index); }},
+                asArray:   {value: function () {
+                    return Object.getPrototypeOf(this);
+                }},
                 clone:     {value: function () {
-                    return adornSegmentFields(
-                        Object.getPrototypeOf(this).clone(), this.ls);
+                    return adornSegmentFields(this.asArray().clone(), this.ls);
                 }},
                 toJSON:    {value: function () {
                     return {type: 'segment',
                             ls: this.ls,
-                            instructions: Object.getPrototypeOf(this)};
+                            instructions: this.asArray()};
                 }}},
             ipBase = Object.defineProperties(
                 {},
@@ -69,7 +71,8 @@
             nuSegment;
 
         nuSegment = function (array, stackOfCurrentLexicalScope) {
-            return adornSegmentFields(nuArray(array), stackOfCurrentLexicalScope);
+            array = nuArray.isArray(array) ? array : nuArray(array);
+            return adornSegmentFields(array, stackOfCurrentLexicalScope);
         }
 
         function adornSegmentFields (segment, stackOfCurrentLexicalScope) {

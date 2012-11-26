@@ -14,8 +14,11 @@
                 lsl:       {value: undef},
                 ip:        {value: undef},
                 segment:   {value: undef},
+                asArray:   {value: function () {
+                    return Object.getPrototypeOf(this);
+                }},
                 clone:     {value: function (shareArray) {
-                    var array = Object.getPrototypeOf(this);
+                    var array = this.asArray();
                     return adornStackOps(
                         shareArray ? array : array.clone(),
                         this.ts, this.dps, this.segment, this.ip.clone());
@@ -27,7 +30,7 @@
                             lps: this.lps,
                             lsl: this.lsl,
                             ip: this.ip,
-                            contents: Object.getPrototypeOf(this)};
+                            contents: this.asArray()};
                 }}
             }, nuStack;
 

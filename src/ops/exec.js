@@ -17,7 +17,7 @@
                         dps = utils.detectTailCall(vcpu);
 
                     if (nuSegment.isSegment(segment)) {
-                        vcpu.enterSegment(segment, Object.getPrototypeOf(vcpu.cs), dps);
+                        vcpu.enterSegment(segment, vcpu.cs.asArray(), dps);
                         return;
                     } else if (nuStack.isStack(segment)) {
                         segment = segment.clone(true);
@@ -26,7 +26,7 @@
                         // possible vcpu.cs === segment. Thus
                         // doing the clone first avoids a loop.
                         segment.dps = dps;
-                        segment.ts = Object.getPrototypeOf(vcpu.cs);
+                        segment.ts = vcpu.cs.asArray();
                         vcpu.enterStack(segment);
                         return;
                     } else if (typeof segment === 'function') {
@@ -61,13 +61,13 @@
                     vcpu.cs.push(vcpu.cs);
 
                     if (nuSegment.isSegment(segment)) {
-                        vcpu.enterSegment(segment, Object.getPrototypeOf(vcpu.cs));
+                        vcpu.enterSegment(segment, vcpu.cs.asArray());
                         return;
                     } else if (nuStack.isStack(segment)) {
                         // NB we do not do the same dps
                         // modifications here as in EXEC
                         segment = segment.clone(true);
-                        segment.ts = Object.getPrototypeOf(vcpu.cs);
+                        segment.ts = vcpu.cs.asArray();
                         vcpu.enterStack(segment);
                         return;
                     } else {
