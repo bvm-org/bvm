@@ -26,6 +26,20 @@
                         return;
                     }
                 },
+                ARRAY_EXPAND: function () {
+                    var ary;
+                    if (vcpu.cs.length() > 0) {
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            vcpu.cs.appendArray(ary.array);
+                            return;
+                        } else {
+                            nuError.invalidOperand(ary);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
                 ARRAY_NEW: function () {
                     vcpu.cs.push(nuArray());
                     return;

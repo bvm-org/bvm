@@ -43,6 +43,23 @@
                     vcpu.cs.push(nuDict());
                     return;
                 },
+                DICT_EXPAND: function () {
+                    var dict;
+                    if (vcpu.cs.length() > 0) {
+                        dict = vcpu.cs.pop();
+                        if (nuDict.isDict(dict)) {
+                            dict.keys().forEach(function (key) {
+                                vcpu.cs.push(key);
+                                vcpu.cs.push(dict.load(key));
+                            });
+                            return;
+                        } else {
+                            nuError.invalidOperand(dict);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
                 DICT_STORE: function () {
                     var dict, key, value;
                     if (vcpu.cs.length() > 2) {

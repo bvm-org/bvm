@@ -5,7 +5,14 @@
 
         var types = require('./types'),
             id = {},
-            dictBase = {id: id},
+            dictBase = {id: id,
+                        toJSON: function () {
+                            var result = {};
+                            this.keys().forEach(function (key) {
+                                result[key] = this.load(key);
+                            }.bind(this));
+                            return result;
+                        }},
             undef,
             dictTemplate = {
                 has:    {value: undef},
