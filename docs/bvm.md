@@ -14,6 +14,13 @@ virtual machines (or software-CPUs) was undertaken. These included the
 world's (suspected) two most popular virtual machines (PostScript and
 the JVM) along with rather more obscure past architectures.
 
+Ultimately however, design depends on research, individual thought,
+and mostly judgement. Not all "neat" features can be successfully
+combined together. Every language has the odd wart and beauty is
+always in the eye of the beholder. However whilst the cyclical
+reinvention of ideas in computing seems on the whole inescapable, on
+the whole there has been a genuine attempt to learn from prior art.
+
 The current example implementation is written in JavaScript and is
 available to run both in web-browsers and under NodeJS. This
 implementation is currently a little over 5k lines of code, including
