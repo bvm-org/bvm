@@ -26,6 +26,83 @@ optimisations.
 
 # Design Rationale
 
+The nice thing about designing a virtual machine is that you get to
+design a CPU without any horrible hardware limitations. This means
+options are open to you which would never have been considered (or
+were seldom considered) for hardware designs. For example, where do
+operands come from and how are they indicated? Most of the time in
+hardware they come from CPU registers, which are explicitly indicated
+in the instruction stream. In a VM, they could just come from memory
+and the instruction stream include memory references instead. Equally,
+they could be implicitly taken from an operand stack.
+
+Not only is it worth examining VM designs, it is worth examining
+hardware CPU designs and features. Before the domination of MIPS, Arm
+and x86 architectures, there were a vast wealth of innovative hardware
+architectures which are well worth studying. Some CPUs were designed
+specifically to enable the cheap compilation of certain languages. For
+example, the Burroughs Large Systems were specifically designed to
+support ALGOL 60, a programming language which many people at the time
+said could never be compiled and executed on computers. ALGOL 60 was
+the first language implementing nested function definitions with
+lexical scope and closure capture. Burroughs built in specific
+features to the hardware to make compilation easier. The Burroughs
+Large Systems had, for example, hardware support for tracking lexical
+scopes and allowing symbolic addressing of locations in parent scopes,
+whilst supporting a contiguous operand-and-control-flow stack and
+without the compiler needing to attempt to calculate explicit
+stack-relative addresses to access parent lexical scopes.
+
+Another interesting feature is the use of *register windows*. These
+are widely used in RISC architectures, particularly SPARC, and perhaps
+most elegantly in the AMD 29k CPU. A register window exposes just a
+subset of the total available registers to each function, and this
+subset changes (and is restored) every time you enter (and exit) a
+function. This allows both the abstraction of register names, and the
+avoidance of software handling of register spilling. In SPARC designs,
+the window is fixed size:
+
+> The Sun Microsystems SPARC architecture provides simultaneous
+  visibility into four sets of eight registers each. Three sets of
+  eight registers each are "windowed". Eight registers (i0 through i7)
+  form the input registers to the current procedure level. Eight
+  registers (L0 through L7) are local to the current procedure level,
+  and eight registers (o0 through o7) are the outputs from the current
+  procedure level to the next level called. When a procedure is
+  called, the register window shifts by sixteen registers, hiding the
+  old input registers and old local registers and making the old
+  output registers the new input registers. The common registers (old
+  output registers and new input registers) are used for parameter
+  passing. Finally, eight registers (g0 through g7) are globally
+  visible to all procedure levels.
+
+Of course eventually, with enough sub-calls, you could exhaust all the
+registers on the CPU, and at that point values have to be manually
+spilled out to RAM. The window is essentially an atomic unit in a
+stack of which contains the current stack-allocated values of the
+current call-chain. The AMD 29k CPU had an elegant modification of
+this design in that the register window is not of fixed size. Thus
+functions declared how many registers they needed and this ensured
+better use of the precious resource that are hardware registers.
+
+It is worth noting that the MIPS design team examined this design and
+concluded that register windows were an unnecessarily complex feature
+and that fewer registers but smarted compilers which made better
+decisions about the use of registers were the way forwards. Received
+opinion is that this is true, though it's difficult to find compelling
+studies given that there are no two CPUs with the same architecture
+that differ only in the provision of register windows.
+
+It is obviously also worth studying VM designs themselves. Some of
+these are fairly general in nature, whilst others are carefully
+designed to match with expected use cases. The JVM, for example,
+accommodates Java very well, whilst accommodating less statically-rigid
+languages far less well. PostScript contains several features and many
+operators specifically designed for the layout of data on a
+page. Parrot contains more operators than could ever be considered
+reasonable by man or beast. There are however more general design
+issues of each that can inform future designs of VMs.
+
 One of the first steps when deciding on a virtual machine design is to
 decide whether it's going to register-based or at least whether the
 operators are going to have explicit locations of operands indicated
