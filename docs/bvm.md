@@ -4,6 +4,7 @@
 - [Design Rationale](#design-rationale)
 	- [The Java Virtual Machine](#the-java-virtual-machine)
 	- [PostScript](#postscript)
+	- [Burroughs Large Systems](#burroughs-large-systems)
 
 # Introduction
 
@@ -292,7 +293,19 @@ issues to consider:
   a VM as being little different from just another programming
   language, the more it ceases to seem odd that a VM should support
   richer data-structures such as collections.
-
+  
+  However, the greater the sophistication of the types supported, the
+  more carefully you need to design and manage memory use and opcodes
+  for manipulating these data types. For example, if you support some
+  kind of a dictionary in a stack machine, is a dictionary just a
+  plain value, or is it a pointer to a dictionary? If the latter, do
+  you need distinct opcodes to clone the dictionary rather just copy
+  the point to it? Is the raw memory in which the dictionary is stored
+  accessibly directly through some sort of heap, or is the memory of
+  the dictionary and the heap distinct and disjoint? Can you have both
+  - i.e. if you start with a pointer to a dictionary, can you *load*
+  that pointer in some way and then have the plain value in the
+  operand stack? What advantages would that give you?
 
 ## The Java Virtual Machine
 
@@ -312,10 +325,28 @@ they are held in the class-file constant table, and then all method
 invocation opcodes take from the instruction-stream indices into the
 class-file constant table to identify the method name. Only the
 *receiver* of the method invocation (i.e. the object) is dynamic and
-thus taken from the stack.
+thus taken from the stack. Another example is that there's no direct
+heap access at all: everything's couched in terms of objects.
 
-Other examples are that there's no direct heap access at all:
-everything's couched in terms of objects.
+The JVM supports multiple threads. Each thread has its own stack of
+frames. A frame contains the state of a method invocation. Java has
+*primitive* values (such as numbers, booleans) which are held directly
+in stack frames. Object values (including arrays) are always created
+and held in the heap, and pointed to from stack frames. Whilst stacks
+are contiguous, there is no way to access the contents of a parent
+stack frame. Method signatures are known at compile-time and so method
+invocation removes the correct number of arguments from the current
+stack frame and supplies them to the new stack frame. There are
+explicit `return` instructions to return values to the calling
+stack. As mentioned above, JVM byte-code does not embrace overloaded
+opcodes: just as there are many different forms of `add` there are
+also different forms of `return` depending on the type of the value
+being returned. It strikes me that this is a little odd given that the
+method signature which is known at compile-time and used to determine
+the number of arguments to a method (and verify their type) would also
+indicate the type of the returned value, thus a single `return`
+instruction would suffice. However, it's possible this asymmetry is
+both intentional and necessary and I'm missing something.
 
 ## PostScript
 
@@ -345,3 +376,42 @@ no more opcodes in the current function.
 There are also no explicit branching (in the sense of `jump`)
 opcodes. Opcodes such as `if`, `loop` etc are supported explicitly and
 take functions as arguments.
+
+## Burroughs Large Systems
+
+As mentioned previously, Burroughs Large Systems were computers with
+an architecture specifically designed for the execution of ALGOL
+60. They had a contiguous operand-and-control-flow stacks and a novel
+form of lexical addressing. This allowed expressions such as "the
+second item in the stack of my lexical grand-parent".
+
+When a function was invoked, as normal, the stack would record the
+previous stack frame marker along with the address of the next
+instruction once the callee has returned. The function to call would
+be indicated by a pointer which would be an offset within the
+stack-frame in which the function was declared. This allows the parent
+lexical scope to be established (i.e. the parent lexical scope is the
+scope in which the function is declared). From the stack frame marker
+of the parent lexical scope, you can find the function that led to
+that stack frame being created and thus the lexical scope of that
+function declaration, and so forth. In fact, these machines supported
+a hardware-based array of 32 elements which were explicitly set on
+function invocation and return to point to all the parent lexical
+scopes. Thus you could then very cheaply access your parent scopes:
+element 0 in this array would point to the scope of the root, 1 to its
+child, and so on up to the current lexical scope, *N*.
+
+Thus the Burroughs Large Systems support not only a stack which tracks
+the dynamic control flow, but also permits function declaration on the
+stack which can then be used to establish the lexical scopes of each
+function upon invocation.
+
+The Burroughs Large Systems were 51-bit architectures. Each value on
+the stack could be up to 48-bits, and had a 3-bit tag indicating the
+operand's type. Opcodes were then allowed to be overloaded based on
+the types of values found on the stack. There were also explicit
+operators to facilitate call-by-value and call-by-reference, both of
+which were supported by ALGOL 60. The stack itself was held in RAM,
+not on the CPU in any sort of CPU-local hardware stack, apart from the
+top two values of the stack which were two registers within the CPU
+itself.
