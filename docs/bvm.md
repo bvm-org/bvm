@@ -1,73 +1,107 @@
-# The BVM
+# Table of Contents
+
+- [Introduction](#introduction)
+- [Design Rationale](#design-rationale)
+	- [The Java Virtual Machine](#the-java-virtual-machine)
+
+# Introduction
 
 The BVM is a stack-based virtual machine, offering a simple and
-comparatively high-level instruction set. The design does not make an
-assumptions about the type of language being compiled to BVM, but it
-does include first-class support for some types of lexical addressing
-and closure capture. These features aim to decrease the gap between
-modern languages and the BVM, without pigeon-holing the BVM to any
-particular type or style of language.
+comparatively high-level instruction set. The design does not make any
+assumptions about the paradigm of the language being compiled to the
+BVM, but it does include first-class support for some types of lexical
+addressing, closure capture and automatic tail-calls. These features
+aim to decrease the gap between modern languages and the BVM, without
+pigeon-holing the BVM to any particular programming paradigm.
 
-Whilst an exhaustive literature review was not possible before
-designing the BVM, substantial investigation into the designs of
-virtual machines (or software-CPUs) was undertaken. These included the
-world's (suspected) two most popular virtual machines (PostScript and
-the JVM) along with rather more obscure past architectures.
+Whilst an exhaustive literature review was not possible prior to
+designing the BVM, substantial investigation into the design of
+various CPUs and VMs (or software-CPUs) was undertaken. These included
+the world's (suspected) two most popular VMs (PostScript and the JVM)
+along with rather more obscure (and rather interesting) past CPU
+architectures.
 
-Ultimately however, design depends on research, individual thought,
-and mostly judgement. Not all "neat" features can be successfully
-combined together. Every language has the odd wart and beauty is
-always in the eye of the beholder. However whilst the cyclical
-reinvention of ideas in computing seems on the whole inescapable, on
-the whole there has been a genuine attempt to learn from prior art.
+Ultimately, design depends on research, individual thought, and mostly
+judgement. Not all "neat" features can be successfully combined
+together. Every language has the odd wart (some rather uglier than
+others!) and beauty is always in the eye of the beholder. However
+whilst the cyclical reinvention of ideas in computing seems on the
+whole inescapable, I believe there has been a genuine attempt to learn
+from the copious prior art.
+
+Whilst hopefully not limiting the scope of application of the BVM, the
+original motivation for the BVM is to enable developers to **not**
+write in JavaScript for the browser. The hypothesis is that many
+developers, if given the choice, would prefer not to use
+JavaScript. There are however some important caveats. For example,
+there are many very good JavaScript libraries that are extremely
+popular and provide functionality specific to the
+browser-environment. These should not be shunned or precluded. Thus
+some aspects of the design of the BVM make it easy for functions to be
+exported, whether they be written in "native"-JavaScript or compiled
+to the BVM. Thus one can think of the BVM as attempting to provide a
+common-language-runtime and also providing a means of dynamic-linking
+which is language agnostic and provides a
+foreign-function-interface. This is in contrast to other efforts such
+as Emscripten which is more focused on translating entire code-bases
+to JavaScript and for example does not, at the time of writing,
+address linking to preexisting JavaScript libraries.
 
 The current example implementation is written in JavaScript and is
 available to run both in web-browsers and under NodeJS. This
-implementation is currently a little over 5k lines of code, including
-comments and white-space. Whilst by no means a convincing metric, this
-suggests that the design is not especially complex, and that
-implementations in other languages should be possible without
-excessive engineering effort. There is also substantial potential for
-optimisations.
+implementation is currently a little over 5k lines-of-code, including
+comments and white-space, and minimises to just 60kB. Whilst
+lines-of-code is by no means a convincing metric, hopefully it
+suggests that the design is not particularly complex, and that
+implementations of the BVM in other languages should be possible
+without excessive engineering effort. There is also substantial
+potential for optimisations.
+
+Ultimately, I hope to see the BVM implemented directly within web
+browsers, thus offering the greatest performance possible and a much
+richer and more inclusive programming environment within the browser.
 
 
 # Design Rationale
 
 The nice thing about designing a virtual machine is that you get to
-design a CPU without any horrible hardware limitations. This means
-options are open to you which would never have been considered (or
-were seldom considered) for hardware designs. For example, where do
-operands come from and how are they indicated? Most of the time in
-hardware they come from CPU registers, which are explicitly indicated
-in the instruction stream. In a VM, they could just come from memory
-and the instruction stream include memory references instead. Equally,
-they could be implicitly taken from an operand stack.
+design a CPU without any hardware limitations. This means options are
+open to you which would never have been considered (or were seldom
+considered) for hardware designs. For example, where do operands come
+from and how are they indicated? Most of the time in hardware they
+come from CPU registers, which are explicitly indicated in the
+instruction stream. In a VM, they could just come from any arbitrary
+memory location and the instruction stream include addresses
+instead. Equally, they could be implicitly taken from an operand
+stack.
 
-Not only is it worth examining VM designs, it is worth examining
-hardware CPU designs and features. Before the domination of MIPS, Arm
-and x86 architectures, there were a vast wealth of innovative hardware
-architectures which are well worth studying. Some CPUs were designed
-specifically to enable the cheap compilation of certain languages. For
-example, the Burroughs Large Systems were specifically designed to
-support ALGOL 60, a programming language which many people at the time
-said could never be compiled and executed on computers. ALGOL 60 was
-the first language implementing nested function definitions with
-lexical scope and closure capture. Burroughs built in specific
-features to the hardware to make compilation easier. The Burroughs
-Large Systems had, for example, hardware support for tracking lexical
-scopes and allowing symbolic addressing of locations in parent scopes,
-whilst supporting a contiguous operand-and-control-flow stack and
-without the compiler needing to attempt to calculate explicit
-stack-relative addresses to access parent lexical scopes.
+Not only is it worth examining existing VM designs, it is worth
+examining hardware CPU designs and features. Before the domination of
+Arm, x86 and MIPS architectures, there were a vast wealth of
+innovative hardware architectures which are well worth studying. Some
+CPUs were designed specifically to enable the cheap compilation of
+certain languages. For example, the Burroughs Large Systems were
+specifically designed to support ALGOL 60, a programming language
+which many people at the time said could never be compiled and
+executed on computers. ALGOL 60 was the first language implementing
+nested function definitions with lexical scope and closure capture
+(features which were then borrowed by Scheme and many other mainstream
+languages). Burroughs built in specific features to the hardware to
+make compilation easier. The Burroughs Large Systems had, for example,
+hardware support for tracking lexical scopes and allowing symbolic
+addressing of locations in parent scopes, whilst supporting a
+contiguous operand-and-control-flow stack and without the compiler
+needing to attempt to calculate explicit stack-relative addresses to
+access parent lexical scopes.
 
 Another interesting feature is the use of *register windows*. These
 are widely used in RISC architectures, particularly SPARC, and perhaps
 most elegantly in the AMD 29k CPU. A register window exposes just a
 subset of the total available registers to each function, and this
 subset changes (and is restored) every time you enter (and exit) a
-function. This allows both the abstraction of register names, and the
-avoidance of software handling of register spilling. In SPARC designs,
-the window is fixed size:
+function. This allows for the abstraction of register names: they
+become local to each function scope. In SPARC designs, the window is
+fixed size:
 
 > The Sun Microsystems SPARC architecture provides simultaneous
   visibility into four sets of eight registers each. Three sets of
@@ -86,43 +120,43 @@ the window is fixed size:
 Of course eventually, with enough sub-calls, you could exhaust all the
 registers on the CPU, and at that point values have to be manually
 spilled out to RAM. The window is essentially an atomic unit in a
-stack of which contains the current stack-allocated values of the
-current call-chain. The AMD 29k CPU had an elegant modification of
-this design in that the register window is not of fixed size. Thus
-functions declared how many registers they needed and this ensured
-better use of the precious resource that are hardware registers.
+stack containing the stack-allocated values of the current
+call-chain. The AMD 29k CPU had an elegant modification of this design
+in that the register window is not of fixed size. Thus functions
+declared how many registers they needed and this ensured better use of
+the precious resource that are hardware registers.
 
 It is worth noting that the MIPS design team examined this design and
 concluded that register windows were an unnecessarily complex feature
-and that fewer registers but smarted compilers which made better
-decisions about the use of registers were the way forwards. Received
-opinion is that this is true, though it's difficult to find compelling
+and that fewer registers but smarter compilers (which made better
+decisions about the use of registers) were the way forwards. Received
+opinion is that this is true, though it's difficult to find conclusive
 studies given that there are no two CPUs with the same architecture
 that differ only in the provision of register windows.
 
 It is obviously also worth studying VM designs themselves. Some of
 these are fairly general in nature, whilst others are carefully
 designed to match with expected use cases. The JVM, for example,
-accommodates Java very well, whilst accommodating less statically-rigid
-languages far less well. PostScript contains several features and many
-operators specifically designed for the layout of data on a
-page. Parrot contains more operators than could ever be considered
-reasonable by man or beast. There are however more general design
-issues of each that can inform future designs of VMs.
+accommodates Java very well, whilst accommodating less
+statically-rigid languages far less well. PostScript contains several
+features and many operators specifically designed for the layout of
+data on a page. Parrot contains more operators than could ever be
+considered reasonable by man or beast. There are however more general
+design choices of each that can inform future designs of VMs.
 
-One of the first steps when deciding on a virtual machine design is to
-decide whether it's going to register-based or at least whether the
-operators are going to have explicit locations of operands indicated
-(which could just be memory addresses), or whether it's going to be
+
+One of the first steps when deciding on a VM design is to decide
+whether it's going to register-based or at least whether the operators
+are going to have explicit locations of operands indicated (which
+could just be memory addresses), or whether it's going to be
 stack-based and thus operands are implicitly taken from the head of
 the stack.
 
-When measured by use, most virtual machines are stack based. This is
-due to the overwhelming influence of both the JVM, and PostScript
-which exists in pretty much every serious printer made. But even if
-you disregard the popularity of these VMs, there seem to be
-relatively few register-based virtual machines. There are several
-reasons for this:
+When measured by use, most VMs are stack based. This is due to the
+overwhelming influence of both the JVM, and PostScript which exists in
+pretty much every serious printer made. But even if you disregard the
+popularity of these VMs, there seem to be relatively few
+register-based VMs. There are several reasons for this:
 
 1. The only reason hard CPUs have registers is as a means of
 identifying locations which are valid holders of operands. With a
