@@ -3,6 +3,7 @@
 - [Introduction](#introduction)
 - [Design Rationale](#design-rationale)
 	- [The Java Virtual Machine](#the-java-virtual-machine)
+	- [PostScript](#postscript)
 
 # Introduction
 
@@ -146,11 +147,10 @@ design choices of each that can inform future designs of VMs.
 
 
 One of the first steps when deciding on a VM design is to decide
-whether it's going to register-based or at least whether the operators
-are going to have explicit locations of operands indicated (which
-could just be memory addresses), or whether it's going to be
-stack-based and thus operands are implicitly taken from the head of
-the stack.
+whether it's going to register-based, whether the operators are going
+to have explicit locations of operands indicated (which could just be
+memory addresses), or whether it's going to be stack-based and thus
+operands are implicitly taken from the head of the stack.
 
 When measured by use, most VMs are stack based. This is due to the
 overwhelming influence of both the JVM, and PostScript which exists in
@@ -158,44 +158,45 @@ pretty much every serious printer made. But even if you disregard the
 popularity of these VMs, there seem to be relatively few
 register-based VMs. There are several reasons for this:
 
-1. The only reason hard CPUs have registers is as a means of
+1. The only reason hardware-CPUs have registers is as a means of
 identifying locations which are valid holders of operands. With a
 software CPU, you don't have this restriction: the operands can come
 from anywhere.
 
-2. Hard CPUs have a limited number of registers. Hard CPU registers
-are special high-performance locations. In a modern CPU, a *register*
-is actually an abstracted location as each register will exist many
-times over at most stages within the CPU's pipeline (assuming it's a
-pipelined design). With a software CPU, as you're not implementing a
-chip, you don't have this limitation. It then seems perverse to
-inflict the issues of register-spilling and management onto any
-compiler targeting your architecture when there's no hardware-based
-reason to have a limited number of registers. Having an unbounded
-number of registers in a VM would complicate the instruction set
-format as the format to indicate which registers are operands would
-become a little involved. Some register-based VMs such as Parrot make
-the argument that they can simply map their virtual registers to
+2. Hardware CPUs have a limited number of registers. Hardware CPU
+registers are special high-performance locations. In a modern CPU, a
+*register* is actually an abstracted location as each register will
+exist many times over at most stages within the CPU's pipeline
+(assuming it's a pipelined design). With a software CPU, as you're not
+implementing a chip, you don't have this limitation. It then seems
+perverse to inflict the issues of register-spilling and management
+onto any compiler targeting your architecture when there's no
+hardware-based reason to have a limited number of registers. Having an
+unbounded number of registers in a VM would complicate the instruction
+set format as the format to indicate which registers are operands
+would become a little involved. Some register-based VMs such as Parrot
+make the argument that they can simply map their virtual registers to
 hardware registers. This is true, but complicates implementations of
 the VM on different architectures with different numbers and types of
-hard registers. Furthermore, given the evidence of the speed of well
-optimised stack-based VMs such as the JVM, it would seem a
-register-based VM is not a necessary precondition of a well-performing
-VM.
+hardware registers. Furthermore, given the evidence of the speed of
+well optimised stack-based VMs such as the JVM, it would seem a
+register-based VM is not a necessary precondition for a
+well-performing VM.
 
 3. Stack-based instruction sets tend to have better code density. This
 is definitely true if you just count *instructions per object-file
 byte* as all instructions take operands implicitly from the stack(s),
 thus operands are not indicated in the instruction stream. However,
 stack machines do have to include instructions for manipulating the
-stack to make sure the operands are in the correct location for
-upcoming instructions. Good compilers can minimise the use of these
-instructions though you will never eliminate them entirely. However,
-even with a modest sprinkling of such instructions, this is fewer
-bytes lost to arrange operands than with register-based VMs where
-every single instruction explicitly indicates its operands. In a world
-of mobile devices where bandwidth can often be limited and data
-transfer billed, this seems a worthwhile concern.
+stack to make sure the operands are in the correct order on the stack
+for upcoming instructions. Good compilers can minimise the use of
+these instructions though you will never eliminate them
+entirely. However, even with a modest sprinkling of such instructions,
+this is fewer bytes lost to manipulating the stack than bytes lost
+with register-based CPUs where every single instruction explicitly
+indicates its operands. In a world of mobile devices where bandwidth
+can often be limited and data transfer billed, this seems a worthwhile
+concern.
 
 If we thus decide that stack-based designs are at least more elegant
 and possibly offer a few advantages (whilst requiring optimisation
@@ -217,8 +218,8 @@ issues to consider:
   adds cost to closure capture when the environment of the closure can
   include stack-based variables and thus sections of the stack then
   have to be copied out and saved for use by the closure, should it be
-  later invoked. This can get very complex if the saved environment
-  include the contents of parent lexical scopes which are then
+  later invoked. This can get rather complex if the saved environment
+  includes the contents of parent lexical scopes which are then
   modified elsewhere and perhaps even shared between different
   closures. For example, in the pseudo code
 
@@ -236,10 +237,14 @@ issues to consider:
 
   if the initial creation of `j` is done on the stack and the stack is
   contiguous, then the stack will be popped and `j` will be lost by
-  the time the call to `x()` returns. Thus the potential subsequent
+  the time the call to `x()` returns. `k` would then point to a
+  location beyond the top of the stack. The potential subsequent
   invocations of `y` and `z` will be problematic unless steps are
   taken to ensure `j` is moved to the heap somewhere and all
-  references to it are updated.
+  references to it are updated. Furthermore, whilst the variables `y`
+  and `z` are in the parent scope, the values assigned to them
+  (i.e. the two functions created by `x()`) can also not be created on
+  the stack as they too would be popped once `x()` returns.
   
   Alternatively, if each activation frame is an entirely separate
   stack with merely a pointer to previous stack (thus representing the
@@ -251,42 +256,92 @@ issues to consider:
   lexically in-scope at the time of declaration of the closure.
   
   This however does start to suggest a design focusing more towards
-  lexically scoped variables rather than dynamically scoped
-  variables. I believe this is justified though as in a
-  lexically-scoped language, implementing a dynamically-scoped
-  language is fairly straight-forward (there are a number of
-  approaches, but one is simply to have a dictionary which maps
-  variable names to their current value). The opposite however is more
-  involved: implementing a lexically-scoped language within a
-  dynamically scoped language requires keeping many dictionaries
-  mapping variable names to values, preserving some and creating new
-  which inherit from old whenever you enter or exit a function. In my
+  lexical scoping rather than dynamic scoping. I believe this is
+  justified though as in a lexically-scoped language, implementing a
+  dynamically-scoped language is fairly straight-forward (there are a
+  number of approaches, but one is simply to have a dictionary which
+  maps variable names to their current value). The opposite however is
+  more involved: implementing a lexically-scoped language within a
+  dynamically scoped one requires keeping many dictionaries mapping
+  variable names to values, preserving some and creating new which
+  inherit from old whenever you enter or exit a function. In my
   estimation, the majority of popular programming languages today are
-  lexically scoped. Thus a VM which supports directly lexically-scoped
+  lexically scoped. Thus a VM which directly supports lexically-scoped
   languages and offers built-in support for closure capture is
   advantageous. Furthermore, the provision of these features should
   not make it more difficult for the VM to be targeted by
   dynamically-scoped languages nor for languages which do not support
   first-class functions (and so have no need for closure capture).
 
+* Types. Types always merit much discussion and debate. An instruction
+  set is a language just like any other and so what types it supports
+  and how those types influence semantics are important questions to
+  ask. Some VMs have multiple operators for the same functionality,
+  just on different types of operands. For example, the JVM has
+  `iadd`, `ladd`, `dadd` and `fadd` to perform addition of integers,
+  longs, doubles and floats. Other architectures track the types of
+  values on the stack or in registers implicitly and then overload
+  opcodes so that a single `add` operator will perform the appropriate
+  action dependent on the types of the operands it finds.
+  
+  Some CPUs have opcodes to perform sophisticated matrix operations
+  which you could argue suggests they support a data type of a
+  matrix. Similarly, some modern CPUs have opcodes to explicitly
+  search strings. Other designs support more abstract data types
+  directly, such as arrays and dictionaries. The more you think about
+  a VM as being little different from just another programming
+  language, the more it ceases to seem odd that a VM should support
+  richer data-structures such as collections.
+
+
 ## The Java Virtual Machine
 
-The JVM mainly uses 1 byte per op-code in its instruction stream which
-is taken from its class-file format. The class-file format contains
-other elements such as a constant-look-up table which allows constants
-(for example strings) to be removed from the instruction stream in
-order facilitate reuse amongst other optimisations. Some instructions
-do have further operands taken from the instruction stream. These tend
-to point to the fact that the JVM was designed with little more than
-the needs of the Java language in mind. So for example, because Java
-does closed-world compilation, all method invocation can be resolved
-at compile-time. This means that there is never a need to try and look
-up a method based on the name on the top of the stack: as all method
-names are known at compile-time, they are held in the class-file
-constant table, and then all method invocation op-codes take from the
-instruction-stream indices into the class-file constant table to
-identify the method name. Only the *receiver* of the method invocation
-(i.e. the object) is dynamic and thus taken from the stack.
+The JVM is a stack-based VM. It mainly uses 1 byte per opcode in its
+instruction stream which is taken from its class-file format. The
+class-file format contains other elements such as a constant-look-up
+table which allows constants (for example strings) to be removed from
+the instruction stream in order facilitate reuse and other
+optimisations. Some instructions do have further operands taken from
+the instruction stream. These tend to point to the fact that the JVM
+was designed with little more than the needs of the Java language in
+mind. So for example, because Java does closed-world compilation, all
+method invocation can be resolved at compile-time. This means that
+there is never a need to try and look up a method based on the name on
+the top of the stack: as all method names are known at compile-time,
+they are held in the class-file constant table, and then all method
+invocation opcodes take from the instruction-stream indices into the
+class-file constant table to identify the method name. Only the
+*receiver* of the method invocation (i.e. the object) is dynamic and
+thus taken from the stack.
 
 Other examples are that there's no direct heap access at all:
 everything's couched in terms of objects.
+
+## PostScript
+
+PostScript is an extremely elegant stack-based design. The instruction
+stream is just text: there is no binary instruction stream, though
+there is support for compression of the instruction stream. It is
+interesting to consider whether there is any benefit these days to a
+VM supporting a custom binary-format given how widely supported *gzip*
+compression, especially of text, has become. The language supports
+arrays (both packed (read-only) and unpacked) and dictionaries. A
+string in the instruction stream that is not recognised as an opcode
+is used as a key to index a stack of dictionaries. If a value is found
+and that value is a user-declared function then the function is
+run. Thus there is no real distinction between opcodes and
+user-defined functions. There is even a form of `eval` where a string
+can be reinterpreted as a stream of opcodes.
+
+PostScript supports some rather high-level operators such as mapping
+over elements of arrays and explicit `for`-loop support. PostScript is
+a dynamically-scoped language and has contiguous stacks: when you call
+a function, that function can perform any manipulation it likes of all
+the stacks: there is no facility to indicate exactly how many operands
+a function should take, and there is also no explicit `return`
+operator: control flow returns to the calling function when there are
+no more opcodes in the current function.
+
+There are also no explicit branching (in the sense of `jump`)
+opcodes. Opcodes such as `if`, `loop` etc are supported explicitly and
+take functions as arguments.
