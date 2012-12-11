@@ -5,6 +5,7 @@
 	- [The Java Virtual Machine](#the-java-virtual-machine)
 	- [PostScript](#postscript)
 	- [Burroughs Large Systems](#burroughs-large-systems)
+- [The Architecture of the BVM](#the-architecture-of-the-bvm)
 
 # Introduction
 
@@ -92,7 +93,7 @@ languages). Burroughs built in specific features to the hardware to
 make compilation easier. The Burroughs Large Systems had, for example,
 hardware support for tracking lexical scopes and allowing symbolic
 addressing of locations in parent scopes, whilst supporting a
-contiguous operand-and-control-flow stack and without the compiler
+continuous operand-and-control-flow stack and without the compiler
 needing to attempt to calculate explicit stack-relative addresses to
 access parent lexical scopes.
 
@@ -212,17 +213,18 @@ issues to consider:
   last two are very specific to the use of PostScript to construct the
   layout of data on a page.
 
-* Should the operand stack (and maybe others?) be contiguous, or
-  should each activation frame turn out to be an entirely separate
-  stack which merely links to its parent? The contiguous design is
-  what people are most used to from e.g. C's use of the stack, but it
-  adds cost to closure capture when the environment of the closure can
-  include stack-based variables and thus sections of the stack then
-  have to be copied out and saved for use by the closure, should it be
-  later invoked. This can get rather complex if the saved environment
-  includes the contents of parent lexical scopes which are then
-  modified elsewhere and perhaps even shared between different
-  closures. For example, in the pseudo code
+* Should the operand stack (and maybe others) be continuous, or
+  disjoint: i.e. should all function calls permit modification of the
+  same stack, or should each function call result in an entirely
+  separate stack which merely has a pointer to its parent stack? The
+  continuous design is what people are most used to from e.g. C's use
+  of the stack, but it adds cost to closure capture when the
+  environment of the closure can include stack-based variables and
+  thus sections of the stack then have to be copied out and saved for
+  use by the closure, should it be later invoked. This can get rather
+  complex if the saved environment includes the contents of parent
+  lexical scopes which are then modified elsewhere and perhaps even
+  shared between different closures. For example, in the pseudo code
 
         var k, x, y, z;
         x = function () {
@@ -237,7 +239,7 @@ issues to consider:
         return z;
 
   if the initial creation of `j` is done on the stack and the stack is
-  contiguous, then the stack will be popped and `j` will be lost by
+  continuous, then the stack will be popped and `j` will be lost by
   the time the call to `x()` returns. `k` would then point to a
   location beyond the top of the stack. The potential subsequent
   invocations of `y` and `z` will be problematic unless steps are
@@ -302,8 +304,8 @@ issues to consider:
   you need distinct opcodes to clone the dictionary rather just copy
   the point to it? Is the raw memory in which the dictionary is stored
   accessibly directly through some sort of heap, or is the memory of
-  the dictionary and the heap distinct and disjoint? Can you have both
-  - i.e. if you start with a pointer to a dictionary, can you *load*
+  the dictionary and the heap distinct and disjoint? Can you have both -
+  i.e. if you start with a pointer to a dictionary, can you *load*
   that pointer in some way and then have the plain value in the
   operand stack? What advantages would that give you?
 
@@ -331,13 +333,17 @@ heap access at all: everything's couched in terms of objects.
 The JVM supports multiple threads. Each thread has its own stack of
 frames. A frame contains the state of a method invocation. Java has
 *primitive* values (such as numbers, booleans) which are held directly
-in stack frames. Object values (including arrays) are always created
-and held in the heap, and pointed to from stack frames. Whilst stacks
-are contiguous, there is no way to access the contents of a parent
-stack frame. Method signatures are known at compile-time and so method
-invocation removes the correct number of arguments from the current
-stack frame and supplies them to the new stack frame. There are
-explicit `return` instructions to return values to the calling
+in stack frames. Reference values (including arrays and objects) are
+always created and held in the heap, and pointed to from stack
+frames. Whilst stacks are continuous, there is no way to access the
+contents of a parent stack frame. Because methods are attached to
+objects and objects are always held in the heap, the closure capture
+issues outlined above are first reduced and then eliminated by
+permitting only access to constants in parent lexical scopes from
+within a new closure. Method signatures are known at compile-time and
+so method invocation removes the correct number of arguments from the
+current stack frame and supplies them to the new stack frame. There
+are explicit `return` instructions to return values to the calling
 stack. As mentioned above, JVM byte-code does not embrace overloaded
 opcodes: just as there are many different forms of `add` there are
 also different forms of `return` depending on the type of the value
@@ -371,7 +377,10 @@ a function, that function can perform any manipulation it likes of all
 the stacks: there is no facility to indicate exactly how many operands
 a function should take, and there is also no explicit `return`
 operator: control flow returns to the calling function when there are
-no more opcodes in the current function.
+no more opcodes in the current function. Because of this contiguous
+operand stack, the call stack must be a separate stack to avoid
+functions coming across and manipulating function-call on the operand
+stack.
 
 There are also no explicit branching (in the sense of `jump`)
 opcodes. Opcodes such as `if`, `loop` etc are supported explicitly and
@@ -415,3 +424,59 @@ which were supported by ALGOL 60. The stack itself was held in RAM,
 not on the CPU in any sort of CPU-local hardware stack, apart from the
 top two values of the stack which were two registers within the CPU
 itself.
+
+
+# The Architecture of the BVM
+
+The BVM is a stack-based virtual machine. There is a disjoint
+call-and-operand stack, and a separate dictionary stack which is used
+for both error handling and to export functions. By making the
+call-and-operand stack elements disjoint, the closure capture is
+trivially supported. Whilst the VM is currently single-threaded, there
+is no requirement for real threads to be precluded, and the VM has
+built-in support for call-with-continuation which can be used both for
+error-handling (i.e. try-catch) and also to build a micro-kernel /
+scheduler which could implement green-threads.
+
+The BVM has built-in support for the following types:
+
+* Numbers. Currently these are required to be 64-bit floats. This will
+  almost certainly be revised to support 32-bit integers (and possibly
+  64-bit integers too).
+
+* Booleans.
+
+* Arrays. Arrays are dynamically sized and are a reference type:
+  multiple values can point to the same array.
+
+* Strings.
+
+* Dictionaries, where the keys must be strings. This restriction may
+  be relaxed in the future. Dictionaries are of dynamic size and are a
+  reference type like Arrays.
+
+* Code Segments. These contain both opcodes and an understanding of
+  the lexical scope in which they were declared.
+
+* Lexical Addresses. These can be literals (i.e. constants) in the
+  instruction stream, or they can be constructed dynamically. They
+  represent an offset into a lexical context in scope at the time of
+  the current function declaration. Once a lexical address enters the
+  operand stack, it is *fixed* which ensures that it is stable:
+  i.e. the lexical address itself can be passed to different functions
+  declared in different scopes and the lexical address will continue
+  to point at the same offset in the very same stack.
+
+* Stacks. A stack is seldom witnessed as a value on the operand stack.
+  It appears though when some form of call-with-continuation
+  (`CALLCC`) occurs and thus then represents a suspension of
+  execution. A stack contains the current state of a segment
+  invocation and along with pointers to the relevent code segment (and
+  internal offset: i.e. instruction pointer), the calling stack
+  (i.e. dynamic call chain), and the stack of its lexical parent scope
+  (this is the same lexical scope information that is held by the
+  stack's code segment itself).
+
+* Various singleton types such as `undefined` and `mark`. `undefined`
+  is a bottom value. `mark` is used to act as a marker on the operand
+  stack and is used both implicitly and explicitly by various opcodes.
