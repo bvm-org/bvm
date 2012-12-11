@@ -489,7 +489,14 @@ The BVM has built-in support for the following types:
 
 The object file format is a JSON array, with no encoding of opcodes at
 all: they exist as literal strings. This is chosen because of its
-widespread support in browsers and the ease of compression.
+widespread support in browsers and the ease of compression: standard
+compression techniques are expected to lead to file sizes as small
+efficient binary object file formats. The non-binary format is also in
+the spirit of the open web and should also lead to a very low curve to
+creating tool chains and debugging infrastructure. The only downside
+is that it is likely the entire object file will need to be downloaded
+before decompression and execution can begin. If in practise this
+becomes an issue, this can be revisited.
 
 The assembly format is plain text, with whitespace-separated
 tokens. The assembly format permits comments. The parser currently
@@ -498,7 +505,14 @@ dictionary and segment declarations) which are not strictly necessary
 though in practise it is not anticipated these restrictions will cause
 any difficulties for users of the assembler. The assembly format
 however does support some very useful short-hands and is less
-syntactically noisy than writing the JSON object file format directly.
+syntactically noisy than writing the JSON object file format
+directly. As mentioned above, the example implementation in
+JavaScript, including the assembler, minimises to 60kB. Given this, it
+might actually be preferable to ship the bundle including the
+assembler to browsers and then treat the assembly itself as the object
+format. It remains to be seen which is more convenient or
+attractive. The arguments made previously about compression are just
+as valid when applied to the assembly format.
 
 All examples given in this document are given in the assembly
 format. The documentation of the opcodes however gives both assembly
