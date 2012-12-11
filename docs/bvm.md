@@ -6,6 +6,8 @@
 	- [PostScript](#postscript)
 	- [Burroughs Large Systems](#burroughs-large-systems)
 - [The Architecture of the BVM](#the-architecture-of-the-bvm)
+	- [Supported Types](#supported-types)
+	- [File formats](#file-formats)
 
 # Introduction
 
@@ -53,12 +55,12 @@ address linking to preexisting JavaScript libraries.
 The current example implementation is written in JavaScript and is
 available to run both in web-browsers and under NodeJS. This
 implementation is currently a little over 5k lines-of-code, including
-comments and white-space, and minimises to just 60kB. Whilst
-lines-of-code is by no means a convincing metric, hopefully it
-suggests that the design is not particularly complex, and that
-implementations of the BVM in other languages should be possible
-without excessive engineering effort. There is also substantial
-potential for optimisations.
+comments and white-space, and minimises to just 60kB (including
+assembly parser). Whilst lines-of-code is by no means a convincing
+metric, hopefully it suggests that the design is not particularly
+complex, and that implementations of the BVM in other languages should
+be possible without excessive engineering effort. There is also
+substantial potential for optimisations.
 
 Ultimately, I hope to see the BVM implemented directly within web
 browsers, thus offering the greatest performance possible and a much
@@ -438,6 +440,8 @@ built-in support for call-with-continuation which can be used both for
 error-handling (i.e. try-catch) and also to build a micro-kernel /
 scheduler which could implement green-threads.
 
+## Supported Types
+
 The BVM has built-in support for the following types:
 
 * Numbers. Currently these are required to be 64-bit floats. This will
@@ -471,7 +475,7 @@ The BVM has built-in support for the following types:
   It appears though when some form of call-with-continuation
   (`CALLCC`) occurs and thus then represents a suspension of
   execution. A stack contains the current state of a segment
-  invocation and along with pointers to the relevent code segment (and
+  invocation and along with pointers to the relevant code segment (and
   internal offset: i.e. instruction pointer), the calling stack
   (i.e. dynamic call chain), and the stack of its lexical parent scope
   (this is the same lexical scope information that is held by the
@@ -480,3 +484,22 @@ The BVM has built-in support for the following types:
 * Various singleton types such as `undefined` and `mark`. `undefined`
   is a bottom value. `mark` is used to act as a marker on the operand
   stack and is used both implicitly and explicitly by various opcodes.
+
+## File formats
+
+The object file format is a JSON array, with no encoding of opcodes at
+all: they exist as literal strings. This is chosen because of its
+widespread support in browsers and the ease of compression.
+
+The assembly format is plain text, with whitespace-separated
+tokens. The assembly format permits comments. The parser currently
+enforces some constraints (such as correct pairing of literal array,
+dictionary and segment declarations) which are not strictly necessary
+though in practise it is not anticipated these restrictions will cause
+any difficulties for users of the assembler. The assembly format
+however does support some very useful short-hands and is less
+syntactically noisy than writing the JSON object file format directly.
+
+All examples given in this document are given in the assembly
+format. The documentation of the opcodes however gives both assembly
+and object file format representations.
