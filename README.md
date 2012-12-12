@@ -536,7 +536,7 @@ enforces some constraints (such as correct pairing of literal array,
 dictionary and segment declarations) which are not strictly necessary
 though in practise it is not anticipated these restrictions will cause
 any difficulties for users of the assembler. The assembly format
-however does support some very useful short-hands and is less
+however does support some very useful shorthands and is less
 syntactically noisy than writing the JSON object file format
 directly. As mentioned above, the example implementation in
 JavaScript, including the assembler, minimises to 60kB. Given this, it
@@ -594,7 +594,13 @@ So we get much more readable results if we do:
 
 Because every function can return a variable number of results,
 results will always be displayed in an array, even though in this
-case, we've only returned a single result.
+case, we've only returned a single result. Note that because the
+current BVM implementation is written in JavaScript, the results
+returned and displayed by the REPL are JSON-formatted data objects and
+thus differ in format from the input of BVM assembly. For example, BVM
+assembly requires whitespace separators, whereas JSON tends to remove
+whitespace where other separators must be used, for example `,` and
+`:` in arrays and objects.
 
 If we do:
 
