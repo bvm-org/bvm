@@ -12,6 +12,8 @@
 	- [Execution Model](#execution-model)
 		- [Literal Arrays](#literal-arrays)
 		- [Literal Dictionaries](#literal-dictionaries)
+		- [Code Segments](#code-segments)
+		- [The Dictionary Stack](#the-dictionary-stack)
 
 # Introduction
 
@@ -786,3 +788,5 @@ from other segments:
 
 This last one demonstrates that `TAKE` operates on the dynamic calling
 stack, and not on the lexical scope.
+
+### The Dictionary Stack
