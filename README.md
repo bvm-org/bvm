@@ -9,6 +9,9 @@
 - [The Architecture of the BVM](#the-architecture-of-the-bvm)
 	- [Supported Types](#supported-types)
 	- [File formats](#file-formats)
+	- [Execution Model](#execution-model)
+		- [Literal Arrays](#literal-arrays)
+		- [Literal Dictionaries](#literal-dictionaries)
 
 # Introduction
 
@@ -547,3 +550,133 @@ All examples given in this document are given in the assembly
 format. The documentation of the opcodes however gives both assembly
 and object file format representations.
 
+## Execution Model
+
+Execution is relatively standard for a stack machine: an opcode is
+fetched from the current instruction pointer. The instruction pointer
+is incremented. The fetched opcode is interpreted. As usual with stack
+machines, operation in Reverse Polish Notation form: thus in general,
+you first set up the operands on the stack, and then you call the
+operator.
+
+The only exception to this general strategy is the `PUSH` opcode,
+which causes the following element from the current segment's
+instruction stream to be placed onto the operand stack.
+
+Note that all opcodes are case sensitive and all the built-in opcodes
+are in UPPERCASE. So, to add together the numbers 3 and 5, we can
+write:
+
+    bvm> PUSH 3 PUSH 5 ADD
+    {"type": "stack",
+     "lsl": 0,
+     "ip": {"type": "ip",
+            "segment": {"type": "segment",
+                        "instructions": ["PUSH!", 3, "PUSH!", 5, "ADD!"]},
+            "index": 5},
+     "contents": [8]}'
+
+The default action of the REPL is to display the result of the
+supplied instructions or, if there is no explicit result, to display
+the final state of the stack. To explicitly return a result, we use
+the `RETURN` opcode, which requires an argument on the stack telling
+it how many subsequent elements from the stack to return to the
+calling function (or in the case of the *root* function of the REPL,
+how many elements to display back to us). The simplest thing is to
+return everything on the stack, which means we must push a number
+which is the current height of the stack. There's an operator for
+that: `COUNT`.
+
+So we get much more readable results if we do:
+
+    bvm> PUSH 3 PUSH 5 ADD COUNT RETURN
+    [8]
+
+Because every function can return a variable number of results,
+results will always be displayed in an array, even though in this
+case, we've only returned a single result.
+
+If we do:
+
+    bvm> PUSH 13 PUSH 3 PUSH 5 ADD COUNT RETURN
+    [13, 8]
+
+We see that the `ADD` only affects the uppermost two elements of the
+stack and the `13` is left alone. `COUNT` will then find there are two
+elements on the stack and so will push the number `2`. `RETURN` will
+then find that `2` and will then grab the next two elements from the
+stack and return them to us.
+
+There is an implicit default operator. This is overloaded and will be
+explained part by part. When an opcode is encountered which is not a
+built-in opcode, this default operator is invoked. *If the opcode
+encountered is a number, the number will be pushed onto the operand
+stack.* Thus we can rewrite the above as:
+
+    bvm> 13 3 5 ADD COUNT RETURN
+    [13, 8]
+
+That's rather a lot shorter.
+
+There is no difference between a string and an opcode. In the above
+examples, `ADD` is just a string that is recognised as the name of an
+opcode. If we wish to push the string "ADD" onto the stack rather than
+invoke the function associated with that string, then we must
+explicitly use `PUSH`:
+
+    bvm> 13 3 5 PUSH ADD COUNT RETURN
+    [13, 3, 5, "ADD"]
+
+You only need to use quotes in the program text when a string has
+spaces in it:
+
+    bvm> 13 3 5 PUSH "ADD this" COUNT RETURN
+    [13, 3, 5, "ADD this"]
+
+### Literal Arrays
+
+A literal array can be created by using the `[` and `]` opcodes. Note
+that these are an assembly shorthand for `ARRAY_START` and `ARRAY_END`
+opcodes. The `ARRAY_START` opcode simply places a marker on the
+stack. Execution then continues as normal (further opcodes are
+directly evaluated as normal) until the `ARRAY_END` opcode is
+encountered. This searches back down through the stack until it finds
+the mark, and then takes all the contents between and uses it to
+populate a fresh array, finally placing that array back onto the
+stack.
+
+    bvm> [ ] COUNT RETURN
+    [[]]
+    bvm> [ 1 16 3 ] COUNT RETURN
+    [[1, 16, 3]]
+    bvm> [ PUSH 1 PUSH 16 PUSH 3 ] COUNT RETURN
+    [[1, 16, 3]]
+    bvm> [ PUSH 1 PUSH 16 PUSH 3 ADD ADD ] COUNT RETURN
+    [[20]]
+    bvm> [ 1 16 3 ADD ADD [ PUSH hello ] ] COUNT RETURN
+    [[20, ["hello"]]]
+
+The full array API including dynamic array creation is covered later.
+
+### Literal Dictionaries
+
+A literal dictionary can be created by using the `<` and `>`
+opcodes. As with arrays, these are assembly shorthands for the opcodes
+`DICT_START` and `DICT_END`. As with arrays, the `START` simply places
+a marker onto the stack, execution continues as normal until the
+`DICT_END` opcode is encountered.
+
+When `DICT_END` is encountered, it is required that there are an even
+number of elements on the stack between the starting marking and the
+top of the stack indicating pairs of keys and values. All keys must be
+strings.
+
+    bvm> < PUSH hello 5 PUSH goodbye 17 > COUNT RETURN
+    [{"hello": 5, "goodbye": 17}]
+    bvm> < PUSH hello 5 DEC PUSH goodbye 17 3 ADD > COUNT RETURN
+    [{"hello": 4, "goodbye": 20}]
+    bvm> < PUSH hello 5 DEC PUSH goodbye 17 3 ADD PUSH foo [ 1 3 5 ] > COUNT RETURN
+    [{"hello": 4, "goodbye": 20, "foo": [1, 3, 5]}]
+
+The full dictionary API including dynamic dictionary creation is
+covered later.
