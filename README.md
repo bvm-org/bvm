@@ -220,7 +220,7 @@ issues to consider:
   layout of data on a page.
 
 * Should the operand stack (and maybe others) be continuous, or
-  disjoint: i.e. should all function calls permit modification of the
+  distinct: i.e. should all function calls permit modification of the
   same stack, or should each function call result in an entirely
   separate stack which merely has a pointer to its parent stack? The
   continuous design is what people are most used to from e.g. C's use
@@ -310,10 +310,10 @@ issues to consider:
   you need distinct opcodes to clone the dictionary rather just copy
   the point to it? Is the raw memory in which the dictionary is stored
   accessibly directly through some sort of heap, or is the memory of
-  the dictionary and the heap distinct and disjoint? Can you have both -
-  i.e. if you start with a pointer to a dictionary, can you *load*
-  that pointer in some way and then have the plain value in the
-  operand stack? What advantages would that give you?
+  the dictionary and the heap distinct? Can you have both - i.e. if
+  you start with a pointer to a dictionary, can you *load* that
+  pointer in some way and then have the plain value in the operand
+  stack? What advantages would that give you?
 
 ## The Java Virtual Machine
 
@@ -462,10 +462,10 @@ Then point your web browser at the `bvm/browser/index.html` file.
 
 # The Architecture of the BVM
 
-The BVM is a stack-based virtual machine. There is a disjoint
-call-and-operand stack, and a separate dictionary stack which is used
+The BVM is a stack-based virtual machine. There are function-distinct
+call-and-operand stacks, and a separate dictionary stack which is used
 for both error handling and to export functions. By making the
-call-and-operand stack elements disjoint, the closure capture is
+function call-and-operand stacks distict, the closure capture is
 trivially supported. Whilst the VM is currently single-threaded, there
 is no requirement for real threads to be precluded, and the VM has
 built-in support for call-with-continuation which can be used both for
@@ -686,3 +686,103 @@ strings.
 
 The full dictionary API including dynamic dictionary creation is
 covered later.
+
+### Code Segments
+
+A code segment can be created by using the `{` and `}` opcodes. Once
+again, these are assembly shorthands for `SEG_START` and
+`SEG_END`. Note that between a `SEG_START` and a `SEG_END`, *no
+evaluation takes place*: evaluation is said to be in *deferred mode*,
+to borrow terminology from PostScript. There are then several ways to
+invoke a segment on the top of the stack, the most obvious of which is
+the `EXEC` opcode.
+
+    bvm> { 3 5 ADD } COUNT RETURN
+    [{"type": "segment",
+      "ls": {"type": "stack",
+             "lsl": 0,
+             "ip": {"type": "ip",
+                    "segment": {"type": "segment",
+                                "instructions": ["SEG_START!", 3, 5, "ADD", "SEG_END!", "COUNT!", "RETURN!"]},
+                    "index": 7},
+             "contents": []},
+      "instructions": [3, 5, "ADD"]}]
+
+Note here the final line which shows the instructions within the newly
+created segment: it shows the literal contents between the `{` and `}`
+opcodes, demonstrating that evaluation of the segment has not yet
+taken place.
+
+    bvm> { 3 5 ADD } EXEC COUNT RETURN
+    []
+
+Here, whilst we now caused the created segment to be evaluated, that
+segment returned no results. Whilst there would have been an 8 sitting
+on its stack before control returned to the enclosing code, there
+needs to be an explicit `RETURN` opcode if you wish to pass any values
+back to the caller.
+
+    bvm> { 3 5 ADD COUNT RETURN } EXEC COUNT RETURN
+    [8]
+    bvm> { 17 3 5 ADD COUNT RETURN } EXEC COUNT RETURN
+    [17, 8]
+    bvm> PUSH hello { 17 3 5 ADD COUNT RETURN } EXEC COUNT RETURN
+    ["hello", 17, 8]
+    bvm> PUSH hello { 17 3 5 ADD COUNT RETURN } EXEC 2 RETURN
+    [17, 8]
+
+The BVM can automatically detect tail calls. If, at the point of
+invocation of a code segment it is found that there are no further
+instructions in the current code segment, then a tail call is
+performed. This then means that you can delegate to a callee which
+values are returned to your own caller:
+
+    bvm> { 17 3 5 ADD COUNT RETURN } EXEC
+    [17, 8]
+
+If you deliberately want to avoid any values being returned, you can
+use `0 RETURN` as you'd expect (though this is obviously no longer a
+tail-call).
+
+    bvm> { 17 3 5 ADD COUNT RETURN } EXEC 0 RETURN
+    []
+
+Segments must use `RETURN` to pass values back to their caller because
+of the fact that operand stacks are distinct: each function invocation
+gets a fresh empty stack. In order to pass values into a function, the
+calling function simply leaves the values on its own stack, and the
+callee may access them using the `RETURN`-symmetric `TAKE`
+opcode. Just like with `RETURN`, `TAKE` requires a numeric argument on
+the current stack to indicate how many values to remove from the
+calling stack. Note that values are removed and not simply copied.
+
+    bvm> 3 5 PUSH "hello" { 3 TAKE } EXEC COUNT RETURN
+    []
+    bvm> 3 5 PUSH "hello" { 3 TAKE COUNT RETURN } EXEC COUNT RETURN
+    [3, 5, "hello"]
+    bvm> 3 5 PUSH "hello" { 3 TAKE COUNT RETURN } EXEC // tail call
+    [3, 5, "hello"]
+    bvm> 3 5 PUSH "hello" { 2 TAKE COUNT RETURN } EXEC COUNT RETURN
+    [3, 5, "hello"]
+    bvm> 3 5 PUSH "hello" { 2 TAKE COUNT RETURN } EXEC
+    [5, "hello"]
+
+There is also a `TAKE_COUNT` to allow you to dynamically determine the
+maximum number of values you may take (or in other words, this pushes
+to the current stack the height of the stack of the caller).
+
+    bvm> 3 5 PUSH "hello" { TAKE_COUNT TAKE COUNT RETURN } EXEC
+    [3, 5, "hello"]
+    bvm> 3 5 PUSH "hello" { TAKE_COUNT TAKE POP ADD COUNT RETURN } EXEC
+    [8]
+
+Segments are first-class values, so for example, you can return them
+from other segments:
+
+    bvm> { { 6 8 ADD 1 RETURN } 1 RETURN } EXEC EXEC
+    [14]
+    bvm> 6 8 { 3 5 { 2 TAKE ADD 1 RETURN } 1 RETURN } EXEC EXEC
+    [14]
+
+This last one demonstrates that `TAKE` operates on the dynamic calling
+stack, and not on the lexical scope.
