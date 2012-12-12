@@ -5,6 +5,7 @@
 	- [The Java Virtual Machine](#the-java-virtual-machine)
 	- [PostScript](#postscript)
 	- [Burroughs Large Systems](#burroughs-large-systems)
+- [Installation and Read-Eval-Print-Loop (REPL)](#installation-and-read-eval-print-loop-repl)
 - [The Architecture of the BVM](#the-architecture-of-the-bvm)
 	- [Supported Types](#supported-types)
 	- [File formats](#file-formats)
@@ -428,6 +429,34 @@ top two values of the stack which were two registers within the CPU
 itself.
 
 
+# Installation and Read-Eval-Print-Loop (REPL)
+
+The JavaScript implementation comes with a REPL that works both in
+web-browsers and in NodeJS.
+
+To download, either just:
+
+    $ npm install bvm
+    $ cd bvm
+
+Or:
+
+    $ git clone https://github.com/five-eleven/bvm.git
+    $ cd bvm
+    bvm$ npm install
+
+Then, to start the REPL under NodeJS:
+
+    bvm$ node -e "require('./bvm').repl();"
+    bvm>
+
+To prepare the REPL for a browser:
+
+    bvm$ npm run-script browserify
+
+Then point your web browser at the `bvm/browser/index.html` file.
+
+
 # The Architecture of the BVM
 
 The BVM is a stack-based virtual machine. There is a disjoint
@@ -517,3 +546,4 @@ as valid when applied to the assembly format.
 All examples given in this document are given in the assembly
 format. The documentation of the opcodes however gives both assembly
 and object file format representations.
+
