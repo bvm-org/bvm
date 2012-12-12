@@ -439,12 +439,7 @@ itself.
 The JavaScript implementation comes with a REPL that works both in
 web-browsers and in NodeJS.
 
-To download, either just:
-
-    $ npm install bvm
-    $ cd bvm
-
-Or:
+To download:
 
     $ git clone https://github.com/five-eleven/bvm.git
     $ cd bvm
