@@ -465,7 +465,7 @@ Then point your web browser at the `bvm/browser/index.html` file.
 The BVM is a stack-based virtual machine. There are function-distinct
 call-and-operand stacks, and a separate dictionary stack which is used
 for both error handling and to export functions. By making the
-function call-and-operand stacks distict, the closure capture is
+function call-and-operand stacks distinct, the closure capture is
 trivially supported. Whilst the VM is currently single-threaded, there
 is no requirement for real threads to be precluded, and the VM has
 built-in support for call-with-continuation which can be used both for
