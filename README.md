@@ -61,7 +61,7 @@ address linking to preexisting JavaScript libraries.
 The current example implementation is written in JavaScript and is
 available to run both in web-browsers and under NodeJS. This
 implementation is currently a little over 5k lines-of-code, including
-comments and white-space, and minimises to just 60kB (including
+comments and whitespace, and minimises to just 60kB (including
 assembly parser). Whilst lines-of-code is by no means a convincing
 metric, hopefully it suggests that the design is not particularly
 complex, and that implementations of the BVM in other languages should
@@ -494,7 +494,9 @@ The BVM has built-in support for the following types:
   reference type like Arrays.
 
 * Code Segments. These contain both opcodes and an understanding of
-  the lexical scope in which they were declared.
+  the lexical scope in which they were declared. Throughout this
+  document, the terms "code segment" and "function" are frequently
+  used interchangeably.
 
 * Lexical Addresses. These can be literals (i.e. constants) in the
   instruction stream, or they can be constructed dynamically. They
@@ -615,9 +617,9 @@ elements on the stack and so will push the number `2`. `RETURN` will
 then find that `2` and will then grab the next two elements from the
 stack and return them to us.
 
-There is an implicit default operator. This is overloaded and will be
-explained part by part. When an opcode is encountered which is not a
-built-in opcode, this default operator is invoked. *If the opcode
+There is an **implicit default operator**. This is overloaded and will
+be explained part by part. When an opcode is encountered which is not
+a built-in opcode, this default operator is invoked. *If the opcode
 encountered is a number, the number will be pushed onto the operand
 stack.* Thus we can rewrite the above as:
 
@@ -790,3 +792,114 @@ This last one demonstrates that `TAKE` operates on the dynamic calling
 stack, and not on the lexical scope.
 
 ### The Dictionary Stack
+
+The dictionary stack is a built-in stack of dictionaries. Unlike the
+operand stack, the dictionary stack is continuous: every function gets
+to see the same dictionary stack and all can manipulate it as they see
+fit. The dictionary stack can be used for anything, but it is expected
+to be used for the following:
+
+* Exporting functions and creating name-spaces. As functions are
+  first-class values, they can be stored as values in dictionaries
+  against the function names as keys. You could then create a new
+  dictionary containing all of your library's exported functions, and
+  then store that dictionary in the dictionary stack under the
+  library's name.
+
+* Error handling. Upon encountering an error, the BVM looks in the
+  dictionary stack searching for a value stored against the error name
+  as a key. If it finds it and if the value is a code segment, the
+  segment is invoked. This is the reason why the dictionary stack is a
+  stack and not just a single dictionary: it is expected that
+  higher-level languages convert `try-catch` blocks into:
+    1. Create a new dictionary
+    2. Populate it with keys and values representing the error names
+      and `catch`-blocks.
+    3. Push this dictionary to the top of the dictionary stack.
+    4. Run the code inside the `try-catch` block.
+    5. In all cases, whether errored or not, pop the dictionary stack
+      after the code inside the `try-catch` block has run.
+
+The dictionary stack also plays a role in the **implicit default
+operator**. If the opcode encountered is a string, the string is used
+as a key to search the dictionary stack. If a value is found and that
+value is a code segment, the code segment is invoked. If a value is
+found and the value is not a code segment, the value is just pushed
+onto the stack.
+
+Whilst the complete dictionary stack API is covered later, for the
+moment we shall look at the opcodes `LOAD` and `STORE`. These are
+overloaded operators and shall be covered in full detail
+later. `STORE` expects to find a value at the top of the operand stack
+and an address beneath it. If that address is a string, then the value
+is stored in the uppermost dictionary on the dictionary stack under
+the address. `LOAD` expects to find an address at the top of the
+operand stack. If that address is a string then the string is used as
+a key to search through the dictionary stack looking for a value. The
+first value that is found is pushed onto the stack. If no value is
+found, then `UNDEF` is pushed onto the stack.
+
+    bvm> PUSH hello 5 STORE COUNT RETURN
+    []
+    bvm> PUSH hello 5 STORE PUSH hello LOAD COUNT RETURN
+    [5]
+    bvm> PUSH hello 5 STORE PUSH foo 17 STORE PUSH foo LOAD COUNT RETURN
+    [17]
+    bvm> PUSH hello 5 STORE PUSH foo 17 STORE PUSH bar LOAD COUNT RETURN
+    ["undef"]
+
+If we now make use of the implicit operator, we can make these
+examples smaller:
+
+    bvm> PUSH hello 5 STORE hello COUNT RETURN
+    [5]
+    bvm> PUSH hello 5 STORE PUSH foo 17 STORE foo COUNT RETURN
+    [17]
+    bvm> PUSH hello 5 STORE PUSH foo 17 STORE bar COUNT RETURN
+    ["undef"]
+
+    bvm> PUSH eight { 8 1 RETURN } STORE eight COUNT RETURN
+    [8]
+    bvm> PUSH eight { 8 1 RETURN } STORE eight // tail call
+    [8]
+    bvm> PUSH my_add { 2 TAKE ADD 1 RETURN } STORE 3 7 my_add
+    [10]
+
+It should now be clear there is no difference between invoking a
+function stored in the dictionary stack and any other opcode. If you
+do have a function stored in the dictionary stack, sometimes you might
+want to load it explicitly rather than the default loading and
+invoking:
+
+    bvm> PUSH eight { 8 1 RETURN } STORE PUSH eight LOAD COUNT RETURN
+    [{"type": "segment",
+      "ls": {"type": "stack",
+             "lsl": 0,
+             "ip": {"type": "ip",
+                    "segment": {"type": "segment",
+                                "instructions": ["PUSH!", "eight", "SEG_START!", 8, 1, "RETURN", "SEG_END!",
+                                                 "STORE!", "PUSH!", "eight", "LOAD!", "COUNT!", "RETURN!"]},
+                    "index": 13},
+             "contents": []},
+      "instructions": [8, 1, "RETURN"]}]
+
+Once we have that code segment back on the stack, we can `EXEC` it as
+usual:
+
+    bvm> PUSH eight { 8 1 RETURN } STORE PUSH eight LOAD EXEC COUNT RETURN
+    [8]
+    bvm> PUSH my_add { 2 TAKE ADD 1 RETURN } STORE 6 7 PUSH my_add LOAD EXEC
+    [13]
+
+And to reinforce the idea that there's really no difference between
+opcodes and user-defined code segments, we can even load opcodes onto
+the stack:
+
+    bvm> 6 7 PUSH ADD LOAD EXEC COUNT RETURN
+    [13]
+
+Though you don't get to actually look inside the implementation of
+opcodes unlike with user-defined code segments:
+
+    bvm> PUSH ADD LOAD COUNT RETURN
+    ["ADD!"]
