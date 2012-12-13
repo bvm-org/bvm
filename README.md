@@ -898,3 +898,73 @@ opcodes unlike with user-defined code segments:
 
     bvm> PUSH ADD LOAD COUNT RETURN
     ["ADD!"]
+
+This reveals then the tradeoff between allowing more than just strings
+as keys in dictionaries: if, for example numbers were allowed as keys,
+then due to the implicit default operator, all literal numbers in the
+source text would have to be explicitly `PUSH`ed onto the stack as by
+default they would be used as keys to index the dictionary stack.
+
+### Lexical Addresses
+
+The BVM allows code segments to explicitly index any lexical
+scope. The syntax for this is `(A, B)` where `A` is the *lexical scope
+level*, and `B` is the stack index within that level. The *lexical
+scope level* is 0 for the root scope, 1 for all children of the root,
+and so on.
+
+The **implicit default operator** also plays a role with lexical
+addresses: if an opcode is encountered which is a lexical address and
+the value pointed to by the lexical address is a code segment, then
+that code segment is invoked. If the opcode encountered is a lexical
+address which points at a value other than a code segment, the value
+is simply pushed onto the stack. Note that the location pointed to by
+the lexical address is not modified, and where the value found is a
+reference value (i.e. an array, dictionary, segment or stack), the
+value is shared: i.e. a new reference to the same actual value is
+pushed to the stack rather than an cloning of the underlying reference
+value going on. These are the same semantics as with an unknown
+string as an opcode and indexing into the dictionary stack.
+
+    bvm> 5 (0, 0) COUNT RETURN
+    [5, 5]
+    bvm> 5 7 (0, 0) COUNT RETURN
+    [5, 7, 5]
+    bvm> 5 7 (0, 1) COUNT RETURN
+    [5, 7, 7]
+    bvm> 13 { 12 (0, 0) COUNT RETURN } EXEC COUNT RETURN
+    [13, 12, 13]
+    bvm> 13 { 12 (1, 0) COUNT RETURN } EXEC // tail call
+    [12, 12]
+
+`EXEC` removes the segment itself from the stack, whereas lexical
+addresses leave the original value in tact, which can be very useful
+for example for recursive functions.
+
+    bvm> 13 { 12 (1, 0) COUNT RETURN } (0, 1) (0, 0) COUNT RETURN
+    [13, {"type": "segment", /* rest elided */ }, 12, 12, 13]
+
+There are two shorthands that the assembler permits with regards to
+lexical addresses. The first is to omit the *lexical scope level*
+entirely, thus the syntax is then just `(B)`. This implies the current
+lexical scope. The following are equivalent:
+
+    bvm> 13 { 17 (1, 0) (0, 0) (1, 1) COUNT RETURN } (0, 1)
+    [17, 17, 13, 17]
+    bvm> 13 { 17 (0) (0, 0) (1) COUNT RETURN } (1)
+    [17, 17, 13, 17]
+
+The second is to use negative numbers as the *lexical scope level*. -1
+indicates your parent, -2 is your grandparent, and so on. In both
+cases, the assembler rewrites these to the first form, but it's an
+easy transformation to do. It's important to remember though that 0 is
+always the root lexical scope - if you want to indicate the current
+scope simply, omit the *lexical scope level* entirely. Thus the
+following is again equivalent:
+
+    bvm> 13 { 17 (1, 0) (0, 0) (1, 1) COUNT RETURN } (0, 1)
+    [17, 17, 13, 17]
+    bvm> 13 { 17 (0) (0, 0) (1) COUNT RETURN } (1)
+    [17, 17, 13, 17]
+    bvm> 13 { 17 (0) (-1, 0) (1) COUNT RETURN } (1)
+    [17, 17, 13, 17]
