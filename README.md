@@ -961,7 +961,7 @@ cases, the assembler rewrites these to the first form, but it's an
 easy transformation to do. It's important to remember though that 0 is
 always the root lexical scope - if you want to indicate the current
 scope simply, omit the *lexical scope level* entirely. Thus the
-following is again equivalent:
+following are again equivalent:
 
     bvm> 13 { 17 (1, 0) (0, 0) (1, 1) COUNT RETURN } (0, 1)
     [17, 17, 13, 17]
