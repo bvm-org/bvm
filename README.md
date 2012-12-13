@@ -15,6 +15,8 @@
 		- [Code Segments](#code-segments)
 		- [The Dictionary Stack](#the-dictionary-stack)
 		- [Lexical Addresses](#lexical-addresses)
+		- [Call with Continuation (CALLCC)](#call-with-continuation-callcc)
+		- [Errors](#errors)
 
 # Introduction
 
@@ -467,7 +469,7 @@ function call-and-operand stacks distinct, the closure capture is
 trivially supported. Whilst the VM is currently single-threaded, there
 is no requirement for real threads to be precluded, and the VM has
 built-in support for call-with-continuation which can be used both for
-error-handling (i.e. try-catch) and also to build a micro-kernel /
+error-handling (i.e. `try-catch`) and also to build a micro-kernel /
 scheduler which could implement green-threads.
 
 ## Supported Types
@@ -782,6 +784,10 @@ to the current stack the height of the stack of the caller).
     bvm> 3 5 PUSH "hello" { TAKE_COUNT TAKE POP ADD COUNT RETURN } EXEC
     [8]
 
+> The stack that you remove values from by the use of `TAKE` is
+> referred to as the *take-stack*. This gets more interesting much
+> later on with the discussion of call-with-continuation.
+
 Segments are first-class values, so for example, you can return them
 from other segments:
 
@@ -1041,3 +1047,116 @@ Again, the following are equivalent:
     ["goodbye"]
     bvm> { PUSH goodbye 1 RETURN } 0 0 LEXICAL_ADDRESS LOAD EXEC
     ["goodbye"]
+
+### Call with Continuation (CALLCC)
+
+The BVM supports Call-with-Continuation as an opcode. This is a
+relatively unusual choice, but is extremely useful in practise for
+building more powerful control-flow structures, for example
+co-routines.
+
+The `CALLCC` opcode expects to find a code segment on the top of the
+stack. It then invokes that code segment, and pushes the old operand
+stack on the top of the old operand stack, which as usual is
+accessible via `TAKE` within the new code segment. There is
+deliberately no dynamic call chain set up, so when the new code
+segment returns, control does **not** return to the old segment. For
+example:
+
+    bvm> 1 3 { 3 TAKE POP ADD COUNT RETURN } CALLCC PUSH hello DEC
+    [4]
+
+Note that none of the instructions to the right of the `CALLCC` get
+evaluated in the above example. Also note that if the `CALLCC` were
+replaced with an `EXEC` the `3 TAKE` would be illegal as there are
+only two values that can be taken at that point: it's the `CALLCC`
+that makes the old operand stack itself available as the uppermost
+element on the *take-stack*.
+
+But you can choose to `EXEC` the old operand stack itself. At that
+point, control returns to the old operand stack and its code segment,
+but now its own *take-stack* is set to the operand stack of the code
+segment invoked by `CALLCC` itself.
+
+    bvm> 3 { 4 1 TAKE EXEC } CALLCC 1 TAKE ADD COUNT RETURN
+    [7]
+
+The `CALLCC` invokes the preceding code segment. That segment pushes
+`4` to its stack, followed by the old (and suspended or interrupted)
+operand stack, which it then invokes. This returns control to after
+the `CALLCC`. In the outer (root) code segment, we can now do the `1
+TAKE` which pulls through the `4` which we pushed earlier to the
+operand stack of the inner code segment, we then continue and do the
+`ADD` as normal.
+
+Note that when you invoke a stack, the dynamic call chain is set so
+that control returns after the stack's code segment completes.
+
+    bvm> 3 { 4 1 TAKE EXEC 2 ADD COUNT RETURN } CALLCC 1 TAKE ADD COUNT RETURN
+    [9]
+
+I.e. the right-most `RETURN` actually passes control back to the inner
+code segment immediately after the `EXEC`, along with the `7` which
+then appears on the operand stack of the inner code segment, to which
+we then add `2`.
+
+Even more exciting is that you can construct loops this way. (`LOG`
+takes the top value off the stack and prints it out on the console.)
+
+    bvm> { 1 TAKE DUPLICATE EXEC } CALLCC PUSH "Hello World" LOG 1 TAKE DUPLICATE EXEC
+    "Hello World"
+    "Hello World"
+    "Hello World"
+    ...
+
+Here, in the inner code segment, we take the old operand stack and
+duplicate it, which will ensure that when control returns to the outer
+code segment, the outer code segment can then take *itself*, which it
+then duplicates (thus maintaining this invariant) before invoking
+itself and thus infinitely looping.
+
+### Errors
+
+As discussed above, for user errors, it is expected that the
+dictionary stack can be used to set up the relevant error-handling
+functions for a `try-catch` block. For errors which occur due to
+mistakes in the code the BVM is running, the same mechanism is used,
+but with the addition of an implicit suspension of the errored operand
+stack via `CALLCC`.
+
+For example, if you try to add together a number and a string, an
+*invalid operand* error will be raised. This causes nothing more than
+a search through the dictionary stack with the key `"ERROR INVALID
+OPERAND"`, and if a code segment is found, it is invoked.
+
+    bvm> 5 PUSH hello ADD
+    Error: Unhandled error in "ADD": ERROR INVALID OPERAND
+    bvm> PUSH "ERROR INVALID OPERAND" { PUSH here 1 RETURN } STORE 5 PUSH hello ADD
+    ["here"]
+
+So the usual method of storing a code segment in the dictionary stack
+under the name of the error will cause that code segment to be invoked
+when the error is raised. When the error handler is invoked, the
+*take-stack* will contain (from the top down) the old operand stack,
+then the opcode name (a string), then the error name itself (a string)
+and then any further details provided by the opcode as to the
+specifics of the error. In the case of *invalid operand*, the operands
+themselves (one or more of which will be invalid in some way) are
+supplied.
+
+    bvm> PUSH "ERROR INVALID OPERAND" { TAKE_COUNT TAKE COUNT RETURN } STORE 5 PUSH hello ADD
+    [5,
+     "hello",
+     "ERROR INVALID OPERAND",
+     "ADD",
+     {"type": "stack", /* rest elided */ }]
+
+Now you are obviously free to take whatever action you wish, but it's
+worth remembering that you can always invoke that old operand stack if
+you want to, in order to pass control back to the errored code
+segment, to continue after the faulty opcode. This is exactly the same
+as with `CALLCC`. The *take-stack* is set up in exactly the same way
+too.
+
+    bvm> PUSH "ERROR INVALID OPERAND" { 14 1 TAKE EXEC } STORE 5 PUSH hello ADD 1 TAKE 6 ADD 1 RETURN
+    [20]
