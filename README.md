@@ -592,20 +592,21 @@ So we get much more readable results if we do:
     bvm> PUSH 3 PUSH 5 ADD COUNT RETURN
     [8]
 
-Because every function can return a variable number of results,
-results will always be displayed in an array, even though in this
-case, we've only returned a single result. Note that because the
-current BVM implementation is written in JavaScript, the results
-returned and displayed by the REPL are JSON-formatted data objects and
-thus differ in format from the input of BVM assembly. For example, BVM
-assembly requires whitespace separators, whereas JSON tends to remove
-whitespace where other separators must be used, for example `,` and
-`:` in arrays and objects. Because JSON can't cope with cycles in data
-structures, quite often when trying to display a stack (which often
-contain cyclical pointers), JSON will fail and you'll get a `Error:
-TypeError: Converting circular structure to JSON` error. This does not
-mean there's anything wrong with your BVM program, just that the
-result of the program can not be successfully converted to JSON.
+> Because every function can return a variable number of results,
+> results will always be displayed in an array, even though in this
+> case, we've only returned a single result. Note that because the
+> current BVM implementation is written in JavaScript, the results
+> returned and displayed by the REPL are JSON-formatted data objects
+> and thus differ in format from the input of BVM assembly. For
+> example, BVM assembly requires whitespace separators, whereas JSON
+> tends to remove whitespace where other separators must be used, for
+> example `,` and `:` in arrays and objects. Because JSON can't cope
+> with cycles in data structures, quite often when trying to display a
+> stack (which often contain cyclical pointers), JSON will fail and
+> you'll get a `Error: TypeError: Converting circular structure to
+> JSON` error. This does not mean there's anything wrong with your BVM
+> program, just that the result of the program can not be successfully
+> converted to JSON.
 
 If we do:
 
@@ -915,10 +916,10 @@ default they would be used as keys to index the dictionary stack.
 
 The BVM allows code segments to explicitly index any lexical
 scope. The syntax for this is `(A, B)` where `A` is the *lexical scope
-level*, and `B` is the stack index within that level. The *lexical
+level*, and `B` is the *stack index* within that level. The *lexical
 scope level* is 0 for the root scope, 1 for all children of the root,
-and so on. The stack index 0 refers to the first item at the *bottom*
-of the relevant stack.
+and so on. The *stack index* 0 refers to the first item at the
+*bottom* of the relevant stack.
 
 The **implicit default operator** also plays a role with lexical
 addresses: if an opcode is encountered which is a lexical address and
@@ -1012,8 +1013,8 @@ yet have values in them!
 Lexical addresses need not be literals: they can be constructed
 dynamically by the `LEXICAL_ADDRESS` operator, which expects to find
 two numbers on the top of the stack: the top number should be the
-stack index, and the next number should be the lexical scope
-level. The following are equivalent:
+*stack index*, and the next number should be the *lexical scope
+level*. The following are equivalent:
 
     bvm> 1 { 2 { 3 { (-1, 0) 1 RETURN } 1 RETURN } EXEC } EXEC EXEC
     [3]
