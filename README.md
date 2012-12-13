@@ -1032,6 +1032,8 @@ However, note that if you are using the `LEXICAL_ADDRESS` opcode:
   use `LOAD` and `EXEC` to then perform the deferencing and invocation
   of a code segment, for example.
 
+Again, the following are equivalent:
+
     bvm> { PUSH goodbye 1 RETURN } EXEC
     ["goodbye"]
     bvm> { PUSH goodbye 1 RETURN } (0)
