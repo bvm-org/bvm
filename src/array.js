@@ -7,6 +7,15 @@
             nuError = require('./errors'),
             id = {},
             undef,
+            undefFilter = function (ary) {
+                var idx = 0, len = ary.length;
+                for (; idx < len; idx += 1) {
+                    if (ary[idx] === undef) {
+                        ary[idx] = types.undef;
+                    }
+                }
+                return ary;
+            },
             arrayResetTemplate = {array: {value: undef, configurable: true},
                                   lastIndexOf: {value: undef, configurable: true},
                                   push: {value: undef, configurable: true},
@@ -46,7 +55,7 @@
                         if (typeof count !== 'number') {
                             count = this.array.length - from;
                         }
-                        return this.array.splice(from, count);
+                        return undefFilter(this.array.splice(from, count));
                     }},
                     clone: {value: function () {
                         return nuArray(this.array.slice(0));
@@ -68,7 +77,7 @@
                         return this;
                     }},
                     toJSON: {value: function () {
-                        return this.array;
+                        return undefFilter(this.array);
                     }}
                 }),
             nuArray;

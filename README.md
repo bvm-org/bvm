@@ -600,7 +600,12 @@ returned and displayed by the REPL are JSON-formatted data objects and
 thus differ in format from the input of BVM assembly. For example, BVM
 assembly requires whitespace separators, whereas JSON tends to remove
 whitespace where other separators must be used, for example `,` and
-`:` in arrays and objects.
+`:` in arrays and objects. Because JSON can't cope with cycles in data
+structures, quite often when trying to display a stack (which often
+contain cyclical pointers), JSON will fail and you'll get a `Error:
+TypeError: Converting circular structure to JSON` error. This does not
+mean there's anything wrong with your BVM program, just that the
+result of the program can not be successfully converted to JSON.
 
 If we do:
 
@@ -844,7 +849,7 @@ found, then `UNDEF` is pushed onto the stack.
     bvm> PUSH hello 5 STORE PUSH foo 17 STORE PUSH bar LOAD COUNT RETURN
     ["undef"]
 
-If we now make use of the implicit operator, we can make these
+If we now make use of the implicit default operator, we can make these
 examples smaller:
 
     bvm> PUSH hello 5 STORE hello COUNT RETURN
@@ -900,7 +905,7 @@ opcodes unlike with user-defined code segments:
     bvm> PUSH ADD LOAD COUNT RETURN
     ["ADD!"]
 
-This reveals then the tradeoff between allowing more than just strings
+This reveals then the trade-off between allowing more than just strings
 as keys in dictionaries: if, for example numbers were allowed as keys,
 then due to the implicit default operator, all literal numbers in the
 source text would have to be explicitly `PUSH`ed onto the stack as by
@@ -912,7 +917,8 @@ The BVM allows code segments to explicitly index any lexical
 scope. The syntax for this is `(A, B)` where `A` is the *lexical scope
 level*, and `B` is the stack index within that level. The *lexical
 scope level* is 0 for the root scope, 1 for all children of the root,
-and so on.
+and so on. The stack index 0 refers to the first item at the *bottom*
+of the relevant stack.
 
 The **implicit default operator** also plays a role with lexical
 addresses: if an opcode is encountered which is a lexical address and
@@ -969,3 +975,66 @@ following are again equivalent:
     [17, 17, 13, 17]
     bvm> 13 { 17 (0) (-1, 0) (1) COUNT RETURN } (1)
     [17, 17, 13, 17]
+
+Lexical addresses, as you would expect, are referenced based on the
+scope of the declaration of the function, not the scope in which the
+function is eventually evaluated. For example, note the following
+returns `3` and not `1` - the innermost code segment is returned as a
+value all the way to the root segment where it is finally
+evaluated. But its parent lexical scope is the scope in which that
+function was declared - i.e. the scope which first pushes `3` to its
+stack.
+
+    bvm> 1 { 2 { 3 { (-1, 0) 1 RETURN } 1 RETURN } EXEC } EXEC EXEC
+    [3]
+
+Just like with strings and the dictionary stack, lexical addresses can
+be explicitly `PUSH`ed onto the operand stack to avoid the implicit
+default operator. Once there, they can act as addresses for the `LOAD`
+and `STORE` opcodes: `LOAD` just takes an address off the operand
+stack and pushes back on the value found at that address, whilst
+`STORE` expects to find a value at the top of the stack, and an
+address next. When the addresses are strings, `LOAD` and `STORE`
+manipulate the dictionary stacks, but when the addresses found are
+lexical addresses they modify the relevant stacks. Again, note how
+lexical address when used both through `LOAD` and through the implicit
+default operator do *not* remove the referenced values.
+
+    bvm> 17 PUSH hello 3 (0) PUSH (2) LOAD ADD COUNT RETURN
+    [17, "hello", 3, 20]
+
+Note how it's legal to store into positions of the stack that don't
+yet have values in them!
+
+    bvm> { PUSH (-1, 1) 2 STORE PUSH (-1, 2) 16 STORE } EXEC ADD COUNT RETURN
+    ["undef", 18]
+
+Lexical addresses need not be literals: they can be constructed
+dynamically by the `LEXICAL_ADDRESS` operator, which expects to find
+two numbers on the top of the stack: the top number should be the
+stack index, and the next number should be the lexical scope
+level. The following are equivalent:
+
+    bvm> 1 { 2 { 3 { (-1, 0) 1 RETURN } 1 RETURN } EXEC } EXEC EXEC
+    [3]
+    bvm> 1 { 2 { 3 { (2, 0) 1 RETURN } 1 RETURN } EXEC } EXEC EXEC
+    [3]
+    bvm> 1 { 2 { 3 { 2 0 LEXICAL_ADDRESS LOAD 1 RETURN } 1 RETURN } EXEC } EXEC EXEC
+    [3]
+
+However, note that if you are using the `LEXICAL_ADDRESS` opcode:
+
+1. You **must** provide both numeric operands
+2. Both operands must not be negative (thus neither shorthand forms are available)
+3. The lexical address constructed is then simply placed on the
+  operand stack: it does not at that point go through the implicit
+  default operator as it's not being seen as an opcode. You can then
+  use `LOAD` and `EXEC` to then perform the deferencing and invocation
+  of a code segment, for example.
+
+    bvm> { PUSH goodbye 1 RETURN } EXEC
+    ["goodbye"]
+    bvm> { PUSH goodbye 1 RETURN } (0)
+    ["goodbye"]
+    bvm> { PUSH goodbye 1 RETURN } 0 0 LEXICAL_ADDRESS LOAD EXEC
+    ["goodbye"]
