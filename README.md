@@ -14,6 +14,7 @@
 		- [Literal Dictionaries](#literal-dictionaries)
 		- [Code Segments](#code-segments)
 		- [The Dictionary Stack](#the-dictionary-stack)
+		- [Lexical Addresses](#lexical-addresses)
 
 # Introduction
 
