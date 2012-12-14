@@ -1277,6 +1277,12 @@ assembler performs:
 
 # BVM Opcode Reference
 
+Throughout the following, the marker `]` is used to indicate the top
+of the stack, and `[` indicates the bottom. If neither are given, the
+state of the stack is not of any significance. If only `]` is given
+then only the contents at the top of the stack are significant and the
+stack can otherwise contain any other elements further down.
+
 ## Operand Stack Manipulation
 
 * `PUSH`  
