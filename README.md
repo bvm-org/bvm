@@ -1278,7 +1278,7 @@ assembler performs:
 ## Operand Stack Manipulation
 
 * `PUSH`  
-    *Before*: `]`  
+    *Before*:  
     *After*: `a]`  
     *where* `a` is the literal element in the code segment immediately following the `PUSH`.  
     *Errors*: Will error if `PUSH` is the last opcode in a code segment.  
