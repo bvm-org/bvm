@@ -21,6 +21,7 @@
 - [BVM Opcode Reference](#bvm-opcode-reference)
 	- [Operand Stack Manipulation](#operand-stack-manipulation)
 	- [Logic](#logic)
+	- [Addressing](#addressing)
 
 # Introduction
 
@@ -1432,3 +1433,81 @@ the JSON values `true` and `false`.
     *Errors*: Will error if fewer than 2 items are on the current
      operand stack or if either of them are not booleans.  
     > Performs logical exclusive disjunction.
+
+## Addressing
+
+* A lexical address  
+    *Before*:  
+    *After*: various  
+    *Errors*: Will error if the lexical address is invalid: if
+     *lexical scope level* is greater than the *lexical scope level*
+     of the current function or is less than 0 or is not an integer;
+     or if the *stack index* is not a non-negative index.  
+    > For general details, see the [section on lexical
+    > addresses](#lexical-addresses). A lexical address when seen as
+    > an opcode will be processed by the *implicit default
+    > operator*. If the value pointed to by the lexical address is a
+    > code segment then that segment will be invoked. Otherwise, the
+    > value pointed to by the lexical address will be pushed onto the
+    > current operand stack. Note that whilst the assembly format for
+    > lexical addresses is `(A, B)`, for the JSON object format,
+    > lexical addresses are `[A, B]`. None of the shorthand formats
+    > are permissible in the JSON object format.
+
+* Any string that's not recognised as an opcode  
+    *Before*:  
+    *After*: various  
+    *Errors*: None.  
+    > The string is used as a key to search through the dictionary
+    > stack. If first value found is a code segment, that code segment
+    > is invoked. If the first value found is not a code segment, the
+    > value is pushed onto the current operand stack. If the key is
+    > not present in any of the dictionaries in the dictionary stack,
+    > then `undef` is pushed onto the current operand stack. See the
+    > [section on the dictionary stack](#the-dictionary-stack) for a
+    > fuller discussion.
+
+* `LEXICAL_ADDRESS`  
+    *Before*: `a, b]`  
+    *After*: `c]`  
+    *where* `a` and `b` are both non-negative integers and `a` is not
+     greater than the *lexical scope level* of the current code
+     segment, and `c` is the lexical address formed by `a` and `b` and
+     fixed to the operand stack indicated by `a`.  
+    *Errors*: Will error if `a` or `b` do not meet the requirements
+     set out above.  
+    > Dynamically creates a new lexical address and pushes it onto the
+      current operand stack.
+
+* `LOAD`  
+    *Before*: `a]`  
+    *After*: `b]`  
+    *where* `a` is a string or a lexical address. If `a` is a string
+     then the dictionary stack is searched by using `a` as a key. If a
+     value is found then it is pushed onto the current operand
+     stack. If `a` is recognised as an opcode then the functionality
+     represented by the opcode is pushed onto the current operand
+     stack. Otherwise `undef` is pushed onto the current operand
+     stack. If `a` is a lexical address, the value pointed to by `a`
+     is pushed onto the current operand stack.  
+    *Errors*: Will error if `a` is not a string and `a` is not a
+     lexical address.  
+    > Loads a value pointed to by some sort of reference - either a
+    > string keying into the dictionary stack or a lexical
+    > address. Unlike the *implicit default operator*, if the value
+    > found is a code segment, it is not executed.
+
+* `STORE`  
+    *Before*: `a, v]`  
+    *After*: `]`  
+    *where* `a` is a string or a lexical address. If `a` is a string
+     then the value `v` is stored in the dictionary at the top of the
+     dictionary stack with a key of `a`. If an exist value is stored
+     in that dictionary under the same key, it is overwritten and
+     lost. If `a` is a lexical address then the value `v` is stored at
+     the location indicated by `a` and any existing value at that
+     location is lost.  
+    *Errors*: Will error if `a` is not a string and `a` is not a
+     lexical address.  
+    > The compliment to `LOAD`, takes a value from the operand stack
+    > and stores that value at the location indicated.
