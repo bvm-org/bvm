@@ -624,7 +624,7 @@ If we do:
     bvm> PUSH 13 PUSH 3 PUSH 5 ADD COUNT RETURN
     [13, 8]
 
-We see that the `ADD` only affects the uppermost two elements of the
+we see that the `ADD` only affects the uppermost two elements of the
 stack and the `13` is left alone. `COUNT` will then find there are two
 elements on the stack and so will push the number `2`. `RETURN` will
 then find that `2` and will then grab the next two elements from the
@@ -757,7 +757,11 @@ The BVM can automatically detect tail calls. If, at the point of
 invocation of a code segment it is found that there are no further
 instructions in the current code segment, then a tail call is
 performed. This then means that you can delegate to a callee which
-values are returned to your own caller:
+values are returned to your own caller (the following example makes
+sense if you consider that the REPL itself is the caller to the
+outer-most code, and thus that code is delegating via a tail-call to
+the declared code segment which and how many values are returned to
+the REPL):
 
     bvm> { 17 3 5 ADD COUNT RETURN } EXEC
     [17, 8]
@@ -852,14 +856,20 @@ onto the stack.
 Whilst the complete dictionary stack API is covered later, for the
 moment we shall look at the opcodes `LOAD` and `STORE`. These are
 overloaded operators and shall be covered in full detail
-later. `STORE` expects to find a value at the top of the operand stack
+later.
+
+* `LOAD` expects to find an address at the top of the operand
+stack. If that address is a string then the string is used as a key to
+search through the dictionary stack looking for a value. The first
+value that is found is pushed onto the stack. If no value is found,
+then `UNDEF` is pushed onto the stack.
+
+* `STORE` expects to find a value at the top of the operand stack
 and an address beneath it. If that address is a string, then the value
 is stored in the uppermost dictionary on the dictionary stack under
-the address. `LOAD` expects to find an address at the top of the
-operand stack. If that address is a string then the string is used as
-a key to search through the dictionary stack looking for a value. The
-first value that is found is pushed onto the stack. If no value is
-found, then `UNDEF` is pushed onto the stack.
+the address.
+
+Some examples:
 
     bvm> PUSH hello 5 STORE COUNT RETURN
     []
@@ -931,6 +941,9 @@ as keys in dictionaries: if, for example numbers were allowed as keys,
 then due to the implicit default operator, all literal numbers in the
 source text would have to be explicitly `PUSH`ed onto the stack as by
 default they would be used as keys to index the dictionary stack.
+
+The rest of the dictionary stack API (including actually adding and
+removing dictionaries from this stack) will be covered later.
 
 ### Lexical Addresses
 
