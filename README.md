@@ -1265,7 +1265,7 @@ assembler performs:
     bvm> 8 JUMP 6 5 JUMP ADD COUNT RETURN 4 2 JUMP
     [10]
 
-    bvm> { 5 <a> JUMP >b< COUNT RETURN >a< 6 <b> JUMP } EXEC { <a> JUMP >b< ADD COUNT RETURN >a< 2 TAKE <b> JUMP } EXEC
-    [11]
-    bvm> { 5 5 JUMP COUNT RETURN 6 3 JUMP } EXEC { 5 JUMP ADD COUNT RETURN 2 TAKE 2 JUMP } EXEC
-    [11]
+    bvm> { 17 <a> JUMP >b< COUNT RETURN >a< 62 <b> JUMP } EXEC { <a> JUMP >b< ADD COUNT RETURN >a< 2 TAKE <b> JUMP } EXEC
+    [79]
+    bvm> { 17 5 JUMP COUNT RETURN 62 3 JUMP } EXEC { 5 JUMP ADD COUNT RETURN 2 TAKE 2 JUMP } EXEC
+    [79]
