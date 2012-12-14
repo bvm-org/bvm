@@ -1481,7 +1481,7 @@ the JSON values `true` and `false`.
 
 * `LOAD`  
     *Before*: `a]`  
-    *After*: `b]`  
+    *After*: `v]`  
     *where* `a` is a string or a lexical address. If `a` is a string
      then the dictionary stack is searched by using `a` as a key. If a
      value is found then it is pushed onto the current operand
