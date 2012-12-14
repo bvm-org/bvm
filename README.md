@@ -1301,8 +1301,8 @@ assembler performs:
     *After*: <code>[a<sub>0</sub>, ..., a<sub>n</sub>, n]</code>  
     *Errors*: None.  
     > Pushes onto the current operand stack an integer being the
-      number of items (or height) of the current operand stack
-      immediately prior to the evaluation of the `COUNT` opcode.
+    > number of items (or height) of the current operand stack
+    > immediately prior to the evaluation of the `COUNT` opcode.
 
 * `CLEAR`  
     *Before*:  
@@ -1315,9 +1315,9 @@ assembler performs:
     *After*: `a, a]`  
     *Errors*: Will error if there are no items on the operand stack.  
     > Duplicates the item on the top of the current operand stack. If
-      the item found is a reference type (i.e. an array, dictionary,
-      code segment or stack) then it is the pointer to that item that
-      is duplicated, not the item itself.
+    > the item found is a reference type (i.e. an array, dictionary,
+    > code segment or stack) then it is the pointer to that item that
+    > is duplicated, not the item itself.
 
 * `INDEX`  
     *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n</sub>, i]</code>  
@@ -1327,9 +1327,9 @@ assembler performs:
      `i` is greater than or equal to the number of items on the
      current operand stack.  
     > Pushes onto the current operand stack a duplicate of the `i`th
-      element of the stack, which is 0-indexed, with the first and
-      bottom element of the stack being item 0. As with `DUPLICATE`,
-      reference types are shared, not cloned themselves.
+    > element of the stack, which is 0-indexed, with the first and
+    > bottom element of the stack being item 0. As with `DUPLICATE`,
+    > reference types are shared, not cloned themselves.
 
 * `COPY`  
     *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
@@ -1338,8 +1338,8 @@ assembler performs:
     *Errors*: Will error if there are fewer than `n + 1` items on the
      current operand stack, or if `n` is not a non-negative integer.
     > Duplicates the top `n` items of the current operand stack. As
-      with `DUPLICATE`, reference types are shared, not cloned
-      themselves.
+    > with `DUPLICATE`, reference types are shared, not cloned
+    > themselves.
 
 * `ROLL`  
     *Before*: <code>a<sub>n-1</sub>, ..., a<sub>0</sub>, n, j]</code>  
@@ -1349,22 +1349,22 @@ assembler performs:
      current operand stack, or if `n` is not a non-negative integer,
      or if `j` is not an integer.  
     > After removing the `n` and `j` parameters from the current
-      operand stack, rolls (or rotates or circular-shifts) the top `n`
-      items on the current operand stack by `j` steps. Positive `j`
-      indicates *upwards* motion (i.e. items are popped off the top of
-      the stack and placed further down, so items below move up),
-      whilst negative `j` indicates *downwards* motion (i.e. items
-      from lower down are removed and pushed onto the top of the
-      stack, so items at the top of the stack move down).
+    > operand stack, rolls (or rotates or circular-shifts) the top `n`
+    > items on the current operand stack by `j` steps. Positive `j`
+    > indicates *upwards* motion (i.e. items are popped off the top of
+    > the stack and placed further down, so items below move up),
+    > whilst negative `j` indicates *downwards* motion (i.e. items
+    > from lower down are removed and pushed onto the top of the
+    > stack, so items at the top of the stack move down).
 
 * `CLONE`  
     *Before*: `a]`  
     *After*: `a, a]`  
     *Errors*: Will error if no items on the current operand stack.  
     > Clones the item on the top of the stack. If the item is a
-      reference type (i.e. an array, dictionary, code segment or
-      stack), the value itself is cloned, thus the two pointers will
-      point a distinct values. This is in contrast to `DUPLICATE`
-      which will result in two pointers pointing at the same
-      object. If the value is not a reference type, then there is no
-      difference between `CLONE` and `DUPLICATE`.
+    > reference type (i.e. an array, dictionary, code segment or
+    > stack), the value itself is cloned, thus the two pointers will
+    > point a distinct values. This is in contrast to `DUPLICATE`
+    > which will result in two pointers pointing at the same
+    > object. If the value is not a reference type, then there is no
+    > difference between `CLONE` and `DUPLICATE`.
