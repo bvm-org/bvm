@@ -1048,6 +1048,20 @@ Again, the following are equivalent:
     bvm> { PUSH goodbye 1 RETURN } 0 0 LEXICAL_ADDRESS LOAD EXEC
     ["goodbye"]
 
+Once a lexical address enters the operand stack, it is fixed to the
+lexical scope determined at that point. This means these addresses can
+be used as stable pointers and used to pass by reference. This is
+demonstrated in the following by passing a lexical address from one
+function to another and showing how it still loads the value
+determined relative to the scope in which it is created:
+
+    bvm> { 17 PUSH (0) 1 RETURN } EXEC { 24 1 TAKE LOAD PUSH (0) LOAD 2 RETURN } EXEC
+    [17, 24]
+
+If the lexical address was not fixed when it entered the stack, but
+reinterpreted at the point of use then the above would return `[24,
+24]`, not `[17, 24]`.
+
 ### Call with Continuation (CALLCC)
 
 The BVM supports Call-with-Continuation as an opcode. This is a
