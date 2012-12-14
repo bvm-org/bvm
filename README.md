@@ -18,6 +18,8 @@
 		- [Call with Continuation (CALLCC)](#call-with-continuation-callcc)
 		- [Errors](#errors)
 		- [Assembly Labels](#assembly-labels)
+- [BVM Opcode Reference](#bvm-opcode-reference)
+	- [Operand Stack Manipulation](#operand-stack-manipulation)
 
 # Introduction
 
@@ -1327,8 +1329,8 @@ assembler performs:
     *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
     *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
     *where* `n` is a non-negative integer.  
-    *Errors*: Will error if there are fewer than `n - 1` items on the
-     operand stack, or if `n` is not a non-negative integer.  
+    *Errors*: Will error if there are fewer than `n` items on the
+     operand stack, or if `n` is not a non-negative integer.
     > Duplicates the top `n` items of the current operand stack. As
       with `DUPLICATE`, reference types are shared, not cloned
       themselves.
