@@ -559,11 +559,16 @@ fetched from the current instruction pointer. The instruction pointer
 is incremented. The fetched opcode is interpreted. As usual with stack
 machines, operation in Reverse Polish Notation form: thus in general,
 you first set up the operands on the stack, and then you call the
-operator.
+operator. The operators, or opcodes, often expect to find further
+values on the top of the stack. These values will be removed from the
+stack, and often the result of the opcode will be pushed onto the
+stack when the operator completes.
 
 The only exception to this general strategy is the `PUSH` opcode,
 which causes the following element from the current segment's
-instruction stream to be placed onto the operand stack.
+instruction stream to be placed onto the operand stack. In all other
+cases, arguments to opcodes come from the operand stack, not the
+instruction stream.
 
 Note that all opcodes are case sensitive and all the built-in opcodes
 are in UPPERCASE. So, to add together the numbers 3 and 5, we can
@@ -596,7 +601,11 @@ So we get much more readable results if we do:
 
 > Because every function can return a variable number of results,
 > results will always be displayed in an array, even though in this
-> case, we've only returned a single result. Note that because the
+> case, we've only returned a single result. The left-hand-end of the
+> array is always the *bottom* of the stack (also the *first item in
+> the stack*, or the *item at index 0 in the stack*). The
+> right-hand-end of the array is always the *top* of the stack (thus
+> also the *last item in the stack*, etc). Note that because the
 > current BVM implementation is written in JavaScript, the results
 > returned and displayed by the REPL are JSON-formatted data objects
 > and thus differ in format from the input of BVM assembly. For
@@ -620,6 +629,11 @@ stack and the `13` is left alone. `COUNT` will then find there are two
 elements on the stack and so will push the number `2`. `RETURN` will
 then find that `2` and will then grab the next two elements from the
 stack and return them to us.
+
+In the BVM, when multiple values are moved around, for example by the
+`RETURN` opcode (and others introduced in due course), order is always
+preserved. So at item at the top of the stack becomes the item at the
+top of the new stack to which it's been moved.
 
 There is an **implicit default operator**. This is overloaded and will
 be explained part by part. When an opcode is encountered which is not
