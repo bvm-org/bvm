@@ -17,6 +17,7 @@
 		- [Lexical Addresses](#lexical-addresses)
 		- [Call with Continuation (CALLCC)](#call-with-continuation-callcc)
 		- [Errors](#errors)
+		- [Assembly Labels](#assembly-labels)
 
 # Introduction
 
@@ -803,8 +804,9 @@ to the current stack the height of the stack of the caller).
     [8]
 
 > The stack that you remove values from by the use of `TAKE` is
-> referred to as the *take-stack*. This gets more interesting much
-> later on with the discussion of call-with-continuation.
+> referred to as the *take-stack*. This is normally the stack of your
+> caller, but not always. This gets more interesting much later on
+> with the discussion of call-with-continuation.
 
 Segments are first-class values, so for example, you can return them
 from other segments:
@@ -1201,3 +1203,69 @@ too.
 
     bvm> PUSH "ERROR INVALID OPERAND" { 14 1 TAKE EXEC } STORE 5 PUSH hello ADD 1 TAKE 6 ADD 1 RETURN
     [20]
+
+### Assembly Labels
+
+Some opcodes (notably `JUMP` and `JUMP_IF`) expect to find a number on
+the operand stack which represents the offset within the current code
+segment to set the instruction pointer to. Code segments are really
+just wrapped arrays, where every token is an individual element within
+the array. Indices start at 0 and are relative to the code segment. No
+form of `JUMP` allows you to set the instruction pointer to an index
+within a different code segment.
+
+Thus a simple infinite loop might look like:
+
+    bvm> PUSH "Hello World" LOG 0 JUMP
+    "Hello World"
+    "Hello World"
+    "Hello World"
+    ...
+
+And to demonstrate that indices are local to the current code segment:
+
+    bvm> 5 7 ADD LOG { PUSH "Hello World" LOG 0 JUMP } EXEC
+    12
+    "Hello World"
+    "Hello World"
+    "Hello World"
+    ...
+
+> It's important to remember (if slightly obvious when you think about
+> it) that these indices are of the *code segment* and have nothing to
+> do with the operand stack.
+
+The object file JSON always requires these indices to be numbers, but
+the assembly format supports labels which makes using opcodes such as
+`JUMP` much easier and more robust. There are two forms: `>foo<`
+declares the location or target of the label `foo`. This declaration
+is not an opcode and has no *width* itself: it simply marks `foo` as
+being the index within the code segment of the opcode immediately
+following the declaration. `<foo>` is a use of the label: it is
+replaced with the index. Note that labels can be used before they're
+declared, and they are scoped to code segments (thus the same label
+name in different code segments is perfectly legal).
+
+The following pairs of examples demonstrate the translation the
+assembler performs:
+
+    bvm> >here< PUSH "Hello World" LOG <here> JUMP
+    "Hello World"
+    "Hello World"
+    "Hello World"
+    ...
+    bvm> PUSH "Hello World" LOG 0 JUMP
+    "Hello World"
+    "Hello World"
+    "Hello World"
+    ...
+
+    bvm> <a> JUMP >b< 6 <c> JUMP >c< ADD COUNT RETURN >a< 4 <b> JUMP
+    [10]
+    bvm> 8 JUMP 6 5 JUMP ADD COUNT RETURN 4 2 JUMP
+    [10]
+
+    bvm> { 5 <a> JUMP >b< COUNT RETURN >a< 6 <b> JUMP } EXEC { <a> JUMP >b< ADD COUNT RETURN >a< 2 TAKE <b> JUMP } EXEC
+    [11]
+    bvm> { 5 5 JUMP COUNT RETURN 6 3 JUMP } EXEC { 5 JUMP ADD COUNT RETURN 2 TAKE 2 JUMP } EXEC
+    [11]
