@@ -1306,7 +1306,7 @@ assembler performs:
 
 * `CLEAR`  
     *Before*:  
-    *After*: `]`  
+    *After*: `[]`  
     *Errors*: None.  
     > Removes all items from the current operand stack.
 
@@ -1351,8 +1351,8 @@ assembler performs:
     > After removing the `n` and `j` parameters from the current
       operand stack, rolls (or rotates or circular-shifts) the top `n`
       items on the current operand stack by `j` steps. Positive `j`
-      indicates *upwards* (i.e. items are popped off the top of the
-      stack and placed further down, so items below move up) motion,
+      indicates *upwards* motion (i.e. items are popped off the top of
+      the stack and placed further down, so items below move up),
       whilst negative `j` indicates *downwards* motion (i.e. items
       from lower down are removed and pushed onto the top of the
       stack, so items at the top of the stack move down).
