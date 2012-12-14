@@ -1368,3 +1368,66 @@ assembler performs:
     > which will result in two pointers pointing at the same
     > object. If the value is not a reference type, then there is no
     > difference between `CLONE` and `DUPLICATE`.
+
+* `UNDEF`  
+    *Before*:  
+    *After*:  `undef]`  
+    *Errors*: None.  
+    > Pushes the singleton value `undef`, which represents bottom, and
+    > is distinct from `false`, onto the current operand stack.
+
+## Logic
+
+Note that `TRUE` and `FALSE` are opcodes, and so in the JSON object
+form, should appear as strings just like all other opcodes, and not as
+the JSON values `true` and `false`.
+
+* `TRUE`  
+    *Before*:  
+    *After*: `true]`  
+    *Errors*: None.  
+    > Pushes the boolean value `true` onto the current operand stack.
+
+* `FALSE`  
+    *Before*:  
+    *After*: `false]`  
+    *Errors*: None.  
+    > Pushes the boolean value `false` (which is distinct from
+    > `undef`) onto the current operand stack.
+
+* `NOT`  
+    *Before*: `a]`  
+    *After*: `b]`  
+    *where* `a` is a boolean and `b` is the logical inversion of `a`.  
+    *Errors*: Will error if there are no items on the current operand
+     stack or if the type of `a` is not a boolean. Note you may not
+     use `NOT` as a means to cast from a number or other value which
+     some languages may consider as *falsey* or *truthy* to a boolean.  
+    > Performs logical negation.
+
+* `AND`  
+    *Before*: `b, a]`  
+    *After*: `c]`  
+    *where* `a` and `b` are booleans, and `c` is the boolean being the
+     logical conjunction of `a` and `b`.  
+    *Errors*: Will error if fewer than 2 items are on the current
+     operand stack or if either of them are not booleans.  
+    > Performs logical conjunction.
+
+* `OR`  
+    *Before*: `b, a]`  
+    *After*: `c]`  
+    *where* `a` and `b` are booleans, and `c` is the boolean being the
+     logical disjunction of `a` and `b`.  
+    *Errors*: Will error if fewer than 2 items are on the current
+     operand stack or if either of them are not booleans.  
+    > Performs logical disjunction.
+
+* `XOR`  
+    *Before*: `b, a]`  
+    *After*: `c]`  
+    *where* `a` and `b` are booleans, and `c` is the boolean being the
+     logical exclusive disjunction of `a` and `b`.  
+    *Errors*: Will error if fewer than 2 items are on the current
+     operand stack or if either of them are not booleans.  
+    > Performs logical exclusive disjunction.
