@@ -1305,8 +1305,8 @@ stack can otherwise contain any other elements further down.
     > Swaps the order of the top two items on the current operand stack.
 
 * `COUNT`  
-    *Before*: <code>[a<sub>0</sub>, ..., a<sub>n</sub>]</code>  
-    *After*: <code>[a<sub>0</sub>, ..., a<sub>n</sub>, n]</code>  
+    *Before*: <code>[a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+    *After*: <code>[a<sub>0</sub>, ..., a<sub>n-1</sub>, n]</code>  
     *Errors*: None.  
     > Pushes onto the current operand stack an integer being the
     > number of items (or height) of the current operand stack
@@ -1328,9 +1328,9 @@ stack can otherwise contain any other elements further down.
     > is duplicated, not the item itself.
 
 * `INDEX`  
-    *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n</sub>, i]</code>  
-    *After*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n</sub>, a<sub>i</sub>]</code>  
-    *where* `i` is a non-negative integer.  
+    *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, i]</code>  
+    *After*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, a<sub>i</sub>]</code>  
+    *where* `i` is a non-negative integer and i < n.  
     *Errors*: Will error if `i` is not a non-negative integer, or if
      `i` is greater than or equal to the number of items on the
      current operand stack.  
@@ -1342,7 +1342,8 @@ stack can otherwise contain any other elements further down.
 * `COPY`  
     *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
     *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
-    *where* `n` is a non-negative integer.  
+    *where* `n` is a non-negative integer less than the height of the
+     current operand stack.
     *Errors*: Will error if there are fewer than `n + 1` items on the
      current operand stack, or if `n` is not a non-negative integer.
     > Duplicates the top `n` items of the current operand stack. As
