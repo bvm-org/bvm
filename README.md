@@ -1304,6 +1304,12 @@ assembler performs:
       number of items (or height) of the current operand stack
       immediately prior to the evaluation of the `COUNT` opcode.
 
+* `CLEAR`  
+    *Before*:  
+    *After*: `]`  
+    *Errors*: None.  
+    > Removes all items from the current operand stack.
+
 * `DUPLICATE`  
     *Before*: `a]`  
     *After*: `a, a]`  
@@ -1329,8 +1335,36 @@ assembler performs:
     *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
     *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
     *where* `n` is a non-negative integer.  
-    *Errors*: Will error if there are fewer than `n` items on the
-     operand stack, or if `n` is not a non-negative integer.
+    *Errors*: Will error if there are fewer than `n + 1` items on the
+     current operand stack, or if `n` is not a non-negative integer.
     > Duplicates the top `n` items of the current operand stack. As
       with `DUPLICATE`, reference types are shared, not cloned
       themselves.
+
+* `ROLL`  
+    *Before*: <code>a<sub>n-1</sub>, ..., a<sub>0</sub>, n, j]</code>  
+    *After*: <code>a<sub>(j-1) mod n</sub>, ..., a<sub>0</sub>, a<sub>n-1</sub>, ..., a<sub>j mod n</sub>]</code>  
+    *where* `n` is a non-negative integer, and `j` is an integer.  
+    *Errors*: Will error if there are fewer than `n + 2` items on the
+     current operand stack, or if `n` is not a non-negative integer,
+     or if `j` is not an integer.  
+    > After removing the `n` and `j` parameters from the current
+      operand stack, rolls (or rotates or circular-shifts) the top `n`
+      items on the current operand stack by `j` steps. Positive `j`
+      indicates *upwards* (i.e. items are popped off the top of the
+      stack and placed further down, so items below move up) motion,
+      whilst negative `j` indicates *downwards* motion (i.e. items
+      from lower down are removed and pushed onto the top of the
+      stack, so items at the top of the stack move down).
+
+* `CLONE`  
+    *Before*: `a]`  
+    *After*: `a, a]`  
+    *Errors*: Will error if no items on the current operand stack.  
+    > Clones the item on the top of the stack. If the item is a
+      reference type (i.e. an array, dictionary, code segment or
+      stack), the value itself is cloned, thus the two pointers will
+      point a distinct values. This is in contrast to `DUPLICATE`
+      which will result in two pointers pointing at the same
+      object. If the value is not a reference type, then there is no
+      difference between `CLONE` and `DUPLICATE`.

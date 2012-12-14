@@ -99,19 +99,30 @@
                     var len = vcpu.cs.length(), shift, count, removed, split;
                     if (len > 1) {
                         shift = vcpu.cs.pop();
-                        count = vcpu.cs.pop();
-                        len -= 2;
-                        if (len >= count) {
-                            removed = vcpu.cs.clear(len - count);
-                            if (shift > 0) {
-                                shift = - (shift % count);
-                            } else if (shift < 0) {
-                                shift = Math.abs(shift) % count;
+                        if (typeof shift === 'number' &&
+                            shift === Math.round(shift)) {
+                            count = vcpu.cs.pop();
+                            if (typeof count === 'number' &&
+                                count >= 0 &&
+                                count === Math.round(count)) {
+                                len -= 2;
+                                if (len >= count) {
+                                    removed = vcpu.cs.clear(len - count);
+                                    if (shift > 0) {
+                                        shift = - (shift % count);
+                                    } else if (shift < 0) {
+                                        shift = Math.abs(shift) % count;
+                                    }
+                                    vcpu.cs.appendArray(removed.splice(shift).concat(removed));
+                                    return;
+                                } else {
+                                    nuError.notEnoughOperands();
+                                }
+                            } else {
+                                nuError.invalidOperand(count, shift);
                             }
-                            vcpu.cs.appendArray(removed.splice(shift).concat(removed));
-                            return;
                         } else {
-                            nuError.notEnoughOperands();
+                            nuError.invalidOperand(shift);
                         }
                     } else {
                         nuError.notEnoughOperands();
