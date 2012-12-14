@@ -57,14 +57,19 @@
                     var len = vcpu.cs.length(), count, idx;
                     if (len > 0) {
                         count = vcpu.cs.pop();
-                        len -= 1;
-                        if (len >= count) {
-                            for (idx = len - count; idx < len; idx += 1) {
-                                vcpu.cs.push(vcpu.cs.index(idx));
+                        if (typeof count === 'number' &&
+                            count >= 0 && count === Math.round(count)) {
+                            len -= 1;
+                            if (len >= count) {
+                                for (idx = len - count; idx < len; idx += 1) {
+                                    vcpu.cs.push(vcpu.cs.index(idx));
+                                }
+                                return;
+                            } else {
+                                nuError.notEnoughOperands();
                             }
-                            return;
                         } else {
-                            nuError.notEnoughOperands();
+                            nuError.invalidOperand(count);
                         }
                     } else {
                         nuError.notEnoughOperands();
@@ -75,11 +80,16 @@
                     if (len > 0) {
                         idx = vcpu.cs.pop();
                         len -= 1;
-                        if (len > idx) {
-                            vcpu.cs.push(vcpu.cs.index(len - idx - 1));
-                            return;
+                        if (typeof idx === 'number' &&
+                            idx >= 0 && idx === Math.round(idx)) {
+                            if (len > idx) {
+                                vcpu.cs.push(vcpu.cs.index(len - idx - 1));
+                                return;
+                            } else {
+                                nuError.notEnoughOperands();
+                            }
                         } else {
-                            nuError.notEnoughOperands();
+                            nuError.invalidOperand(idx);
                         }
                     } else {
                         nuError.notEnoughOperands();

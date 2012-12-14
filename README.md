@@ -1269,3 +1269,66 @@ assembler performs:
     [79]
     bvm> { 17 5 JUMP COUNT RETURN 62 3 JUMP } EXEC { 5 JUMP ADD COUNT RETURN 2 TAKE 2 JUMP } EXEC
     [79]
+
+
+# BVM Opcode Reference
+
+## Operand Stack Manipulation
+
+* `PUSH`  
+    *Before*: `]`  
+    *After*: `a]`  
+    *where* `a` is the literal element in the code segment immediately following the `PUSH`.  
+    *Errors*: Will error if `PUSH` is the last opcode in a code segment.  
+    > Explicitly pushes an item onto the stack.
+
+* `POP`  
+    *Before*: `a]`  
+    *After*: `]`  
+    *Errors*: Will error if there are no items on the operand stack.  
+    > Removes and discards the top item from the current operand stack.
+
+* `EXCHANGE`  
+    *Before*: `b, a]`  
+    *After*: `a, b]`  
+    *Errors*: Will error if there are fewer than two items on the operand stack.  
+    > Swaps the order of the top two items on the current operand stack.
+
+* `COUNT`  
+    *Before*: <code>[a<sub>0</sub>, ..., a<sub>n</sub>]</code>  
+    *After*: <code>[a<sub>0</sub>, ..., a<sub>n</sub>, n]</code>  
+    *Errors*: None.  
+    > Pushes onto the current operand stack an integer being the
+      number of items (or height) of the current operand stack
+      immediately prior to the evaluation of the `COUNT` opcode.
+
+* `DUPLICATE`  
+    *Before*: `a]`  
+    *After*: `a, a]`  
+    *Errors*: Will error if there are no items on the operand stack.  
+    > Duplicates the item on the top of the current operand stack. If
+      the item found is a reference type (i.e. an array, dictionary,
+      code segment or stack) then it is the pointer to that item that
+      is duplicated, not the item itself.
+
+* `INDEX`  
+    *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n</sub>, i]</code>  
+    *After*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n</sub>, a<sub>i</sub>]</code>  
+    *where* `i` is a non-negative integer.  
+    *Errors*: Will error if `i` is not a non-negative integer, or if
+     `i` is greater than or equal to the number of items on the
+     current operand stack.  
+    > Pushes onto the current operand stack a duplicate of the `i`th
+      element of the stack, which is 0-indexed, with the first and
+      bottom element of the stack being item 0. As with `DUPLICATE`,
+      reference types are shared, not cloned themselves.
+
+* `COPY`  
+    *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
+    *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
+    *where* `n` is a non-negative integer.  
+    *Errors*: Will error if there are fewer than `n - 1` items on the
+     operand stack, or if `n` is not a non-negative integer.  
+    > Duplicates the top `n` items of the current operand stack. As
+      with `DUPLICATE`, reference types are shared, not cloned
+      themselves.
