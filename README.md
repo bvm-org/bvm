@@ -20,6 +20,7 @@
 		- [Assembly Labels](#assembly-labels)
 - [BVM Opcode Reference](#bvm-opcode-reference)
 	- [Operand Stack Manipulation](#operand-stack-manipulation)
+	- [Logic](#logic)
 
 # Introduction
 
