@@ -1518,3 +1518,170 @@ the JSON values `true` and `false`.
      lexical address.  
     > The compliment to `LOAD`, takes a value from the operand stack
     > and stores that value at the location indicated.
+
+## Mark
+
+> Marks are placed on the stack by various other opcodes, but
+> sometimes there is need to explicitly use them. It's also useful to
+> understand that some other opcodes are little more than a set
+> sequence of opcodes which make use of marks.
+
+* `MARK`  
+    *Before*:  
+    *After*:  `mark]`  
+    *Errors*: None.
+    > Pushes a mark onto the stack.
+
+* `COUNT_TO_MARK`  
+    *Before*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+    *After*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>, n]</code>  
+    *Errors*: Will error if no mark is found in the current operand
+     stack.  
+    > Pushes to the stack an integer representing the number of items
+    > between the uppermost mark on the stack and the top of the
+    > stack, prior to this opcode being invoked.
+
+* `CLEAR_TO_MARK`  
+    *Before*: `mark, ...]`  
+    *After*: `]`  
+    *Errors*: Will error if no mark is found in the current operand
+     stack.  
+    > Removes from the current operand stack all items from the
+    > uppermost mark on the stack to the top of the stack, including
+    > the mark itself.
+
+## Arrays
+
+* `ARRAY_START` *(equivalent to `[` in assembly)*  
+    *Before*:  
+    *After*:  `mark]`  
+    *Errors*: None.  
+    > A synonym of `MARK`. Exists to balance `ARRAY_END` and make
+    > intent clear.
+
+* `ARRAY_END` *(equivalent to `]` in assembly)*  
+    *Before*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+    *After*: `ary]`  
+    *where* `ary` is a reference to a fresh array of length `n`
+     containing all the items on the current operand stack above the
+     uppermost mark and up to the top of the top of the
+     stack. <code>a<sub>0</sub></code> is the item in index `0` of the
+     array and <code>a<sub>n-1</sub></code> is the item in index `n-1`
+     of the array.  
+    *Errors*: Will error if no mark is found on the current operand
+     stack.  
+    > Creates an array from the items above the uppermost mark on the
+    > current operand stack. The new array is placed on the stack and
+    > all items from (and including) the uppermost mark and the top of
+    > the stack are removed. Arrays are not homogeneous: you may store
+    > any mix of values and types in an array.
+
+    > Note that the assembly parser expects pairs of `[` and `]`, and
+    > similarly `ARRAY_START` and `ARRAY_END`. Occasionally there is
+    > reason to want a lone `ARRAY_END`, for example due to use of
+    > `ARRAY_EXPAND` and then wanting to repack the array. This is
+    > currently not accepted by the assembly parser and so this is one
+    > reason why you may wish to use the JSON object format which does
+    > not have these restrictions.
+
+* `ARRAY_EXPAND`  
+    *Before*: `ary]`  
+    *After*: <code>a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+    *where* `ary` is a reference to an array of length `n` which
+     contains the item <code>a<sub>0</sub></code> in index `0` through
+     to item <code>a<sub>n-1</sub></code> in index `n-1`.  
+    *Errors*: Will error if the uppermost item on the current operand
+     stack is not an array reference.  
+    > Removes the array reference at the top of the current operand
+    > stack and expands to the contents of the array. Note that no
+    > mark is added to the stack.
+
+* `ARRAY_NEW`  
+    *Before*:  
+    *After*: `ary]`  
+    *where* `ary` is a reference to a fresh empty array.  
+    *Errors*: None.  
+    > Creates a new empty array and pushes a reference to it onto the
+    > current operand stack.
+
+* `ARRAY_LOAD`  
+    *Before*: `ary, idx]`  
+    *After*: `ary, v]`  
+    *where* `ary` is a reference to an array of length `n`, `idx` is a
+     non-negative integer less than `n`, and `v` is the value in the
+     array at index `idx`.  
+    *Errors*: Will error if `ary` is not an array reference or if
+     `idx` is not a non-negative integer smaller than the length of
+     the array, or if there are fewer than two items on the current
+     operand stack.  
+    > Indexes the supplied array at the supplied index. Note that for
+    > convenience, the array reference itself is left on the stack
+    > below the value found.
+
+* `ARRAY_STORE`  
+    *Before*: `ary, idx, v]`  
+    *After*: `ary]`  
+    *where* `ary` is a reference to an array, `idx` is a non-negative
+     integer, and `v` is the value to be stored in the array `ary` at
+     index `idx`.  
+    *Errors*: Will error if `ary` is not an array reference or if
+     `idx` is not a non-negative integer, or if there are fewer than
+     three items on the current operand stack.  
+    > Stores the supplied value into the supplied array at the
+    > supplied index. Note that for convenience, the array reference
+    > itself is left on the stack. It is legal for the supplied index
+    > to be greater than current length of the array. If this is the
+    > case, the length of the array will be extended and any indices
+    > between the previous length and the supplied index will contain
+    > the `undef` value. In this way, arrays are of dynamic length. If
+    > there is already a value stored in the array at the supplied
+    > index, that value is overwritten and lost.
+
+* `ARRAY_LENGTH`  
+    *Before*: `ary]`  
+    *After*: `ary, n]`  
+    *where* `ary` is a reference to an array of length `n`.  
+    *Errors*: Will error if the top item on the current operand stack
+     is not an array reference or if there are no items on the current
+     operand stack.  
+    > Pushes onto the stack the length of the array, the reference to
+    > which is at the top of the current operand stack. Note that for
+    > convenience, the array reference itself is left on the stack.
+
+* `ARRAY_TRUNCATE`  
+    *Before*: `ary, n]`  
+    *After*: `ary]`  
+    *where* `ary` is a reference to an array, and `n` is a
+     non-negative integer.  
+    *Errors*: Will error if `ary` is not a reference to an array, or
+     if `n` is not a non-negative integer, or if there are fewer than
+     two items on the current operand stack.  
+    > Truncates the array at the supplied array reference to the
+    > length supplied. If the length supplied is less than the current
+    > length, items are lost from the array. If the length supplied is
+    > greater than the current length then the array is extended and
+    > values of the new indices are filled with the `undef`
+    > value. After this opcode, `ARRAY_LENGTH` will always reveal the
+    > length just set by the `ARRAY_TRUNCATE` opcode.
+
+* `ARRAY_TO_SEG`  
+    *Before*: `ary]`  
+    *After*: `seg]`  
+    *where* `ary` is a reference to an array and `seg` is a reference
+     to a code segment where the opcodes within the code segment are
+     taken from the array.  
+    *Errors*: Will error if the item at the top of the current operand
+     stack is not an array reference or if there are no items on the
+     current operand stack.  
+    > Converts an array to a segment. Note that the segment shares the
+    > array itself, so if you retain a reference to the array before
+    > invoking `ARRAY_TO_SEG` then the array used to store the code
+    > segment's opcodes will be the same as the array. No checking is
+    > done that the contents of the array represent valid opcodes, so
+    > any errors due to this won't surface until invocation of the
+    > segment. However, remember that the **implicit default
+    > operator** will, if nothing else, push the current unrecognised
+    > opcode onto the current operand stack if it's not a string,
+    > lexical address or code segment. This means that this opcode
+    > allows opcodes that have no string representation to be used
+    > directly, such as array and dictionary references.
