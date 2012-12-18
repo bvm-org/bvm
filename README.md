@@ -22,6 +22,8 @@
 	- [Operand Stack Manipulation](#operand-stack-manipulation)
 	- [Logic](#logic)
 	- [Addressing](#addressing)
+	- [Mark](#mark)
+	- [Arrays](#arrays)
 
 # Introduction
 
