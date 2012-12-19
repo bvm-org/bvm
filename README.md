@@ -2019,8 +2019,8 @@ counter is set to zero.
   *Before*: `n]`  
   *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
   *where* `n` is a non-negative integer, and <code>a<sub>0</sub>,
-   a<sub>1</sub>, ..., a<sub>n - 1</sub> are the uppermost `n` items
-   on the current *take-stack*.  
+   a<sub>1</sub>, ..., a<sub>n - 1</sub></code> are the uppermost `n`
+   items on the current *take-stack*.  
   *Errors*: Will error if `n` is not a non-negative integer, or if
    there are no items on the current operand stack, or if `n` is
    greater than the number of items on the current *take-stack*.  
