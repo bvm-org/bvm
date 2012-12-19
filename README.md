@@ -2005,7 +2005,7 @@ counter is set to zero.
   *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
   *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
   *where* the *after* is the operand stack of the caller, and the
-   **before* is the operand stack of the callee.  
+   *before* is the operand stack of the callee.  
   *Errors*: Will error if `n` is not a non-negative integer or if there
    are fewer than `n` items on the current operand stack.  
   > Returns control to the calling segment and explicitly passes a
