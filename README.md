@@ -1936,7 +1936,7 @@ counter is set to zero.
 
 * `EXEC`  
   *Before*: `s]`  
-  *After*  
+  *After*:  
   *where* `s` is a reference to either a code segment or a stack.  
   *Errors*: Will error if the item at the top of the current operand
    stack is not a code segment reference or a stack, or if there are
