@@ -1749,7 +1749,7 @@ dictionaries are not functional: they are mutated in place.
 * `DICT_END` *(equivalent to `>` in assembly)*  
   *Before*: <code>mark, k<sub>0</sub>, v<sub>0</sub>, ..., k<sub>n-1</sub>, v<sub>n-1</sub>]</code>  
   *After*: `dict]`  
-  *where* `dict` is a reference to a fresh dictionaries containing
+  *where* `dict` is a reference to a fresh dictionary containing
    `n` key-value pairs of no distinct order, where
    <code>k<sub>i</sub></code> is the key of value
    <code>v<sub>i</sub></code> for all non-negative integers `i` less
@@ -1869,3 +1869,54 @@ dictionaries are not functional: they are mutated in place.
   > Creates and returns a fresh array containing all the keys found
   > within the dictionary. The dictionary reference is left on the
   > stack.
+
+## Code Segments
+
+`SEG_START` and `SEG_END` are the only opcodes that have any effect
+when in *deferred mode* in that they always adjust the *deferred mode*
+counter. This is the reason why the two possible outcomes are
+explicitly shown in this section. All other opcodes have no action
+when in *deferred mode*, other than to be pushed onto the operand
+stack (and in all other sections, this is not shown as a possible
+outcome). See the [section on code segments](#code-segments) for more
+details. When the BVM is first started, the *deferred mode* counter is
+set to zero.
+
+* `SEG_START` *(equivalent to `{` in assembly)*  
+  *Before*:  
+  *After*: `mark]` or `SEG_START]`  
+  *Errors*: None.  
+  > Increments the *deferred mode* counter. If the *deferred mode*
+  > counter is now `1`, we have just entered *deferred mode*, so we
+  > push a mark onto the stack.  If the *deferred mode* counter is now
+  > greater than `1`, we were already in *deferred mode* so simply
+  > push the opcode `SEG_START` onto operand stack, as usual.
+
+* `SEG_END` *(equivalent to `}` in assembly)*  
+  *Before*: <code>mark, v<sub>0</sub>, ..., v<sub>n-1</sub>]</code>  
+  *After*: `seg]` *or* <code>mark, v<sub>0</sub>, ..., v<sub>n-1</sub>, SEG_END]</code>  
+  *where* `seg` is a reference to a fresh code segment containing in
+   order <code>v<sub>0</sub></code> to <code>v<sub>n-1</sub></code>
+   found above the uppermost mark on the current operand stack.  
+  *Errors*: Will error if no mark is found on the current operand
+   stack.  
+  > Decrements the *deferred mode* counter. If the *deferred mode*
+  > counter is now 0, then we have just left *deferred mode*, so we
+  > create a fresh code segment containing the items above the
+  > uppermost mark on the current operand stack, and push that code
+  > segment onto the stack. If the *deferred mode* counter is still
+  > greater than 0, then we remain in *deferred mode*, and so simply
+  > push the opcode `SEG_END` onto the operand stack, as
+  > usual.
+
+* `SEG_TO_ARRAY`  
+  *Before*: `seg]`  
+  *After*: `ary]`  
+  *where* `seg` is a reference to a code segment, and `ary` is a
+  reference to the array holding the opcodes within the code segment.  
+  *Errors*: Will error if the item at the top of the current operand
+   stack is not a code segment reference or if there are no items on
+   the current operand stack.  
+  > Converts a segment to an array. This is the mirror of
+  > `ARRAY_TO_SEG`, and just like that opcode, the array is shared
+  > with the code segment.
