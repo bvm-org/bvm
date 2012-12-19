@@ -24,6 +24,7 @@
 	- [Addressing](#addressing)
 	- [Mark](#mark)
 	- [Arrays](#arrays)
+	- [Dictionaries](#dictionaries)
 
 # Introduction
 
@@ -968,12 +969,13 @@ the value pointed to by the lexical address is a code segment, then
 that code segment is invoked. If the opcode encountered is a lexical
 address which points at a value other than a code segment, the value
 is simply pushed onto the stack. Note that the location pointed to by
-the lexical address is not modified, and where the value found is a
+the lexical address is not modified, thus where the value found is a
 reference value (i.e. an array, dictionary, segment or stack), the
-value is shared: i.e. a new reference to the same actual value is
-pushed to the stack rather than an cloning of the underlying reference
-value going on. These are the same semantics as with an unknown
-string as an opcode and indexing into the dictionary stack.
+value is shared: i.e. a new reference to the same underlying value is
+pushed to the stack rather than any cloning of the underlying value
+going on. These are the same semantics as with an unknown string as an
+opcode and indexing into the dictionary stack: it's just you're
+indexing via your lexical scopes rather than the dictionary stack.
 
     bvm> 5 (0, 0) COUNT RETURN
     [5, 5]
@@ -1288,104 +1290,106 @@ stack can otherwise contain any other elements further down.
 ## Operand Stack Manipulation
 
 * `PUSH`  
-    *Before*:  
-    *After*: `a]`  
-    *where* `a` is the literal element in the code segment immediately following the `PUSH`.  
-    *Errors*: Will error if `PUSH` is the last opcode in a code segment.  
-    > Explicitly pushes an item onto the stack.
+  *Before*:  
+  *After*: `a]`  
+  *where* `a` is the literal element in the code segment immediately following the `PUSH`.  
+  *Errors*: Will error if `PUSH` is the last opcode in a code segment.  
+  > Explicitly pushes an item onto the stack.
 
 * `POP`  
-    *Before*: `a]`  
-    *After*: `]`  
-    *Errors*: Will error if there are no items on the operand stack.  
-    > Removes and discards the top item from the current operand stack.
+  *Before*: `a]`  
+  *After*: `]`  
+  *Errors*: Will error if there are no items on the operand stack.  
+  > Removes and discards the top item from the current operand stack.
 
 * `EXCHANGE`  
-    *Before*: `b, a]`  
-    *After*: `a, b]`  
-    *Errors*: Will error if there are fewer than two items on the operand stack.  
-    > Swaps the order of the top two items on the current operand stack.
+  *Before*: `b, a]`  
+  *After*: `a, b]`  
+  *Errors*: Will error if there are fewer than two items on the operand stack.  
+  > Swaps the order of the top two items on the current operand stack.
 
 * `COUNT`  
-    *Before*: <code>[a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
-    *After*: <code>[a<sub>0</sub>, ..., a<sub>n-1</sub>, n]</code>  
-    *Errors*: None.  
-    > Pushes onto the current operand stack an integer being the
-    > number of items (or height) of the current operand stack
-    > immediately prior to the evaluation of the `COUNT` opcode.
+  *Before*: <code>[a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+  *After*: <code>[a<sub>0</sub>, ..., a<sub>n-1</sub>, n]</code>  
+  *Errors*: None.  
+  > Pushes onto the current operand stack an integer being the
+  > number of items (or height) of the current operand stack
+  > immediately prior to the evaluation of the `COUNT` opcode.
 
 * `CLEAR`  
-    *Before*:  
-    *After*: `[]`  
-    *Errors*: None.  
-    > Removes all items from the current operand stack.
+  *Before*:  
+  *After*: `[]`  
+  *Errors*: None.  
+  > Removes all items from the current operand stack.
 
 * `DUPLICATE`  
-    *Before*: `a]`  
-    *After*: `a, a]`  
-    *Errors*: Will error if there are no items on the operand stack.  
-    > Duplicates the item on the top of the current operand stack. If
-    > the item found is a reference type (i.e. an array, dictionary,
-    > code segment or stack) then it is the pointer to that item that
-    > is duplicated, not the item itself.
+  *Before*: `a]`  
+  *After*: `a, a]`  
+  *Errors*: Will error if there are no items on the operand stack.  
+  > Duplicates the item on the top of the current operand stack. If
+  > the item found is a reference type (i.e. an array, dictionary,
+  > code segment or stack) then it is the pointer to that item that
+  > is duplicated, not the item itself.
 
 * `INDEX`  
-    *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, i]</code>  
-    *After*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, a<sub>i</sub>]</code>  
-    *where* `i` is a non-negative integer and i < n.  
-    *Errors*: Will error if `i` is not a non-negative integer, or if
-     `i` is greater than or equal to the number of items on the
-     current operand stack.  
-    > Pushes onto the current operand stack a duplicate of the `i`th
-    > element of the stack, which is 0-indexed, with the first and
-    > bottom element of the stack being item 0. As with `DUPLICATE`,
-    > reference types are shared, not cloned themselves.
+  *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, i]</code>  
+  *After*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, a<sub>i</sub>]</code>  
+  *where* `i` is a non-negative integer and i < n.  
+  *Errors*: Will error if `i` is not a non-negative integer, or if
+   `i` is greater than or equal to the number of items on the
+   current operand stack.  
+  > Pushes onto the current operand stack a duplicate of the `i`th
+  > element of the stack, which is 0-indexed, with the first and
+  > bottom element of the stack being item 0. As with `DUPLICATE`,
+  > reference types are shared, not cloned themselves.
 
 * `COPY`  
-    *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
-    *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
-    *where* `n` is a non-negative integer less than the height of the
-     current operand stack.
-    *Errors*: Will error if there are fewer than `n + 1` items on the
-     current operand stack, or if `n` is not a non-negative integer.
-    > Duplicates the top `n` items of the current operand stack. As
-    > with `DUPLICATE`, reference types are shared, not cloned
-    > themselves.
+  *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
+  *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
+  *where* `n` is a non-negative integer less than the height of the
+   current operand stack.
+  *Errors*: Will error if there are fewer than `n + 1` items on the
+   current operand stack, or if `n` is not a non-negative integer.
+  > Duplicates the top `n` items of the current operand stack. As
+  > with `DUPLICATE`, reference types are shared, not cloned
+  > themselves.
 
 * `ROLL`  
-    *Before*: <code>a<sub>n-1</sub>, ..., a<sub>0</sub>, n, j]</code>  
-    *After*: <code>a<sub>(j-1) mod n</sub>, ..., a<sub>0</sub>, a<sub>n-1</sub>, ..., a<sub>j mod n</sub>]</code>  
-    *where* `n` is a non-negative integer, and `j` is an integer.  
-    *Errors*: Will error if there are fewer than `n + 2` items on the
-     current operand stack, or if `n` is not a non-negative integer,
-     or if `j` is not an integer.  
-    > After removing the `n` and `j` parameters from the current
-    > operand stack, rolls (or rotates or circular-shifts) the top `n`
-    > items on the current operand stack by `j` steps. Positive `j`
-    > indicates *upwards* motion (i.e. items are popped off the top of
-    > the stack and placed further down, so items below move up),
-    > whilst negative `j` indicates *downwards* motion (i.e. items
-    > from lower down are removed and pushed onto the top of the
-    > stack, so items at the top of the stack move down).
+  *Before*: <code>a<sub>n-1</sub>, ..., a<sub>0</sub>, n, j]</code>  
+  *After*: <code>a<sub>(j-1) mod n</sub>, ..., a<sub>0</sub>, a<sub>n-1</sub>, ..., a<sub>j mod n</sub>]</code>  
+  *where* `n` is a non-negative integer, and `j` is an integer.  
+  *Errors*: Will error if there are fewer than `n + 2` items on the
+   current operand stack, or if `n` is not a non-negative integer,
+   or if `j` is not an integer.  
+  > After removing the `n` and `j` parameters from the current
+  > operand stack, rolls (or rotates or circular-shifts) the top `n`
+  > items on the current operand stack by `j` steps. Positive `j`
+  > indicates *upwards* motion (i.e. items are popped off the top of
+  > the stack and placed further down, so items below move up),
+  > whilst negative `j` indicates *downwards* motion (i.e. items
+  > from lower down are removed and pushed onto the top of the
+  > stack, so items at the top of the stack move down).
 
 * `CLONE`  
-    *Before*: `a]`  
-    *After*: `a, a]`  
-    *Errors*: Will error if no items on the current operand stack.  
-    > Clones the item on the top of the stack. If the item is a
-    > reference type (i.e. an array, dictionary, code segment or
-    > stack), the value itself is cloned, thus the two pointers will
-    > point a distinct values. This is in contrast to `DUPLICATE`
-    > which will result in two pointers pointing at the same
-    > object. If the value is not a reference type, then there is no
-    > difference between `CLONE` and `DUPLICATE`.
+  *Before*: `a]`  
+  *After*: `a, a]`  
+  *Errors*: Will error if no items on the current operand stack.  
+  > Clones the item on the top of the stack. If the item is a
+  > reference type (i.e. an array, dictionary, code segment or
+  > stack), the value itself is cloned, thus the subsequent two
+  > pointers will point at distinct values, containing the same
+  > values. This is in contrast to `DUPLICATE` which will result in
+  > two pointers pointing at the same value. If the value is not a
+  > reference type, then there is no difference between `CLONE` and
+  > `DUPLICATE`. Note that in the case of a reference value, the
+  > cloning is shallow.
 
 * `UNDEF`  
-    *Before*:  
-    *After*:  `undef]`  
-    *Errors*: None.  
-    > Pushes the singleton value `undef`, which represents bottom, and
-    > is distinct from `false`, onto the current operand stack.
+  *Before*:  
+  *After*:  `undef]`  
+  *Errors*: None.  
+  > Pushes the singleton value `undef`, which represents bottom, and
+  > is distinct from `false`, onto the current operand stack.
 
 ## Logic
 
@@ -1394,132 +1398,132 @@ form, should appear as strings just like all other opcodes, and not as
 the JSON values `true` and `false`.
 
 * `TRUE`  
-    *Before*:  
-    *After*: `true]`  
-    *Errors*: None.  
-    > Pushes the boolean value `true` onto the current operand stack.
+  *Before*:  
+  *After*: `true]`  
+  *Errors*: None.  
+  > Pushes the boolean value `true` onto the current operand stack.
 
 * `FALSE`  
-    *Before*:  
-    *After*: `false]`  
-    *Errors*: None.  
-    > Pushes the boolean value `false` (which is distinct from
-    > `undef`) onto the current operand stack.
+  *Before*:  
+  *After*: `false]`  
+  *Errors*: None.  
+  > Pushes the boolean value `false` (which is distinct from
+  > the `undef` value) onto the current operand stack.
 
 * `NOT`  
-    *Before*: `a]`  
-    *After*: `b]`  
-    *where* `a` is a boolean and `b` is the logical inversion of `a`.  
-    *Errors*: Will error if there are no items on the current operand
-     stack or if the type of `a` is not a boolean. Note you may not
-     use `NOT` as a means to cast from a number or other value which
-     some languages may consider as *falsey* or *truthy* to a boolean.  
-    > Performs logical negation.
+  *Before*: `a]`  
+  *After*: `b]`  
+  *where* `a` is a boolean and `b` is the logical inversion of `a`.  
+  *Errors*: Will error if there are no items on the current operand
+   stack or if the type of `a` is not a boolean. Note you may not
+   use `NOT` as a means to cast from a number or other value which
+   some languages may consider as *falsey* or *truthy* to a boolean.  
+  > Performs logical negation.
 
 * `AND`  
-    *Before*: `b, a]`  
-    *After*: `c]`  
-    *where* `a` and `b` are booleans, and `c` is the boolean being the
-     logical conjunction of `a` and `b`.  
-    *Errors*: Will error if fewer than 2 items are on the current
-     operand stack or if either of them are not booleans.  
-    > Performs logical conjunction.
+  *Before*: `b, a]`  
+  *After*: `c]`  
+  *where* `a` and `b` are booleans, and `c` is the boolean being the
+   logical conjunction of `a` and `b`.  
+  *Errors*: Will error if fewer than 2 items are on the current
+   operand stack or if either of them are not booleans.  
+  > Performs logical conjunction.
 
 * `OR`  
-    *Before*: `b, a]`  
-    *After*: `c]`  
-    *where* `a` and `b` are booleans, and `c` is the boolean being the
-     logical disjunction of `a` and `b`.  
-    *Errors*: Will error if fewer than 2 items are on the current
-     operand stack or if either of them are not booleans.  
-    > Performs logical disjunction.
+  *Before*: `b, a]`  
+  *After*: `c]`  
+  *where* `a` and `b` are booleans, and `c` is the boolean being the
+   logical disjunction of `a` and `b`.  
+  *Errors*: Will error if fewer than 2 items are on the current
+   operand stack or if either of them are not booleans.  
+  > Performs logical disjunction.
 
 * `XOR`  
-    *Before*: `b, a]`  
-    *After*: `c]`  
-    *where* `a` and `b` are booleans, and `c` is the boolean being the
-     logical exclusive disjunction of `a` and `b`.  
-    *Errors*: Will error if fewer than 2 items are on the current
-     operand stack or if either of them are not booleans.  
-    > Performs logical exclusive disjunction.
+  *Before*: `b, a]`  
+  *After*: `c]`  
+  *where* `a` and `b` are booleans, and `c` is the boolean being the
+   logical exclusive disjunction of `a` and `b`.  
+  *Errors*: Will error if fewer than 2 items are on the current
+   operand stack or if either of them are not booleans.  
+  > Performs logical exclusive disjunction.
 
 ## Addressing
 
 * A lexical address  
-    *Before*:  
-    *After*: various  
-    *Errors*: Will error if the lexical address is invalid: if
-     *lexical scope level* is greater than the *lexical scope level*
-     of the current function or is less than 0 or is not an integer;
-     or if the *stack index* is not a non-negative index.  
-    > For general details, see the [section on lexical
-    > addresses](#lexical-addresses). A lexical address when seen as
-    > an opcode will be processed by the *implicit default
-    > operator*. If the value pointed to by the lexical address is a
-    > code segment then that segment will be invoked. Otherwise, the
-    > value pointed to by the lexical address will be pushed onto the
-    > current operand stack. Note that whilst the assembly format for
-    > lexical addresses is `(A, B)`, for the JSON object format,
-    > lexical addresses are `[A, B]`. None of the shorthand formats
-    > are permissible in the JSON object format.
+  *Before*:  
+  *After*: various  
+  *Errors*: Will error if the lexical address is invalid: if
+   *lexical scope level* is greater than the *lexical scope level*
+   of the current function or is less than 0 or is not an integer;
+   or if the *stack index* is not a non-negative index.  
+  > For general details, see the [section on lexical
+  > addresses](#lexical-addresses). A lexical address when seen as
+  > an opcode will be processed by the *implicit default
+  > operator*. If the value pointed to by the lexical address is a
+  > code segment then that segment will be invoked. Otherwise, the
+  > value pointed to by the lexical address will be pushed onto the
+  > current operand stack. Note that whilst the assembly format for
+  > lexical addresses is `(A, B)`, for the JSON object format,
+  > lexical addresses are `[A, B]`. None of the shorthand formats
+  > are permissible in the JSON object format.
 
 * Any string that's not recognised as an opcode  
-    *Before*:  
-    *After*: various  
-    *Errors*: None.  
-    > The string is used as a key to search through the dictionary
-    > stack. If first value found is a code segment, that code segment
-    > is invoked. If the first value found is not a code segment, the
-    > value is pushed onto the current operand stack. If the key is
-    > not present in any of the dictionaries in the dictionary stack,
-    > then `undef` is pushed onto the current operand stack. See the
-    > [section on the dictionary stack](#the-dictionary-stack) for a
-    > fuller discussion.
+  *Before*:  
+  *After*: various  
+  *Errors*: None.  
+  > The string is used as a key to search through the dictionary
+  > stack. If first value found is a code segment, that code segment
+  > is invoked. If the first value found is not a code segment, the
+  > value is pushed onto the current operand stack. If the key is
+  > not present in any of the dictionaries in the dictionary stack,
+  > then the `undef` value is pushed onto the current operand
+  > stack. See the [section on the dictionary
+  > stack](#the-dictionary-stack) for a fuller discussion.
 
 * `LEXICAL_ADDRESS`  
-    *Before*: `a, b]`  
-    *After*: `c]`  
-    *where* `a` and `b` are both non-negative integers and `a` is not
-     greater than the *lexical scope level* of the current code
-     segment, and `c` is the lexical address formed by `a` and `b` and
-     fixed to the operand stack indicated by `a`.  
-    *Errors*: Will error if `a` or `b` do not meet the requirements
-     set out above.  
-    > Dynamically creates a new lexical address and pushes it onto the
-      current operand stack.
+  *Before*: `a, b]`  
+  *After*: `c]`  
+  *where* `a` and `b` are both non-negative integers and `a` is not
+   greater than the *lexical scope level* of the current code
+   segment, and `c` is the lexical address formed by `a` and `b` and
+   fixed to the operand stack indicated by `a`.  
+  *Errors*: Will error if `a` or `b` do not meet the requirements
+   set out above.  
+  > Dynamically creates a new lexical address and pushes it onto the
+  > current operand stack.
 
 * `LOAD`  
-    *Before*: `a]`  
-    *After*: `v]`  
-    *where* `a` is a string or a lexical address. If `a` is a string
-     then the dictionary stack is searched by using `a` as a key. If a
-     value is found then it is pushed onto the current operand
-     stack. If `a` is recognised as an opcode then the functionality
-     represented by the opcode is pushed onto the current operand
-     stack. Otherwise `undef` is pushed onto the current operand
-     stack. If `a` is a lexical address, the value pointed to by `a`
-     is pushed onto the current operand stack.  
-    *Errors*: Will error if `a` is not a string and `a` is not a
-     lexical address.  
-    > Loads a value pointed to by some sort of reference - either a
-    > string keying into the dictionary stack or a lexical
-    > address. Unlike the *implicit default operator*, if the value
-    > found is a code segment, it is not executed.
+  *Before*: `a]`  
+  *After*: `v]`  
+  *where* `a` is a string or a lexical address. If `a` is a string
+   then the dictionary stack is searched by using `a` as a key. If a
+   value is found then it is pushed onto the current operand
+   stack. If `a` is recognised as an opcode then the functionality
+   represented by the opcode is pushed onto the current operand
+   stack. Otherwise the `undef` value is pushed onto the current
+   operand stack. If `a` is a lexical address, the value pointed to
+   by `a` is pushed onto the current operand stack.
+  *Errors*: Will error if `a` is not a string and `a` is not a
+   lexical address.  
+  > Loads a value pointed to by some sort of reference - either a
+  > string keying into the dictionary stack or a lexical
+  > address. Unlike the *implicit default operator*, if the value
+  > found is a code segment, it is not executed.
 
 * `STORE`  
-    *Before*: `a, v]`  
-    *After*: `]`  
-    *where* `a` is a string or a lexical address. If `a` is a string
-     then the value `v` is stored in the dictionary at the top of the
-     dictionary stack with a key of `a`. If an exist value is stored
-     in that dictionary under the same key, it is overwritten and
-     lost. If `a` is a lexical address then the value `v` is stored at
-     the location indicated by `a` and any existing value at that
-     location is lost.  
-    *Errors*: Will error if `a` is not a string and `a` is not a
-     lexical address.  
-    > The compliment to `LOAD`, takes a value from the operand stack
-    > and stores that value at the location indicated.
+  *Before*: `a, v]`  
+  *After*: `]`  
+  *where* `a` is a string or a lexical address. If `a` is a string
+   then the value `v` is stored in the dictionary at the top of the
+   dictionary stack with a key of `a`. If an exist value is stored
+   in that dictionary under the same key, it is overwritten and
+   lost. If `a` is a lexical address then the value `v` is stored at
+   the location indicated by `a` and any existing value at that
+   location is lost.  
+  *Errors*: Will error if `a` is not a string and `a` is not a
+   lexical address.  
+  > The compliment to `LOAD`, takes a value from the operand stack
+  > and stores that value at the location indicated.
 
 ## Mark
 
@@ -1529,161 +1533,339 @@ the JSON values `true` and `false`.
 > sequence of opcodes which make use of marks.
 
 * `MARK`  
-    *Before*:  
-    *After*:  `mark]`  
-    *Errors*: None.
-    > Pushes a mark onto the stack.
+  *Before*:  
+  *After*:  `mark]`  
+  *Errors*: None.
+  > Pushes a mark onto the stack.
 
 * `COUNT_TO_MARK`  
-    *Before*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
-    *After*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>, n]</code>  
-    *Errors*: Will error if no mark is found in the current operand
-     stack.  
-    > Pushes to the stack an integer representing the number of items
-    > between the uppermost mark on the stack and the top of the
-    > stack, prior to this opcode being invoked.
+  *Before*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+  *After*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>, n]</code>  
+  *Errors*: Will error if no mark is found in the current operand
+   stack.  
+  > Pushes to the stack an integer representing the number of items
+  > between the uppermost mark on the stack and the top of the
+  > stack, prior to this opcode being invoked.
 
 * `CLEAR_TO_MARK`  
-    *Before*: `mark, ...]`  
-    *After*: `]`  
-    *Errors*: Will error if no mark is found in the current operand
-     stack.  
-    > Removes from the current operand stack all items from the
-    > uppermost mark on the stack to the top of the stack, including
-    > the mark itself.
+  *Before*: `mark, ...]`  
+  *After*: `]`  
+  *Errors*: Will error if no mark is found in the current operand
+   stack.  
+  > Removes from the current operand stack all items from the
+  > uppermost mark on the stack to the top of the stack, including
+  > the mark itself.
 
 ## Arrays
 
+Arrays in the BVM are mutable collections mapping non-negative integer
+indices to values (which are not constrained in any way). Only
+references to arrays may enter the operand stack, and arrays are not
+functional: they are mutated in place.
+
 * `ARRAY_START` *(equivalent to `[` in assembly)*  
-    *Before*:  
-    *After*:  `mark]`  
-    *Errors*: None.  
-    > A synonym of `MARK`. Exists to balance `ARRAY_END` and make
-    > intent clear.
+  *Before*:  
+  *After*:  `mark]`  
+  *Errors*: None.  
+  > A synonym of `MARK`. Exists to balance `ARRAY_END` and make
+  > intent clear. Note that `ARRAY_START` does not cause *deferred
+  > mode* to be entered (unlike `SEG_START`).
 
 * `ARRAY_END` *(equivalent to `]` in assembly)*  
-    *Before*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
-    *After*: `ary]`  
-    *where* `ary` is a reference to a fresh array of length `n`
-     containing all the items on the current operand stack above the
-     uppermost mark and up to the top of the top of the
-     stack. <code>a<sub>0</sub></code> is the item in index `0` of the
-     array and <code>a<sub>n-1</sub></code> is the item in index `n-1`
-     of the array.  
-    *Errors*: Will error if no mark is found on the current operand
-     stack.  
-    > Creates an array from the items above the uppermost mark on the
-    > current operand stack. The new array is placed on the stack and
-    > all items from (and including) the uppermost mark and the top of
-    > the stack are removed. Arrays are not homogeneous: you may store
-    > any mix of values and types in an array.
+  *Before*: <code>mark, a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+  *After*: `ary]`  
+  *where* `ary` is a reference to a fresh array of length `n`
+   containing all the items on the current operand stack above the
+   uppermost mark and up to the top of the top of the
+   stack. <code>a<sub>0</sub></code> is the item in index `0` of the
+   array and <code>a<sub>n-1</sub></code> is the item in index `n-1`
+   of the array.  
+  *Errors*: Will error if no mark is found on the current operand
+   stack.  
+  > Creates an array from the items above the uppermost mark on the
+  > current operand stack. The new array is placed on the stack and
+  > all items from (and including) the uppermost mark and the top of
+  > the stack are removed. Arrays are not homogeneous: you may store
+  > any mix of values and types in an array. Note that due to the
+  > significance of mark in this opcode, you cannot use a literal
+  > array to create an array which contains mark as a value.
 
-    > Note that the assembly parser expects pairs of `[` and `]`, and
-    > similarly `ARRAY_START` and `ARRAY_END`. Occasionally there is
-    > reason to want a lone `ARRAY_END`, for example due to use of
-    > `ARRAY_EXPAND` and then wanting to repack the array. This is
-    > currently not accepted by the assembly parser and so this is one
-    > reason why you may wish to use the JSON object format which does
-    > not have these restrictions.
+  > Note that the assembly parser expects pairs of `[` and `]`, and
+  > similarly `ARRAY_START` and `ARRAY_END`. Occasionally there is
+  > reason to want a lone `ARRAY_END`, for example due to use of
+  > `ARRAY_EXPAND` and then wanting to repack the array. This is
+  > currently not accepted by the assembly parser and so this is one
+  > reason why you may wish to use the JSON object format which does
+  > not have these restrictions.
 
 * `ARRAY_EXPAND`  
-    *Before*: `ary]`  
-    *After*: <code>a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
-    *where* `ary` is a reference to an array of length `n` which
-     contains the item <code>a<sub>0</sub></code> in index `0` through
-     to item <code>a<sub>n-1</sub></code> in index `n-1`.  
-    *Errors*: Will error if the uppermost item on the current operand
-     stack is not an array reference.  
-    > Removes the array reference at the top of the current operand
-    > stack and expands to the contents of the array. Note that no
-    > mark is added to the stack.
+  *Before*: `ary]`  
+  *After*: <code>a<sub>0</sub>, ..., a<sub>n-1</sub>]</code>  
+  *where* `ary` is a reference to an array of length `n` which
+   contains the item <code>a<sub>0</sub></code> in index `0` through
+   to item <code>a<sub>n-1</sub></code> in index `n-1`.  
+  *Errors*: Will error if the uppermost item on the current operand
+   stack is not an array reference.  
+  > Removes the array reference at the top of the current operand
+  > stack and expands to the contents of the array. Note that no
+  > mark is added to the stack.
 
 * `ARRAY_NEW`  
-    *Before*:  
-    *After*: `ary]`  
-    *where* `ary` is a reference to a fresh empty array.  
-    *Errors*: None.  
-    > Creates a new empty array and pushes a reference to it onto the
-    > current operand stack.
+  *Before*:  
+  *After*: `ary]`  
+  *where* `ary` is a reference to a fresh empty array.  
+  *Errors*: None.  
+  > Creates a new empty array and pushes a reference to it onto the
+  > current operand stack.
 
 * `ARRAY_LOAD`  
-    *Before*: `ary, idx]`  
-    *After*: `ary, v]`  
-    *where* `ary` is a reference to an array of length `n`, `idx` is a
-     non-negative integer less than `n`, and `v` is the value in the
-     array at index `idx`.  
-    *Errors*: Will error if `ary` is not an array reference or if
-     `idx` is not a non-negative integer smaller than the length of
-     the array, or if there are fewer than two items on the current
-     operand stack.  
-    > Indexes the supplied array at the supplied index. Note that for
-    > convenience, the array reference itself is left on the stack
-    > below the value found.
+  *Before*: `ary, idx]`  
+  *After*: `ary, v]`  
+  *where* `ary` is a reference to an array, `idx` is a non-negative
+   integer, and `v` is the value in the array at index `idx`, or the
+   `undef` value if `idx` is not less than the length of the array.  
+  *Errors*: Will error if `ary` is not an array reference or if
+   `idx` is not a non-negative integer, or if there are fewer than
+   two items on the current operand stack.  
+  > Indexes the supplied array at the supplied index. Note that for
+  > convenience, the array reference itself is left on the stack
+  > below the value found. For consistency with `DICT_LOAD`,
+  > `ARRAY_LOAD` returns the `undef` value rather than erroring if
+  > the supplied index is not less than the length of the array.
 
 * `ARRAY_STORE`  
-    *Before*: `ary, idx, v]`  
-    *After*: `ary]`  
-    *where* `ary` is a reference to an array, `idx` is a non-negative
-     integer, and `v` is the value to be stored in the array `ary` at
-     index `idx`.  
-    *Errors*: Will error if `ary` is not an array reference or if
-     `idx` is not a non-negative integer, or if there are fewer than
-     three items on the current operand stack.  
-    > Stores the supplied value into the supplied array at the
-    > supplied index. Note that for convenience, the array reference
-    > itself is left on the stack. It is legal for the supplied index
-    > to be greater than current length of the array. If this is the
-    > case, the length of the array will be extended and any indices
-    > between the previous length and the supplied index will contain
-    > the `undef` value. In this way, arrays are of dynamic length. If
-    > there is already a value stored in the array at the supplied
-    > index, that value is overwritten and lost.
+  *Before*: `ary, idx, v]`  
+  *After*: `ary]`  
+  *where* `ary` is a reference to an array, `idx` is a non-negative
+   integer, and `v` is the value to be stored in the array `ary` at
+   index `idx`.  
+  *Errors*: Will error if `ary` is not an array reference or if
+   `idx` is not a non-negative integer, or if there are fewer than
+   three items on the current operand stack.  
+  > Stores the supplied value into the supplied array at the
+  > supplied index. Note that for convenience, the array reference
+  > itself is left on the stack. It is legal for the supplied index
+  > to be greater than current length of the array. If this is the
+  > case, the length of the array will be extended and any indices
+  > between the previous length and the supplied index will contain
+  > the `undef` value. In this way, arrays are of dynamic length. If
+  > there is already a value stored in the array at the supplied
+  > index, that value is overwritten and lost.
 
 * `ARRAY_LENGTH`  
-    *Before*: `ary]`  
-    *After*: `ary, n]`  
-    *where* `ary` is a reference to an array of length `n`.  
-    *Errors*: Will error if the top item on the current operand stack
-     is not an array reference or if there are no items on the current
-     operand stack.  
-    > Pushes onto the stack the length of the array, the reference to
-    > which is at the top of the current operand stack. Note that for
-    > convenience, the array reference itself is left on the stack.
+  *Before*: `ary]`  
+  *After*: `ary, n]`  
+  *where* `ary` is a reference to an array of length `n`.  
+  *Errors*: Will error if the top item on the current operand stack
+   is not an array reference or if there are no items on the current
+   operand stack.  
+  > Pushes onto the stack the length of the array, the reference to
+  > which is at the top of the current operand stack. Note that for
+  > convenience, the array reference itself is left on the stack.
 
 * `ARRAY_TRUNCATE`  
-    *Before*: `ary, n]`  
-    *After*: `ary]`  
-    *where* `ary` is a reference to an array, and `n` is a
-     non-negative integer.  
-    *Errors*: Will error if `ary` is not a reference to an array, or
-     if `n` is not a non-negative integer, or if there are fewer than
-     two items on the current operand stack.  
-    > Truncates the array at the supplied array reference to the
-    > length supplied. If the length supplied is less than the current
-    > length, items are lost from the array. If the length supplied is
-    > greater than the current length then the array is extended and
-    > values of the new indices are filled with the `undef`
-    > value. After this opcode, `ARRAY_LENGTH` will always reveal the
-    > length just set by the `ARRAY_TRUNCATE` opcode.
+  *Before*: `ary, n]`  
+  *After*: `ary]`  
+  *where* `ary` is a reference to an array, and `n` is a
+   non-negative integer.  
+  *Errors*: Will error if `ary` is not a reference to an array, or
+   if `n` is not a non-negative integer, or if there are fewer than
+   two items on the current operand stack.  
+  > Truncates the array at the supplied array reference to the
+  > length supplied. If the length supplied is less than the current
+  > length, items are lost from the array. If the length supplied is
+  > greater than the current length then the array is extended and
+  > values of the new indices are filled with the `undef`
+  > value. After this opcode, `ARRAY_LENGTH` will always reveal the
+  > length just set by the `ARRAY_TRUNCATE` opcode.
 
 * `ARRAY_TO_SEG`  
-    *Before*: `ary]`  
-    *After*: `seg]`  
-    *where* `ary` is a reference to an array and `seg` is a reference
-     to a code segment where the opcodes within the code segment are
-     taken from the array.  
-    *Errors*: Will error if the item at the top of the current operand
-     stack is not an array reference or if there are no items on the
-     current operand stack.  
-    > Converts an array to a segment. Note that the segment shares the
-    > array itself, so if you retain a reference to the array before
-    > invoking `ARRAY_TO_SEG` then the array used to store the code
-    > segment's opcodes will be the same as the array. No checking is
-    > done that the contents of the array represent valid opcodes, so
-    > any errors due to this won't surface until invocation of the
-    > segment. However, remember that the **implicit default
-    > operator** will, if nothing else, push the current unrecognised
-    > opcode onto the current operand stack if it's not a string,
-    > lexical address or code segment. This means that this opcode
-    > allows opcodes that have no string representation to be used
-    > directly, such as array and dictionary references.
+  *Before*: `ary]`  
+  *After*: `seg]`  
+  *where* `ary` is a reference to an array and `seg` is a reference
+   to a code segment where the opcodes within the code segment are
+   taken from the array.  
+  *Errors*: Will error if the item at the top of the current operand
+   stack is not an array reference or if there are no items on the
+   current operand stack.  
+  > Converts an array to a segment. Note that the segment shares the
+  > array itself, so if you retain a reference to the array before
+  > invoking `ARRAY_TO_SEG` then the array used to store the code
+  > segment's opcodes will be the same as the array. No checking is
+  > done that the contents of the array represent valid opcodes, so
+  > any errors due to this won't surface until invocation of the
+  > segment. However, remember that the **implicit default
+  > operator** will, if nothing else, push the current unrecognised
+  > opcode onto the current operand stack if it's not a string,
+  > lexical address or code segment. This means that this opcode
+  > allows opcodes that have no string representation to be used
+  > directly, such as array and dictionary references.
+
+  > It is important to very carefully consider what will happen to
+  > lexical addresses within the array when using this opcode. Given
+  > the array will have been constructed on the operand stack, all
+  > lexical addresses that entered the operand stack will be fixed
+  > relative to the *current* code segment, not the code segment to
+  > be constructed. For example:
+
+        bvm> 5 [ 17 PUSH (0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+        [5]
+        bvm> 5 [ 17 PUSH (0,0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+        [5]
+        bvm> 5 [ 17 PUSH (1,0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+        Error: Unhandled error in "PUSH": ERROR INVALID OPERAND
+
+  > I.e., the *lexical scope level* of 1 does not exist until
+  > `ARRAY_TO_SEG` is invoked, and that is too late for a literal
+  > lexical address of `(1,0)`. This is why the first two examples
+  > both yield `5`: the current *lexical scope level* implied by the
+  > shorthand `(0)` is indeed still `0`. Thus in this situation, you
+  > must the opcode `LEXICAL_ADDRESS` to dynamically construct
+  > lexical addresses when the segment is finally invoked. This way,
+  > the lexical addresses will be fixed relative to the new code
+  > segment when it is invoked. Of course, you may not use any of
+  > the shorthands (they only apply to literal lexical addresses,
+  > not dynamic lexical addresses anyway).
+
+        bvm> 5 [ 17 1 0 PUSH LEXICAL_ADDRESS PUSH LOAD 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+        [17]
+
+
+## Dictionaries
+
+Dictionaries in the BVM are mutable collections mapping keys (which
+must be strings) to values (which are not constrained in any
+way). Only references to dictionaries may enter the operand stack, and
+dictionaries are not functional: they are mutated in place.
+
+* `DICT_START` *(equivalent to `<` in assembly)*  
+  *Before*:  
+  *After*:  `mark]`  
+  *Errors*: None.  
+  > A synonym of `MARK`. Exists to balance `DICT_END` and make
+  > intent clear. Note that `DICT_START` does not cause *deferred
+  > mode* to be entered (unlike `SEG_START`).
+
+* `DICT_END` *(equivalent to `>` in assembly)*  
+  *Before*: <code>mark, k<sub>0</sub>, v<sub>0</sub>, ..., k<sub>n-1</sub>, v<sub>n-1</sub>]</code>  
+  *After*: `dict]`  
+  *where* `dict` is a reference to a fresh dictionaries containing
+   `n` key-value pairs of no distinct order, where
+   <code>k<sub>i</sub></code> is the key of value
+   <code>v<sub>i</sub></code> for all non-negative integers `i` less
+   than `n`.  
+  *Errors*: Will error if no mark is found on the current operand
+   stack or if there are an odd number of items between the
+   uppermost mark on the current operand stack and the top of the
+   stack, or if any of the keys are not strings.
+  > Creates a dictionary from the items above the uppermost mark on
+  > the current operand stack. The new dictionary is placed on the
+  > stack and all items from (and including) the uppermost mark and
+  > the top of the stack are removed. Dictionaries are not
+  > homogeneous: you may store any mix of values and types as values
+  > in a dictionary. All keys must be strings. Note that due to the
+  > significance of mark in this opcode, you cannot use a literal
+  > dictionary to create a dictionary which contains mark as a value
+  > (or key).
+
+  > Note that the assembly parser expects pairs of `<` and `>`, and
+  > similarly `DICT_START` and `DICT_END`. Occasionally there is
+  > reason to want a lone `DICT_END`, for example due to use of
+  > `DICT_EXPAND` and then wanting to repack the dictionary. This is
+  > currently not accepted by the assembly parser and so this is one
+  > reason why you may wish to use the JSON object format which does
+  > not have these restrictions.
+
+* `DICT_NEW`
+  *Before*:  
+  *After*: `dict]`  
+  *where* `dict` is a reference to a fresh empty dictionary.  
+  *Errors*: None.  
+  > Creates a new empty dictionary and pushes a reference to it onto
+  > the current operand stack.
+
+* `DICT_EXPAND`  
+  *Before*: `dict]`  
+  *After*: <code>k<sub>0</sub>, v<sub>0</sub>, ..., k<sub>n-1</sub>, v<sub>n-1</sub>]</code>  
+  *where* `dict` is a reference to a dictionary containing `n`
+   key-value pairs.
+  *Errors*: Will error if the uppermost item on the current operand
+   stack is not a dictionary reference.  
+  > Removes the dictionary reference at the top of the current
+  > operand stack and expands to the contents of the
+  > dictionary. Note that no mark is added to the stack.
+
+* `DICT_CONTAINS`  
+  *Before*: `dict, key]`  
+  *After*: `dict, boolean]`  
+  *where* `dict` is a reference to a dictionary, `key` is a string
+   which is the key to test the dictionary with, `boolean` is a
+   boolean value representing whether or not the dictionary contains
+   a key-value pair with the key supplied.  
+  *Errors*: Will error if `dict` is not a dictionary reference or if
+   `key` is not a string, or if fewer than two items on the current
+   operand stack.  
+  > Tests whether the supplied dictionary has a key-value pair for
+  > the key provided. Note that if you store the `undef` value in a
+  > dictionary, the dictionary still has the corresponding key:
+  > storing a value of `undef` is **not** equivalent to explicitly
+  > removing a key-value pair from the dictionary. Note for
+  > convenience, the dictionary reference is left on the stack.
+
+* `DICT_REMOVE`  
+  *Before*: `dict, key]`  
+  *After*: `dict]`  
+  *where* `dict` is a reference to a dictionary and `key` is a
+   string which is the key to remove from the dictionary.  
+  *Errors*: Will error if `dict` is not a reference to a dictionary,
+   or if `key` is not a string, or if there are fewer than two items
+   on the current operand stack. It is not an error to try to remove
+   a key from the dictionary which does not exist in dictionary
+   (i.e. `DICT_REMOVE` is idempotent).  
+  > Removes the supplied key from the supplied dictionary. Leaves
+  > the dictionary reference on the stack. Does not indicate whether
+  > or not the dictionary contained the key: use `DICT_CONTAINS` if
+  > you need to know.
+
+* `DICT_LOAD`  
+  *Before*: `dict, key]`  
+  *After*: `dict, value]`  
+  *where* `dict` is a reference to a dictionary, `key` is a string
+   by which to index the dictionary, and `value` is the value
+   consequently found or the `undef` value if the key is not found
+   in the dictionary.  
+  *Errors*: Will error if `dict` is not a dictionary reference or if
+   `key` is not a string, or if there are fewer than two items on
+   the current operand stack.  
+  > Indexes the supplied dictionary by the supplied key, and returns
+  > the value found. If the dictionary does not contain the supplied
+  > key, returns `undef` as the value. Note that because it is legal
+  > to store `undef` in a dictionary as a value, a result of `undef`
+  > does not indicate whether or not the dictionary contains the
+  > supplied key. Use `DICT_CONTAINS` if you wish to find out.
+
+* `DICT_STORE`  
+  *Before*: `dict, key, v]`  
+  *After*: `dict]`  
+  *where* `dict` is a reference to a dictionary, `key` is a string
+   representing a key, and `v` is the value to store in the
+   dictionary under the key `key`.  
+  *Errors*: Will error if `dict` is not a dictionary reference, or
+   if `key` is not a string, or if there are fewer than 3 items on
+   the current operand stack.  
+  > Stores the supplied key-value pair in the supplied
+  > dictionary. Leaves the dictionary on the stack. If the
+  > dictionary already contained the supplied key, the corresponding
+  > value is overwritten and lost.
+
+* `DICT_KEYS`  
+  *Before*: `dict]`  
+  *After*: `dict, ary]`  
+  *where* `dict` is a reference to a dictionary, `ary` is a reference
+   to an array, and the contents of the array are strings which are
+   all the keys in `dict`.  
+  *Errors*: Will error if `dict` is not a dictionary reference or if
+   there are no items on the current operand stack.  
+  > Creates and returns a fresh array containing all the keys found
+  > within the dictionary. The dictionary reference is left on the
+  > stack.

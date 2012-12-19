@@ -33,7 +33,7 @@
                     }},
                     index: {value: function (idx) {
                         var val;
-                        if (0 <= idx && idx < this.array.length) {
+                        if (0 <= idx) {
                             val = this.array[idx];
                             return val === undef ? types.undef : val;
                         } else {
