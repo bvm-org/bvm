@@ -1460,8 +1460,8 @@ the JSON values `true` and `false`.
    or if the *stack index* is not a non-negative index.  
   > For general details, see the [section on lexical
   > addresses](#lexical-addresses). A lexical address when seen as
-  > an opcode will be processed by the *implicit default
-  > operator*. If the value pointed to by the lexical address is a
+  > an opcode will be processed by the **implicit default
+  > operator**. If the value pointed to by the lexical address is a
   > code segment then that segment will be invoked. Otherwise, the
   > value pointed to by the lexical address will be pushed onto the
   > current operand stack. Note that whilst the assembly format for
@@ -1498,32 +1498,39 @@ the JSON values `true` and `false`.
   *Before*: `a]`  
   *After*: `v]`  
   *where* `a` is a string or a lexical address. If `a` is a string
-   then the dictionary stack is searched by using `a` as a key. If a
-   value is found then it is pushed onto the current operand
-   stack. If `a` is recognised as an opcode then the functionality
-   represented by the opcode is pushed onto the current operand
-   stack. Otherwise the `undef` value is pushed onto the current
-   operand stack. If `a` is a lexical address, the value pointed to
-   by `a` is pushed onto the current operand stack.
-  *Errors*: Will error if `a` is not a string and `a` is not a
-   lexical address.  
+   which is recognised as the name of an opcode, then the
+   functionality represented by the opcode is pushed onto the current
+   operand stack. Otherwise, the dictionary stack is searched by using
+   `a` as a key. If a value is found then it is pushed onto the
+   current operand stack. If no value is found from the dictionary
+   stack, the `undef` value is pushed onto the current operand
+   stack. If `a` is a lexical address, the value pointed to by `a` is
+   pushed onto the current operand stack.  
+  *Errors*: Will error if `a` is not a string and `a` is not a lexical
+   address, or if there are no items on the current operand stack.  
   > Loads a value pointed to by some sort of reference - either a
-  > string keying into the dictionary stack or a lexical
-  > address. Unlike the *implicit default operator*, if the value
-  > found is a code segment, it is not executed.
+  > string keying into first the set of known opcodes and secondly the
+  > dictionary stack, or a lexical address. Unlike the **implicit
+  > default operator**, if the value found is a code segment, it is
+  > not executed. Note that the priority of looking up via the set of
+  > known opcodes first and then the dictionary stack matches exactly
+  > the behaviour of the **implicit default operator**.
 
 * `STORE`  
   *Before*: `a, v]`  
   *After*: `]`  
   *where* `a` is a string or a lexical address. If `a` is a string
    then the value `v` is stored in the dictionary at the top of the
-   dictionary stack with a key of `a`. If an exist value is stored
+   dictionary stack under a key of `a`. If an existing value is held
    in that dictionary under the same key, it is overwritten and
    lost. If `a` is a lexical address then the value `v` is stored at
    the location indicated by `a` and any existing value at that
-   location is lost.  
-  *Errors*: Will error if `a` is not a string and `a` is not a
-   lexical address.  
+   location is lost. Note that just like with `ARRAY_STORE`, it is
+   perfectly legal to use a lexical address beyond the length of the
+   indicate lexical scope's operand stack.  
+  *Errors*: Will error if `a` is not a string and `a` is not a lexical
+   address, or if there are fewer than two items on the current
+   operand stack.  
   > The compliment to `LOAD`, takes a value from the operand stack
   > and stores that value at the location indicated.
 

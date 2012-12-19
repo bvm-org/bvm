@@ -37,17 +37,17 @@
                             vcpu.cs.push(reference.ls.index(reference.index));
                             return;
                         } else if (types.isString(reference)) {
-                            found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
-                            if (found === undef) {
-                                if (reference in this) {
-                                    vcpu.cs.push(this[reference]);
-                                    return;
-                                } else {
+                            if (reference in this) {
+                                vcpu.cs.push(this[reference]);
+                                return;
+                            } else {
+                                found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
+                                if (found === undef) {
                                     vcpu.cs.push(types.undef);
                                     return;
+                                } else {
+                                    vcpu.cs.push(found);
                                 }
-                            } else {
-                                vcpu.cs.push(found);
                             }
                         } else {
                             nuError.invalidOperand(reference);
