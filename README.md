@@ -1928,7 +1928,116 @@ counter is set to zero.
    the current operand stack.  
   > Converts a segment to an array. This is the mirror of
   > `ARRAY_TO_SEG`, and just like that opcode, the array is shared
-  > with the code segment.
+  > with the code segment. Note that you may not use this on a
+  > built-in opcode. Thus the following example is illegal:
+
+        bvm> PUSH ADD LOAD SEG_TO_ARRAY
+        Error: Unhandled error in "SEG_TO_ARRAY": ERROR INVALID OPERAND
+
+* `EXEC`  
+  *Before*: `s]`  
+  *After*  
+  *where* `s` is a reference to either a code segment or a stack.  
+  *Errors*: Will error if the item at the top of the current operand
+   stack is not a code segment reference or a stack, or if there are
+   no items on the current operand stack.  
+
+  > Explicitly invokes the item at the top of the current operand
+  > stack. In all non-erroring cases, control will return to the next
+  > opcode after the current `EXEC` once the invoked item
+  > completes. If the item is a code segment then it is invoked
+  > normally with a fresh empty operand stack, and with its
+  > *take-stack* set to the current operand stack. If the item is a
+  > stack, then the stack is invoked, continuing from immediately
+  > after the `CALLCC` opcode which caused it to be suspended. The
+  > stack's *take-stack* is now set to the current operand stack. The
+  > stack may be invoked multiple times, and each time it will resume
+  > from the same instruction. However the operand stack is maintained
+  > and shared across each invocation, as the following example
+  > demonstrates:
+
+        bvm> 5 { 1 TAKE DUPLICATE EXEC EXEC COUNT RETURN } CALLCC COUNT LOG POP
+        1
+        0
+        Error: Unhandled error in "POP": ERROR NOT ENOUGH OPERANDS
+
+  > The first `EXEC` resumes the suspension after the `CALLCC` with
+  > `5` on its operand stack. This causes `COUNT` to push `1`, which
+  > is then removed and displayed by `LOG`. `POP` then removes the
+  > `5`. Control then returns to the inner code segment which then
+  > invokes the second `EXEC`, again resuming the same suspension at
+  > the same point (after the `CALLCC`). But as its operand stack is
+  > maintained, this time there is no `5` on the stack. So the `COUNT`
+  > pushes `0`, which is removed and displayed by `LOG`, and the the
+  > `POP` errors as there is nothing on the operand stack to pop.
+
+  > However, if we replace the `DUPLICATE` with a `CLONE` then we are
+  > explicitly cloning the stack and its contents before invoking each
+  > one. This makes the contents of the stacks distinct:
+
+        bvm> 5 { 1 TAKE CLONE EXEC EXEC COUNT RETURN } CALLCC COUNT LOG POP
+        1
+        1
+        []
+
+* `CALLCC`  
+  *Before*: `s]`  
+  *After*:  
+  *where* `s` is a reference to either a code segment or a stack.  
+  *Errors*: Will error if `s` is not a code segment or a stack, or if
+   there are no items on the current operand stack.  
+  > Suspends the current code segment and its operand stack. Control
+  > is passed to the code segment or stack found at the top of the
+  > current operand stack and no dynamic control chain is created:
+  > when the supplied code segment or stack completes, control does
+  > not automatically return to the current code segment. The current
+  > code segment and its operand stack is suspended as a stack, and
+  > pushed onto its own operand stack, which becomes the *take-stack*
+  > for the supplied code segment or stack which is invoked. The
+  > supplied and invoked code segment or stack may retrieve the newly
+  > suspended stack via `TAKE` as usual, and beyond that can access
+  > the contents of the operand stack of the suspended code
+  > segment. It may resume the suspension, zero or more times, using
+  > `EXEC`. See the above entry for `EXEC` and also the [section on
+  > Call with Continuation](#call-with-continuation-callcc).
+
+* `RETURN`  
+  *Before*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>, n]</code>  
+  *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
+  *where* the *after* is the operand stack of the caller, and the
+   **before* is the operand stack of the callee.  
+  *Errors*: Will error if `n` is not a non-negative integer or if there
+   are fewer than `n` items on the current operand stack.  
+  > Returns control to the calling segment and explicitly passes a
+  > number of items from the current operand stack to the operand
+  > stack of the calling segment. It is legal for `RETURN` to occur
+  > when the current operand stack is completely empty. In this case,
+  > it is implicitly understood that no items are to be returned to
+  > the calling segment's operand stack.
+
+* `TAKE`  
+  *Before*: `n]`  
+  *After*: <code>a<sub>0</sub>, a<sub>1</sub>, ..., a<sub>n - 1</sub>]</code>  
+  *where* `n` is a non-negative integer, and <code>a<sub>0</sub>,
+   a<sub>1</sub>, ..., a<sub>n - 1</sub> are the uppermost `n` items
+   on the current *take-stack*.  
+  *Errors*: Will error if `n` is not a non-negative integer, or if
+   there are no items on the current operand stack, or if `n` is
+   greater than the number of items on the current *take-stack*.  
+  > Moves items from the current *take-stack* to the current operand
+  > stack. This is how code segments are expected to retrieve their
+  > arguments.
+
+* `TAKE_COUNT`  
+  *Before*:  
+  *After*: `n]`  
+  *where* `n` is a non-negative integer representing the number of
+   items in (or height of) the current *take-stack*.  
+  *Errors*: None.  
+  > Pushes to the current operand stack the integer representing the
+  > number of items available on the current *take-stack*. In most
+  > cases, the *take-stack* is the operand stack of your caller. This
+  > opcode is most of use for variadic segments.
 
 ## Dictionary Stack
 

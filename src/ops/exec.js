@@ -20,6 +20,10 @@
                         vcpu.enterSegment(segment, vcpu.cs.asArray(), dps);
                         return;
                     } else if (nuStack.isStack(segment)) {
+                        // Note that whilst we clone the stack, the
+                        // `true` here indicates we are explicitly
+                        // sharing the underlying array, thus values
+                        // are preserved across multiple invocations.
                         segment = segment.clone(true);
                         // It is vitally important we do this dps
                         // assigment *after* the clone as it's
