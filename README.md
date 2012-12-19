@@ -12,7 +12,7 @@
 	- [Execution Model](#execution-model)
 		- [Literal Arrays](#literal-arrays)
 		- [Literal Dictionaries](#literal-dictionaries)
-		- [Code Segments](#code-segments)
+		- [Literal Code Segments](#literal-code-segments)
 		- [The Dictionary Stack](#the-dictionary-stack)
 		- [Lexical Addresses](#lexical-addresses)
 		- [Call with Continuation (CALLCC)](#call-with-continuation-callcc)
@@ -718,7 +718,7 @@ strings.
 The full dictionary API including dynamic dictionary creation is
 covered later.
 
-### Code Segments
+### Literal Code Segments
 
 A code segment can be created by using the `{` and `}` opcodes. Once
 again, these are assembly shorthands for `SEG_START` and
@@ -1879,9 +1879,9 @@ counter. This is the reason why the two possible outcomes are
 explicitly shown in this section. All other opcodes have no action
 when in *deferred mode*, other than to be pushed onto the operand
 stack (and in all other sections, this is not shown as a possible
-outcome). See the [section on code segments](#code-segments) for more
-details. When the BVM is first started, the *deferred mode* counter is
-set to zero.
+outcome). See the [section on code segments](#literal-code-segments)
+for more details. When the BVM is first started, the *deferred mode*
+counter is set to zero.
 
 * `SEG_START` *(equivalent to `{` in assembly)*  
   *Before*:  
