@@ -26,6 +26,7 @@
 	- [Arrays](#arrays)
 	- [Dictionaries](#dictionaries)
 	- [Code Segments](#code-segments)
+	- [Dictionary Stack](#dictionary-stack)
 
 # Introduction
 
@@ -1921,3 +1922,90 @@ counter is set to zero.
   > Converts a segment to an array. This is the mirror of
   > `ARRAY_TO_SEG`, and just like that opcode, the array is shared
   > with the code segment.
+
+## Dictionary Stack
+
+See the [section on the dictionary stack](#the-dictionary-stack) for a
+discussion of its purpose and expected use. When the BVM is started,
+the dictionary stack contains one dictionary which is empty. You can
+think of all the opcodes as being items in a dictionary at the very
+top of the dictionary stack which can not be modified by this API.
+
+* `DICT_STACK_PUSH`  
+  *Before*: `dict]`  
+  *After*: `]`  
+  *where* `dict` is a dictionary reference.  
+  *Errors*: Will error if `dict` is not a dictionary reference or if
+   there are no items on the current operand stack.  
+  > Pushes the supplied dictionary onto the dictionary stack where it
+  > becomes the uppermost item in the dictionary stack. The supplied
+  > dictionary itself is placed on the dictionary stack: no copying or
+  > cloning takes place.
+
+* `DICT_STACK_POP`  
+  *Before*:  
+  *After*: `dict]`  
+  *where* `dict` is a reference to what was the uppermost dictionary
+   on the dictionary stack, or the `undef` value if the dictionary
+   stack is empty.  
+  *Errors*: None.  
+  > Removes the uppermost item from the dictionary stack and pushes it
+  > to the current operand stack. If the dictionary stack is empty,
+  > pushes the `undef` value to the current operand stack.
+
+* `DICT_STACK_WHERE`  
+  *Before*: `key]`  
+  *After*: `dict]`  
+  *where* `key` is a string by which to search the dictionary stack,
+   and `dict` is the first dictionary found containing that key,
+   searching from the uppermost dictionary downwards, or the `undef`
+   value if no dictionary was found containing that key.  
+  *Errors*: Will error if the item on the top of the current operand
+   stack is not a string or if there are no items on the current
+   operand stack.  
+  > Searches through the dictionary stack for the first dictionary
+  > containing the supplied key, and pushes that dictionary onto the
+  > current operand stack. If no such dictionary is found, pushes the
+  > `undef` value.
+
+* `DICT_STACK_REPLACE`  
+  *Before*: `key, v]`  
+  *After*: `]`  
+  *where* `key` is a string and `v` is a value.  
+  *Errors*: Will error if `key` is not a string, or if there are fewer
+   than two items on the current operand stack, or if the dictionary
+   stack is empty.  
+  > Searches the dictionary stack for the first dictionary from the
+  > top downwards containing the supplied key. If such a dictionary is
+  > found, the key and value supplied are stored in the dictionary,
+  > replacing the existing key-value pair. If no dictionary is found
+  > containing the key supplied then the uppermost dictionary in the
+  > dictionary stack is used to store the key-value pair supplied.
+
+* `DICT_STACK_LOAD`  
+  *Before*:  
+  *After*: `ary]`  
+  *where* `ary` is a reference to the array containing all the
+   dictionaries in the dictionary stack, where the dictionary at index
+   `0` in the array represents the bottom of the dictionary stack.  
+  *Errors*: None.  
+  > Pushes onto the current operand stack the dictionary stack. This
+  > is the actual dictionary stack, not a clone or copy. Thus any
+  > modifications to this array affect the dictionary stack too. As
+  > such, if you store non-dictionary values into this array, you can
+  > break the BVM. You have been warned.
+
+* `DICT_STACK_SET`  
+  *Before*: `ary]`  
+  *After*: `]`  
+  *where* `ary` is a reference to an array containing only
+   dictionaries.  
+  *Errors*: Will error if the item at the top of the stack is not an
+   array reference, or if any of the values found within the array are
+   not dictionaries, or if there are no items on the stack.  
+  > Sets the entire dictionary stack to the array at the top of the
+  > current operand stack, where the dictionary in index `0` of the
+  > array is the bottom of the dictionary stack. Note that this sets
+  > the entire dictionary stack to the value provided: the dictionary
+  > stack becomes the array provided and the previous entire
+  > dictionary stack is discarded.
