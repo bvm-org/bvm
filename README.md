@@ -2098,7 +2098,7 @@ a tail call, with all that that entails.
   > call. Otherwise, a no-op.
 
 * `IF_ELSE`  
-  *Before*:  `sT, sF, b]'  
+  *Before*:  `sT, sF, b]`  
   *After*: `]`  
   *where* `sT` and `sF` are code segments or stacks and `b` is a
    boolean.  
