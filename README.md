@@ -20,13 +20,17 @@
 		- [Assembly Labels](#assembly-labels)
 - [BVM Opcode Reference](#bvm-opcode-reference)
 	- [Operand Stack Manipulation](#operand-stack-manipulation)
-	- [Logic](#logic)
 	- [Addressing](#addressing)
 	- [Mark](#mark)
 	- [Arrays](#arrays)
 	- [Dictionaries](#dictionaries)
 	- [Code Segments](#code-segments)
 	- [Dictionary Stack](#dictionary-stack)
+	- [Control flow](#control-flow)
+	- [Comparison](#comparison)
+	- [Logic](#logic)
+	- [Maths](#maths)
+	- [Miscellaneous](#miscellaneous)
 
 # Introduction
 
@@ -1393,62 +1397,6 @@ stack can otherwise contain any other elements further down.
   > Pushes the singleton value `undef`, which represents bottom, and
   > is distinct from `false`, onto the current operand stack.
 
-## Logic
-
-Note that `TRUE` and `FALSE` are opcodes, and so in the JSON object
-form, should appear as strings just like all other opcodes, and not as
-the JSON values `true` and `false`.
-
-* `TRUE`  
-  *Before*:  
-  *After*: `true]`  
-  *Errors*: None.  
-  > Pushes the boolean value `true` onto the current operand stack.
-
-* `FALSE`  
-  *Before*:  
-  *After*: `false]`  
-  *Errors*: None.  
-  > Pushes the boolean value `false` (which is distinct from
-  > the `undef` value) onto the current operand stack.
-
-* `NOT`  
-  *Before*: `a]`  
-  *After*: `b]`  
-  *where* `a` is a boolean and `b` is the logical inversion of `a`.  
-  *Errors*: Will error if there are no items on the current operand
-   stack or if the type of `a` is not a boolean. Note you may not
-   use `NOT` as a means to cast from a number or other value which
-   some languages may consider as *falsey* or *truthy* to a boolean.  
-  > Performs logical negation.
-
-* `AND`  
-  *Before*: `b, a]`  
-  *After*: `c]`  
-  *where* `a` and `b` are booleans, and `c` is the boolean being the
-   logical conjunction of `a` and `b`.  
-  *Errors*: Will error if fewer than 2 items are on the current
-   operand stack or if either of them are not booleans.  
-  > Performs logical conjunction.
-
-* `OR`  
-  *Before*: `b, a]`  
-  *After*: `c]`  
-  *where* `a` and `b` are booleans, and `c` is the boolean being the
-   logical disjunction of `a` and `b`.  
-  *Errors*: Will error if fewer than 2 items are on the current
-   operand stack or if either of them are not booleans.  
-  > Performs logical disjunction.
-
-* `XOR`  
-  *Before*: `b, a]`  
-  *After*: `c]`  
-  *where* `a` and `b` are booleans, and `c` is the boolean being the
-   logical exclusive disjunction of `a` and `b`.  
-  *Errors*: Will error if fewer than 2 items are on the current
-   operand stack or if either of them are not booleans.  
-  > Performs logical exclusive disjunction.
-
 ## Addressing
 
 * A lexical address  
@@ -2125,3 +2073,299 @@ top of the dictionary stack which can not be modified by this API.
   > the entire dictionary stack to the value provided: the dictionary
   > stack becomes the array provided and the previous entire
   > dictionary stack is discarded.
+
+## Control flow
+
+For both `IF` and `IF_ELSE` note that the invocations these can cause
+can still be tail calls: the requirement for a tail call is merely
+that there are no more opcodes to come in the current code
+segment. This says nothing about the last opcode being an `EXEC`, or
+an unrecognised string to look up in the dictionary stack and maybe
+invoke, for example. Thus if the last instruction in a segment is an
+`IF_ELSE`, the code segment chosen to invoke will still be invoked as
+a tail call, with all that that entails.
+
+* `IF`  
+  *Before*: `s, b]`  
+  *After*: `]`  
+  *where* `s` is a code segment or stack and `b` is a boolean.  
+  *Errors*: Will error if `b` is not a boolean or `s` is not a code
+   segment or stack, or if there are fewer than two items on the
+   current operand stack.  
+  > Removes the top two items from the current operand stack. If the
+  > uppermost item was the `true` boolean value, the code segment (or
+  > stack) beneath it is invoked as per a normal `EXEC`
+  > call. Otherwise, a no-op.
+
+* `IF_ELSE`  
+  *Before*:  `sT, sF, b]'  
+  *After*: `]`  
+  *where* `sT` and `sF` are code segments or stacks and `b` is a
+   boolean.  
+  *Errors*: Will error if `b` is not a boolean, or if either `sT` or
+   `sF` are not code segments or stacks, or if there are fewer than
+   three items on the current operand stack.  
+  > Removes the top three items from the current operand stack. If the
+  > uppermost item was the `true` boolean value then the lowest item
+  > removed (`sT` in the above) is invoked. If the uppermost item was
+  > the `false` boolean value then the upper code segment (`sF` in the
+  > above) is invoked.
+
+* `JUMP`  
+  *Before*: `n]`  
+  *After*: `]`  
+  *where* `n` is a non-negative integer less than the number of
+   opcodes in the current code segment.  
+  *Errors*: Will error if `n` is not a non-negative integer or if it
+   is not less than the number of opcodes in the current segment, or
+   if there are no items on the current operand stack.  
+  > Directly adjusts the current instruction pointer. Note it is not
+  > possible to directly set the instruction pointer to an offset in a
+  > different code segment: you may only move about within the current
+  > code segment. Offsets are relative to the start of each code
+  > segment. Please see also the [section on Assembly
+  > Labels](#assembly-labels) for a robust way to indicate such
+  > offsets in the assembly format.
+
+* `JUMP_IF`  
+  *Before*: `n, b]`  
+  *After*: `]`  
+  *where* `n` is a non-negative integer less than the number of
+   opcodes in the current code segment, and `b` is a boolean.  
+  *Errors*: Will error if `n` is not a non-negative integer or if it
+   is not less than the number of opcodes in the current segment, if
+   `b` is not a boolean value, or if there are fewer than two items on
+   the current operand stack.  
+  > Conditional jump. Directly adjust the instruction pointer as with
+  > `JUMP` if the boolean value found at the top of the current
+  > operand stack is found to be the `true` value. Otherwise, a no-op.
+
+## Comparison
+
+* `EQ`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `NEQ`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `LT`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `LTE`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `GT`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `GTE`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+## Logic
+
+Note that `TRUE` and `FALSE` are opcodes, and so in the JSON object
+form, should appear as strings just like all other opcodes, and not as
+the JSON values `true` and `false`.
+
+* `TRUE`  
+  *Before*:  
+  *After*: `true]`  
+  *Errors*: None.  
+  > Pushes the boolean value `true` onto the current operand stack.
+
+* `FALSE`  
+  *Before*:  
+  *After*: `false]`  
+  *Errors*: None.  
+  > Pushes the boolean value `false` (which is distinct from
+  > the `undef` value) onto the current operand stack.
+
+* `NOT`  
+  *Before*: `a]`  
+  *After*: `b]`  
+  *where* `a` is a boolean and `b` is the logical inversion of `a`.  
+  *Errors*: Will error if there are no items on the current operand
+   stack or if the type of `a` is not a boolean. Note you may not
+   use `NOT` as a means to cast from a number or other value which
+   some languages may consider as *falsey* or *truthy* to a boolean.  
+  > Performs logical negation.
+
+* `AND`  
+  *Before*: `b, a]`  
+  *After*: `c]`  
+  *where* `a` and `b` are booleans, and `c` is the boolean being the
+   logical conjunction of `a` and `b`.  
+  *Errors*: Will error if fewer than 2 items are on the current
+   operand stack or if either of them are not booleans.  
+  > Performs logical conjunction.
+
+* `OR`  
+  *Before*: `b, a]`  
+  *After*: `c]`  
+  *where* `a` and `b` are booleans, and `c` is the boolean being the
+   logical disjunction of `a` and `b`.  
+  *Errors*: Will error if fewer than 2 items are on the current
+   operand stack or if either of them are not booleans.  
+  > Performs logical disjunction.
+
+* `XOR`  
+  *Before*: `b, a]`  
+  *After*: `c]`  
+  *where* `a` and `b` are booleans, and `c` is the boolean being the
+   logical exclusive disjunction of `a` and `b`.  
+  *Errors*: Will error if fewer than 2 items are on the current
+   operand stack or if either of them are not booleans.  
+  > Performs logical exclusive disjunction.
+
+## Maths
+
+* `ADD`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `SUBTRACT`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `MULTIPLY`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `DIVIDE`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `MODULUS`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `MAX`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `MIN`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `POW`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `ABS`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `NEGATE`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `CEILING`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `FLOOR`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `ROUND`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `LOG_E`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `INC`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `DEC`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+## Miscellaneous
+
+* `HALT`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
+
+* `LOG`  
+  *Before*:  
+  *After*:  
+  *where*  
+  *Errors*:  
+  >
