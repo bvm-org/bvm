@@ -2457,3 +2457,114 @@ the JSON values `true` and `false`.
   > it. In the JavaScript implementation of the BVM, this defaults to
   > `console.log`, but can be overridden through the JavaScript API,
   > covered later.
+
+
+# JavaScript API
+
+The JavaScript implementation of the BVM has an API. This API is the
+same regardless of whether you use the BVM in a browser or in NodeJS.
+
+## Entry point
+
+* `require('./bvm')`  
+  Returns a `BVM` object. Due to the use of *browserify*, this is the
+  correct entry point when in the web browser too.
+
+## The `BVM` object
+
+* `nuCPU(segment)`  
+  Takes a segment, returns a new `CPU` object, ready to start running
+  at the start (index 0) of the supplied segment.
+
+* `nuSegment(array)`  
+  Takes an array which is expected to be a JSON array of opcodes, and
+  returns a `segment`. See [File formats](#file-formats). I am not
+  providing documentation of the `segment` object type here as you
+  don't need to understand it to use the JavaScript implementation of
+  the BVM. You just need to pass the created segment to the `nuCPU`
+  method.
+
+* `types`  
+  Returns the `types` object. Not further documented here. You may
+  require some of the methods in the `types` object if you wish to
+  programmatically inspect the result of `CPU.boot()`.
+
+* `assembler(string)`  
+  Returns the assembler. Takes an optional string which if provided,
+  should be the path to a file containing assembly.
+
+* `interpret(string)`  
+  Takes a string, which is expected to be assembly. Parses it,
+  converts it to the JSON object format and creates a segment from it,
+  then creates and returns a new CPU ready to evaluate the
+  segment. Does not boot the CPU.
+
+* `repl()`  
+  *Only available in NodeJS*  
+  Invokes the NodeJS REPL.
+
+## The `CPU` object
+
+* `boot()`  
+  Starts the CPU at index 0 in the code segment the CPU was
+  parameterised by. If the segment causes a value to be explicitly
+  returned, then `boot()` will return this value to the
+  caller. Otherwise, `boot()` will return the last operand stack in
+  use when execution finished. Note that if the `HALT` opcode was the
+  last opcode to be invoked, then `boot()` returns `undefined`.
+
+* `resume()`  
+  If the CPU has been halted by use of the `HALT` opcode, resumes
+  execution of the CPU from the instruction immediately following the
+  `HALT` opcode. All state is preserved.
+
+* `log`  
+  This is a field which contains the function used by the `LOG`
+  opcode. You may set it to any function you wish. That function will
+  be invoked by the `LOG` opcode and will be provided with one
+  argument which will be a string formed by the `JSON.stringify`
+  method on the value found at the top of the operand stack by the
+  `LOG` opcode.
+
+* `ops`  
+  This is a field which contains an array of strings, one for each
+  recognised opcode.
+
+* `installOp(name, function)`  
+  Installs a new opcode with the supplied name, to be the supplied
+  function. The function as any JavaScript function. The function will
+  be invoked with two arguments: the `vcpu` object which allows direct
+  access to the current stack, dictionary stack etc, and the `ops`
+  objects, which allows access to the other opcodes. A full discussion
+  of this is really beyond the scope of this document and is specific
+  to the JavaScript implementation. You'll really just have to Use the
+  Source (the tests are a good place to start - the test harness uses
+  `installOp` to install opcodes to create breakpoints).
+
+## The `Assembler` object
+
+* `read()`  
+  If the `assembler` was created with a path to a file, this method
+  reads in the contents of the file, and sets the `source` field of
+  the `assembler` object to the contents of the file. Returns itself.
+
+* `parse()`  
+  Does nothing unless the `source` field of the assembler has been
+  set. If you didn't create the `assembler` object with a path to a
+  file, don't forget to explicitly set the `source` field to the
+  string containing the assembly. The call `parse()`. Parses the
+  assembly. Sets the `parsed` field to the abstract syntax tree (AST)
+  of the parsed assembly. Returns itself. Will throw various
+  exceptions if the assembly is faulty.
+
+* `prettyprint()`  
+  If the assembly was successfully parsed, calls `console.log` with
+  the pretty-printed abstract syntax tree (AST) of the
+  assembly. Returns itself.
+
+* `toJSON()`  
+  If the assembly was successfully parsed, sets the `json` field of
+  the `assembler` object to the JSON array of opcodes formed by
+  walking over the AST. The contents of this `json` field may now be
+  passed to the `BVM.nuSegment()` method to form a code
+  segment. Returns itself.
