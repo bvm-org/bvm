@@ -2163,19 +2163,19 @@ a tail call, with all that that entails.
   > includes the youngest scope. Consider carefully the following
   > examples:
 
-        // Youngest scope is fresh for each segment invocation...
+        // Youngest scope is fresh for each segment invocation.
         bvm> { PUSH (0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
         [{"type": "lexical address", "lsl": 1, "index": 0},
          {"type": "lexical address", "lsl": 1, "index": 0},
          false]
 
-        // ...two addresses from the same scope with same index are eq
+        // Two addresses from same scope with same index are equal.
         bvm> { PUSH (0) PUSH (0) 2 RETURN } (0) 2 COPY EQ 3 RETURN
         [{"type": "lexical address", "lsl": 1, "index": 0},
          {"type": "lexical address", "lsl": 1, "index": 0},
          true]
 
-        // Two segment invocations, but both addresses reference common parent, so eq
+        // Two segment invocations, but both addresses reference common parent, so equal.
         bvm> { PUSH (-1,0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
         [{"type": "lexical address", "lsl": 0, "index": 0},
          {"type": "lexical address", "lsl": 0, "index": 0},
