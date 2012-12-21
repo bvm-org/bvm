@@ -31,6 +31,11 @@
 	- [Logic](#logic)
 	- [Maths](#maths)
 	- [Miscellaneous](#miscellaneous)
+- [JavaScript API](#javascript-api)
+	- [Entry point](#entry-point)
+	- [The `BVM` object](#the-bvm-object)
+	- [The `CPU` object](#the-cpu-object)
+	- [The `Assembler` object](#the-assembler-object)
 
 # Introduction
 
