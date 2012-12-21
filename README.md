@@ -2143,46 +2143,98 @@ a tail call, with all that that entails.
 ## Comparison
 
 * `EQ`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `b]`  
+  *where* `x` and `y` are any values, and `b` is a boolean.  
+  *Errors*: Will error if there are fewer than two items on the
+   current operand stack.  
+  > Tests the two items at the top of the current operand stack for
+  > equality. Pushes `true` if the two items are found equal, and
+  > `false` otherwise. For reference values (arrays, dictionaries,
+  > code segments and stacks), equality is pointer equality. This
+  > reinforces the difference between the `CLONE` and `DUPLICATE`
+  > opcodes for reference types. For simple types (numbers, booleans,
+  > strings, the singleton values undef and mark), it is the obvious
+  > definition of equality. For lexical addresses, the lexical scope
+  > in which the address was declared must be the same, and the index
+  > must be the same too. I.e. lexical addresses with the same
+  > *lexical scope level* and the same index, but declared in
+  > different lexical scopes are considered distinct. Note that this
+  > includes the youngest scope. Consider carefully the following
+  > examples:
+
+        // Youngest scope is fresh for each segment invocation...
+        bvm> { PUSH (0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
+        [{"type": "lexical address", "lsl": 1, "index": 0},
+         {"type": "lexical address", "lsl": 1, "index": 0},
+         false]
+
+        // ...two addresses from the same scope with same index are eq
+        bvm> { PUSH (0) PUSH (0) 2 RETURN } (0) 2 COPY EQ 3 RETURN
+        [{"type": "lexical address", "lsl": 1, "index": 0},
+         {"type": "lexical address", "lsl": 1, "index": 0},
+         true]
+
+        // Two segment invocations, but both addresses reference common parent, so eq
+        bvm> { PUSH (-1,0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
+        [{"type": "lexical address", "lsl": 0, "index": 0},
+         {"type": "lexical address", "lsl": 0, "index": 0},
+         true]
 
 * `NEQ`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `b]`  
+  *where* `x` and `y` are any values, and `b` is a boolean.  
+  *Errors*: Will error if there are fewer than two items on the
+   current operand stack.  
+  > The inverse of `EQ`. See the `EQ` entry.
 
 * `LT`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `b]`  
+  *where* `x` and `y` are both numbers or both strings, and `b` is a
+   boolean.  
+  *Errors*: Will error if there are fewer than two items on the
+   current operand stack, or if the items have different types, or if
+   either item is not a string or a number.  
+  > Pushes `true` if `x` is *less than* `y` and `false` otherwise. `x`
+  > and `y` must both be numbers, or must both be strings.
 
 * `LTE`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `b]`  
+  *where* `x` and `y` are both numbers or both strings, and `b` is a
+   boolean.  
+  *Errors*: Will error if there are fewer than two items on the
+   current operand stack, or if the items have different types, or if
+   either item is not a string or a number.  
+  > Pushes `true` if `x` is *less than or equal to* `y` and `false`
+  > otherwise. `x` and `y` must both be numbers, or must both be
+  > strings.
 
 * `GT`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `b]`  
+  *where* `x` and `y` are both numbers or both strings, and `b` is a
+   boolean.  
+  *Errors*: Will error if there are fewer than two items on the
+   current operand stack, or if the items have different types, or if
+   either item is not a string or a number.  
+  > Pushes `true` if `x` is *greater than* `y` and `false`
+  > otherwise. `x` and `y` must both be numbers, or must both be
+  > strings.
 
 * `GTE`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `b]`  
+  *where* `x` and `y` are both numbers or both strings, and `b` is a
+   boolean.  
+  *Errors*: Will error if there are fewer than two items on the
+   current operand stack, or if the items have different types, or if
+   either item is not a string or a number.  
+  > Pushes `true` if `x` is *greater than or equal to* `y` and `false`
+  > otherwise. `x` and `y` must both be numbers, or must both be
+  > strings.
 
 ## Logic
 
