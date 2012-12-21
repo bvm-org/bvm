@@ -2295,129 +2295,165 @@ the JSON values `true` and `false`.
 ## Maths
 
 * `ADD`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Performs numeric addition. `z = x + y`
 
 * `SUBTRACT`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Performs numeric subtraction. `z = x - y`
 
 * `MULTIPLY`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Performs numeric multiplication. `z = x * y`
 
 * `DIVIDE`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Performs numeric division. Note this is not integer division. `z = x / y`
 
 * `MODULUS`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Calculates the modulus. `z = x % y`. Note that the sign of `z` is
+  > the same as the sign of `x`. So we have the following identity,
+  > relating the properties of `MODULUS` and `ROUND`:  
+  > `x = round(x / y) * y + (x % y)`
+  > which, as a code segment for the BVM is:  
+  > `{ 2 TAKE 2 COPY DIVIDE ROUND (1) MULTIPLY (0) (1) MODULUS ADD 1 RETURN }`
+
+        bvm> { 2 TAKE 2 COPY DIVIDE ROUND (1) MULTIPLY (0) (1) MODULUS ADD 1 RETURN } 99 98 (0)
+        [99]
+        bvm> { 2 TAKE 2 COPY DIVIDE ROUND (1) MULTIPLY (0) (1) MODULUS ADD 1 RETURN } -99 98 (0)
+        [-99]
+        bvm> { 2 TAKE 2 COPY DIVIDE ROUND (1) MULTIPLY (0) (1) MODULUS ADD 1 RETURN } -99 -98 (0)
+        [-99]
+        bvm> { 2 TAKE 2 COPY DIVIDE ROUND (1) MULTIPLY (0) (1) MODULUS ADD 1 RETURN } 99 -98 (0)
+        [99]
 
 * `MAX`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Pushes the greater of `x` and `y`.
 
 * `MIN`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Pushes the lesser of `x` and `y`.
 
 * `POW`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x, y]`  
+  *After*: `z]`  
+  *where* `x` and `y` and `z` are all numbers.  
+  *Errors*: Will error if `x` and `y` are not numbers or if there are
+   fewer than two items on the current operand stack.  
+  > Pushes `x` raised to the power of `y`.
 
 * `ABS`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > Pushes the absolute value of `x` - i.e. `x` if `x` is positive, or
+  > `0 - x` if `x` is negative.
 
 * `NEGATE`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > Pushes `0 - x`.
 
 * `CEILING`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > If `x` is not an integer, rounds up (moving towards positive
+  > infinity). Otherwise, no-op.
 
 * `FLOOR`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > If `x` is not an integer, rounds down (moving towards negative
+  > infinity). Otherwise, no-op.
 
 * `ROUND`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > Rounds to the *nearest* integer.
 
 * `LOG_E`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > Takes the natural logarithm (i.e. logarithm with base *E*).
 
 * `INC`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > `y = x + 1`
 
 * `DEC`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `x]`  
+  *After*: `y]`  
+  *where* `x` and `y` are numbers.  
+  *Errors*: Will error if `x` is not a number, or if there are no
+   items on the current operand stack.  
+  > `y = x - 1`
 
 ## Miscellaneous
 
 * `HALT`  
   *Before*:  
   *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Errors*: None.  
+  > Halts the BVM. Note that in the JavaScript implementation, the BVM
+  > can be resumed with the `resume` API call, covered later.
 
 * `LOG`  
-  *Before*:  
-  *After*:  
-  *where*  
-  *Errors*:  
-  >
+  *Before*: `a]`  
+  *After*: `]`  
+  *Errors*: Will error if there are no items on the current operand
+   stack.  
+  > Removes the top item from the current operand stack and displays
+  > it. In the JavaScript implementation of the BVM, this defaults to
+  > `console.log`, but can be overridden through the JavaScript API,
+  > covered later.
