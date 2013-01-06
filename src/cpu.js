@@ -3,8 +3,7 @@
 
         'use strict';
 
-        var types = require('./types'),
-            nuArray = require('./array'),
+        var nuArray = require('./array'),
             nuDict = require('./dict'),
             nuStack = require('./stack'),
             nuSegment = require('./segment'),
