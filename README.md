@@ -1117,9 +1117,16 @@ relatively unusual choice, but is extremely useful in practise for
 building more powerful control-flow structures, for example
 co-routines.
 
+`CALLCC` will switch execution to a provided code segment, which does
+not have any dynamic call chain set up, but is provided with what was
+the current operand stack on the *take-stack*. Execution of that
+operand stack restores control to the code segment that invoked the
+`CALLCC`, immediately after the `CALLCC` instruction. Thus the old
+operand stack represents the continuation.
+
 The `CALLCC` opcode expects to find a code segment on the top of the
-stack. It then invokes that code segment, and pushes the old operand
-stack on the top of the old operand stack, which as usual is
+stack and it pushes the old operand stack (representing the
+continuation) on the top of the old operand stack, which as usual is
 accessible via `TAKE` within the new code segment. There is
 deliberately no dynamic call chain set up, so when the new code
 segment returns, control does **not** return to the old segment. For
@@ -1135,10 +1142,11 @@ only two values that can be taken at that point: it's the `CALLCC`
 that makes the old operand stack itself available as the uppermost
 element on the *take-stack*.
 
-But you can choose to `EXEC` the old operand stack itself. At that
-point, control returns to the old operand stack and its code segment,
-but now its own *take-stack* is set to the operand stack of the code
-segment invoked by `CALLCC` itself.
+But you can choose to `EXEC` the old operand stack itself and thus
+invoke the continuation. At that point, control returns to the old
+operand stack and its code segment, but now its own *take-stack* is
+set to the operand stack of the code segment invoked by `CALLCC`
+itself.
 
     bvm> 3 { 4 1 TAKE EXEC } CALLCC 1 TAKE ADD COUNT RETURN
     [7]
@@ -1166,6 +1174,16 @@ Even more exciting is that you can construct loops this way. (`LOG`
 takes the top value off the stack and prints it out on the console.)
 
     bvm> { 1 TAKE DUPLICATE EXEC } CALLCC PUSH "Hello World" LOG 1 TAKE DUPLICATE EXEC
+    "Hello World"
+    "Hello World"
+    "Hello World"
+    ...
+
+By making use of the implicit default operator and the fact that
+lexical addresses don't remove values from the stack, we can shorten
+this to:
+
+    bvm> { 1 TAKE (0) } CALLCC PUSH "Hello World" LOG 1 TAKE (0)
     "Hello World"
     "Hello World"
     "Hello World"
@@ -1339,8 +1357,8 @@ stack can otherwise contain any other elements further down.
   *Errors*: Will error if there are no items on the operand stack.  
   > Duplicates the item on the top of the current operand stack. If
   > the item found is a reference type (i.e. an array, dictionary,
-  > code segment or stack) then it is the pointer to that item that
-  > is duplicated, not the item itself.
+  > code segment or stack) then it is the pointer to that item that is
+  > duplicated, not the item itself. This is the same as `1 COPY`.
 
 * `INDEX`  
   *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, i]</code>  
@@ -1363,7 +1381,7 @@ stack can otherwise contain any other elements further down.
    current operand stack, or if `n` is not a non-negative integer.
   > Duplicates the top `n` items of the current operand stack. As
   > with `DUPLICATE`, reference types are shared, not cloned
-  > themselves.
+  > themselves. `1 COPY` is the same as `DUPLICATE`.
 
 * `ROLL`  
   *Before*: <code>a<sub>n-1</sub>, ..., a<sub>0</sub>, n, j]</code>  
