@@ -6,7 +6,7 @@
         var types = require('./types'),
             nuError = require('./errors'),
             id = {},
-            undef,
+            undef, nuArray,
             undefFilter = function (ary) {
                 var idx = 0, len = ary.length;
                 for (; idx < len; idx += 1) {
@@ -79,8 +79,7 @@
                     toJSON: {value: function () {
                         return undefFilter(this.array);
                     }}
-                }),
-            nuArray;
+                });
 
         nuArray = function (array) {
             if (! array) {

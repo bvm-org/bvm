@@ -30,7 +30,7 @@
                 assembly = nuAssembler();
             assembly.source = codeStr;
             return nuCPU(nuSegment(assembly.parse().toJSON().json)).boot();
-        }
+        };
 
         return bvmRepl;
 

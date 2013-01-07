@@ -5,7 +5,7 @@
 
         var id = {},
             nuArray = require('./array'),
-            undef,
+            undef, adornStackOps,
             stackTemplate = {
                 id:        {value: id},
                 ts:        {value: undef, writable: true},
@@ -37,9 +37,9 @@
         // segment here is the new segment being entered.
         nuStack = function (arrayBase, takeStack, oldStack, segment, index) {
             return adornStackOps(nuArray(arrayBase), takeStack, oldStack, segment, segment.nuIP(index));
-        }
+        };
 
-        function adornStackOps (array, takeStack, oldStack, segment, ip) {
+        adornStackOps = function (array, takeStack, oldStack, segment, ip) {
             stackTemplate.ts.value = takeStack;
             stackTemplate.dps.value = oldStack;
             stackTemplate.lps.value = segment.ls;
@@ -47,7 +47,7 @@
             stackTemplate.ip.value = ip;
             stackTemplate.segment.value = segment;
             return Object.create(array, stackTemplate);
-        }
+        };
 
         nuStack.isStack = function (thing) {
             return thing &&

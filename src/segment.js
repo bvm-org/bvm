@@ -8,7 +8,7 @@
             nuError = require('./errors'),
             id = {},
             segmentExhausted = {},
-            undef,
+            undef, nuIP, adornSegmentFields,
             segmentTemplate = {
                 id:        {value: id},
                 ls:        {value: undef},
@@ -70,24 +70,24 @@
             },
             nuSegment;
 
-        nuSegment = function (array, stackOfCurrentLexicalScope) {
-            array = nuArray.isArray(array) ? array : nuArray(array);
-            return adornSegmentFields(array, stackOfCurrentLexicalScope);
-        }
-
-        function adornSegmentFields (segment, stackOfCurrentLexicalScope) {
-            segmentTemplate.ls.value = stackOfCurrentLexicalScope;
-            return Object.create(segment, segmentTemplate);
-        }
-
-        function nuIP (segment, index) {
+        nuIP = function (segment, index) {
             if (! index) {
                 index = 0;
             }
             ipTemplate.segment.value = segment;
             ipTemplate.index.value = index;
             return Object.create(ipBase, ipTemplate);
-        }
+        };
+
+        adornSegmentFields = function (segment, stackOfCurrentLexicalScope) {
+            segmentTemplate.ls.value = stackOfCurrentLexicalScope;
+            return Object.create(segment, segmentTemplate);
+        };
+
+        nuSegment = function (array, stackOfCurrentLexicalScope) {
+            array = nuArray.isArray(array) ? array : nuArray(array);
+            return adornSegmentFields(array, stackOfCurrentLexicalScope);
+        };
 
         nuSegment.isSegment = function (thing) {
             return thing &&

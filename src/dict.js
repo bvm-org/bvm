@@ -22,7 +22,7 @@
                 remove: {value: undef},
                 clone:  {value: undef}
             },
-            nuDict;
+            nuDict, adornDictOps;
 
         nuDict = function (dict) {
             if (! dict) {
@@ -34,10 +34,9 @@
             return thing &&
                 typeof thing === 'object' &&
                 id === thing.id;
-        }
-        return nuDict;
+        };
 
-        function adornDictOps (dict) {
+        adornDictOps = function (dict) {
             dictTemplate.has.value = Object.prototype.hasOwnProperty.bind(dict);
             dictTemplate.keys.value = function () { return Object.keys(dict); };
             dictTemplate.load.value = function (key) {
@@ -63,8 +62,9 @@
                 return nuDict(d);
             };
             return Object.create(dictBase, dictTemplate);
-        }
+        };
 
+        return nuDict;
 
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));

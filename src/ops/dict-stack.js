@@ -7,6 +7,7 @@
             nuDict = require('../dict'),
             nuArray = require('../array'),
             nuError = require('../errors'),
+            utils = require('../utils'),
             undef;
 
         return function (vcpu) {

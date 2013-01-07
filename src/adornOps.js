@@ -24,7 +24,7 @@
                     Object.defineProperties(ops, opsObj);
                 }
             });
-        }
+        };
 
     });
 }(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));

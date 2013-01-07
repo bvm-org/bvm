@@ -23,7 +23,7 @@
 
                         return segment;
                     } else {
-                        nuError.notEnoughOperands()
+                        nuError.notEnoughOperands();
                     }
                 }},
 
