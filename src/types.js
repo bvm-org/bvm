@@ -30,6 +30,11 @@
                 fix:   {value: function () { return this; }}
             },
             lexicalAddressBase,
+            chId = {},
+            chBase,
+            chTemplate = {
+                ch: {value: undef}
+            },
             toString = Object.prototype.toString,
             nuError = require('./errors');
 
@@ -79,6 +84,25 @@
                                       typeof thing === 'object' &&
                                       lexicalAddressId === thing.id;
                               }});
+
+        chBase = Object.create(
+            plain,
+            {
+                id: {value: chId},
+                toJSON: {value: function () {
+                    return {type: 'character',
+                            character: this.ch};
+                }}
+            });
+
+        Object.defineProperty(types, 'nuChar', {value: function (ch) {
+            chTemplate.ch.value = ch;
+            return Object.create(chBase, chTemplate);
+        }});
+        Object.defineProperty(types, 'isChar', {value: function (thing) {
+            return thing && typeof thing === 'object' &&
+                chId === thing.id;
+        }});
 
         Object.defineProperty(types, 'isString', {value: function (thing) {
             return (typeof thing === 'string') ||

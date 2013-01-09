@@ -44,6 +44,7 @@
                         while (worklist.length) {
                             elem = worklist.shift();
                             if (types.isString(elem)) {
+                                // This covers general opcodes
                                 if (('' + elem) === 'SEG_END') {
                                     lsl -= 1;
                                     tmp = Object.keys(labelStack.shift().unknown);
@@ -56,7 +57,20 @@
                             } else if (typeof elem === 'number') {
                                 result.push(elem);
                             } else if (typeof elem === 'object' && 'type' in elem) {
-                                if (elem.type === 'LexicalAddress') {
+                                // This covers explicitly "double" quoted strings
+                                if (elem.type === 'QuotedString') {
+                                    if (('' + elem.content) === 'SEG_END') {
+                                        lsl -= 1;
+                                        tmp = Object.keys(labelStack.shift().unknown);
+                                        if (tmp.length !== 0) {
+                                            throw "Labels referenced but not declared by end of scope: " +
+                                                JSON.stringify(tmp);
+                                        }
+                                    }
+                                    result.push(elem.content);
+                                } else if (elem.type === 'QuotedChar') {
+                                    result.push([elem.content]);
+                                } else if (elem.type === 'LexicalAddress') {
                                     if ('lsl' in elem) {
                                         tmp = elem.lsl < 0 ? lsl + elem.lsl : elem.lsl;
                                         if (tmp < 0) {

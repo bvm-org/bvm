@@ -25,6 +25,7 @@ Statement
   / LexicalAddress
   / SignedNumericLiteral
   / QuotedStringLiteral
+  / QuotedCharLiteral
   / Label
   / Opcode
 
@@ -42,6 +43,7 @@ PushOperand
     / Opcode
     / SignedNumericLiteral
     / QuotedStringLiteral
+    / QuotedCharLiteral
     / "PUSH"i
 
 Section "section"
@@ -135,7 +137,12 @@ ExponentIndicator
   = [eE]
 
 QuotedStringLiteral "string"
-  = parts:('"' QuotedStringCharacters? '"' ) { return parts[1]; }
+  = parts:('"' QuotedStringCharacters? '"' ) {
+      return {
+        type: "QuotedString",
+        content: parts[1]
+      };
+    }
 
 QuotedStringCharacters
   = chars:QuotedStringCharacter+ { return chars.join(""); }
@@ -143,6 +150,14 @@ QuotedStringCharacters
 QuotedStringCharacter
   = Escaped
   / !"\"" char:Char { return char; }
+
+QuotedCharLiteral "char"
+  = parts:("'" QuotedStringCharacter "'" ) {
+      return {
+        type: "QuotedChar",
+        content: parts[1]
+      };
+    }
 
 EscapeChar
   = "\\"

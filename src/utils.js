@@ -7,6 +7,7 @@
             nuSegment = require('./segment'),
             nuStack = require('./stack'),
             nuError = require('./errors'),
+            nuArray = require('./array'),
             undef;
 
         return Object.defineProperties(
@@ -52,6 +53,20 @@
                     }
                     return obj;
                 }},
+
+                string: {value: (function () {
+                    return Object.defineProperties(
+                        {},
+                        {
+                            toArray: {value: function (str) {
+                                var idx, len = str.length, ary = [];
+                                for (idx = 0; idx < len; idx += 1) {
+                                    ary.push(types.nuChar(str.charAt(idx)));
+                                }
+                                return nuArray(ary);
+                            }}
+                        });
+                }())}
             });
 
     });

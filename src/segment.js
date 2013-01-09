@@ -35,7 +35,11 @@
                             op = seg.index(idx);
                             this.index += 1;
                             if (Array.isArray(op)) {
-                                return types.nuLexicalAddress(op[0], op[1]);
+                                if (op.length === 1) {
+                                    return types.nuChar(op[0]);
+                                } else if (op.length === 2) {
+                                    return types.nuLexicalAddress(op[0], op[1]);
+                                }
                             }
                             return op;
                         }
