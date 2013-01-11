@@ -30,11 +30,13 @@
                 fix:   {value: function () { return this; }}
             },
             lexicalAddressBase,
+
             chId = {},
             chBase,
             chTemplate = {
                 ch: {value: undef}
             },
+
             toString = Object.prototype.toString,
             nuError = require('./errors');
 
@@ -104,7 +106,7 @@
                 chId === thing.id;
         }});
 
-        Object.defineProperty(types, 'isString', {value: function (thing) {
+        Object.defineProperty(types, 'isRawString', {value: function (thing) {
             return (typeof thing === 'string') ||
                 (typeof thing === 'object' &&
                  toString.call(thing) === '[object String]');

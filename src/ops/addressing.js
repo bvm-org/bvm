@@ -16,8 +16,11 @@
                 var found;
                 if (types.isLexicalAddress(op)) {
                     found = op.fix(vcpu).ls.index(op.index);
-                } else if (types.isString(op)) {
+                } else if (types.isRawString(op)) {
                     found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
+                    found = found === undef ? types.undef : found;
+                } else if (nuArray.isArray(op) && op.allChars) {
+                    found = utils.searchDicts({key: op.toRawString(), dicts: vcpu.ds}).found;
                     found = found === undef ? types.undef : found;
                 } else {
                     vcpu.cs.push(op);
@@ -36,7 +39,8 @@
                         if (types.isLexicalAddress(reference)) {
                             vcpu.cs.push(reference.ls.index(reference.index));
                             return;
-                        } else if (types.isString(reference)) {
+                        } else if (nuArray.isArray(reference) && reference.allChars) {
+                            reference = reference.toRawString();
                             if (reference in this) {
                                 vcpu.cs.push(this[reference]);
                                 return;
@@ -64,8 +68,8 @@
                         if (types.isLexicalAddress(reference)) {
                             reference.ls.store(reference.index, value);
                             return;
-                        } else if (types.isString(reference)) {
-                            vcpu.ds.index(vcpu.ds.length() - 1).store(reference, value);
+                        } else if (nuArray.isArray(reference) && reference.allChars) {
+                            vcpu.ds.index(vcpu.ds.length() - 1).store(reference.toRawString(), value);
                             return;
                         } else {
                             nuError.invalidOperand(reference);

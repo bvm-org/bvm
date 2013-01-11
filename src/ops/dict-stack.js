@@ -38,8 +38,8 @@
                     var key, dict;
                     if (vcpu.cs.length() > 0) {
                         key = vcpu.cs.pop();
-                        if (types.isString(key)) {
-                            dict = utils.searchDicts({key: key, dicts: vcpu.ds}).dict;
+                        if (nuArray.isArray(key) && key.allChars) {
+                            dict = utils.searchDicts({key: key.toRawString(), dicts: vcpu.ds}).dict;
                             vcpu.cs.push(dict === undef ? types.undef : dict);
                             return;
                         } else {
@@ -54,7 +54,8 @@
                     if (vcpu.cs.length() > 1) {
                         value = vcpu.cs.pop();
                         key = vcpu.cs.pop();
-                        if (types.isString(key)) {
+                        if (nuArray.isArray(key) && key.allChars) {
+                            key = key.toRawString();
                             dict = utils.searchDicts({key: key, dicts: vcpu.ds}).dict;
                             if (nuDict.isDict(dict)) {
                                 dict.store(key, value);

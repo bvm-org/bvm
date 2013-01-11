@@ -5,7 +5,8 @@
 
         var types = require('../types'),
             nuSegment = require('../segment'),
-            nuError = require('../errors');
+            nuError = require('../errors'),
+            nuArray = require('../array');
 
         return function (vcpu) {
             return {
@@ -16,6 +17,8 @@
                     } else {
                         if (types.isLexicalAddress(op)) {
                             op = op.fix(vcpu); // fix it / make it portable. Does not alter segment
+                        } else if (types.isRawString(op)) {
+                            op = nuArray(op); // wrap strings as soon as they enter the stack
                         }
                         vcpu.cs.push(op);
                         return;
@@ -135,7 +138,6 @@
                         thingT = typeof thing;
                         if (thingT === 'number' ||
                             thingT === 'boolean' ||
-                            types.isString(thing) || // We treat ALL strings as primitives
                             thing === types.isLexicalAddress(thing) ||
                             thing === types.undef ||
                             thing === types.mark) {

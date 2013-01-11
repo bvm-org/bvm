@@ -17,9 +17,12 @@
                 if (vcpu.cs.length() > 1) {
                     b = vcpu.cs.pop();
                     a = vcpu.cs.pop();
-                    if ((typeof a === 'number' && typeof b === 'number') ||
-                        (types.isString(a) && types.isString(b))) {
+                    if (typeof a === 'number' && typeof b === 'number') {
                         vcpu.cs.push(this.fun(a, b));
+                        return;
+                    } else if (nuArray.isArray(a) && a.allChars &&
+                               nuArray.isArray(b) && b.allChars) {
+                        vcpu.cs.push(this.fun(a.toRawString(), b.toRawString()));
                         return;
                     } else {
                         nuError.invalidOperand(a, b);
@@ -45,7 +48,6 @@
                         if (aType === bType) {
                             if (aType === 'number' ||
                                 aType === 'boolean' ||
-                                aType === 'string' ||
                                 a === types.mark ||
                                 a === types.undef) {
                                 vcpu.cs.push(a === b);
@@ -62,9 +64,6 @@
                             } else {
                                 nuError.internalError();
                             }
-                        } else if (types.isString(a) && types.isString(b)) {
-                            // this will convert both to the primitive repr.
-                            vcpu.cs.push(('' + a) === ('' + b));
                         } else {
                             vcpu.cs.push(false);
                             return;

@@ -26,8 +26,8 @@
                             for (idx = 0, len = removed.length; idx < len; idx += 2) {
                                 key = removed[idx];
                                 val = removed[idx + 1];
-                                if (types.isString(key)) {
-                                    dict[key] = val;
+                                if (nuArray.isArray(key) && key.allChars) {
+                                    dict[key.toRawString()] = val;
                                 } else {
                                     nuError.invalidOperand(key);
                                 }
@@ -49,7 +49,7 @@
                         dict = vcpu.cs.pop();
                         if (nuDict.isDict(dict)) {
                             dict.keys().forEach(function (key) {
-                                vcpu.cs.push(key);
+                                vcpu.cs.push(nuArray(key));
                                 vcpu.cs.push(dict.load(key));
                             });
                             return;
@@ -66,8 +66,8 @@
                         value = vcpu.cs.pop();
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && types.isString(key)) {
-                            dict.store(key, value);
+                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
+                            dict.store(key.toRawString(), value);
                             vcpu.cs.push(dict);
                             return;
                         } else {
@@ -82,9 +82,9 @@
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && types.isString(key)) {
+                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
                             vcpu.cs.push(dict);
-                            vcpu.cs.push(dict.has(key));
+                            vcpu.cs.push(dict.has(key.toRawString()));
                             return;
                         } else {
                             nuError.invalidOperand(dict, key);
@@ -98,8 +98,8 @@
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && types.isString(key)) {
-                            dict.remove(key);
+                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
+                            dict.remove(key.toRawString());
                             vcpu.cs.push(dict);
                             return;
                         } else {
@@ -114,9 +114,9 @@
                     if (vcpu.cs.length() > 1) {
                         key = vcpu.cs.pop();
                         dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && types.isString(key)) {
+                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
                             vcpu.cs.push(dict);
-                            vcpu.cs.push(dict.load(key));
+                            vcpu.cs.push(dict.load(key.toRawString()));
                             return;
                         } else {
                             nuError.invalidOperand(dict, key);
@@ -131,7 +131,8 @@
                         dict = vcpu.cs.pop();
                         if (nuDict.isDict(dict)) {
                             vcpu.cs.push(dict);
-                            vcpu.cs.push(nuArray(dict.keys()));
+                            vcpu.cs.push(nuArray(dict.keys().map(
+                                function (str) { return nuArray(str); })));
                         } else {
                             nuError.invalidOperand(dict);
                         }

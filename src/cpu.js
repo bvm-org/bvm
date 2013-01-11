@@ -33,6 +33,9 @@
                                     this.running = false;
                                 }
                             } else {
+                                if (nuArray.isArray(op) && op.allChars) {
+                                    op = op.toRawString();
+                                }
                                 this.op = op;
                                 if (op === 'SEG_END' || op === ops['SEG_END']) {
                                     this.deferred -= 1;

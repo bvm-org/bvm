@@ -43,7 +43,7 @@
                         worklist = this.parsed.statements.slice(0);
                         while (worklist.length) {
                             elem = worklist.shift();
-                            if (types.isString(elem)) {
+                            if (types.isRawString(elem)) {
                                 // This covers general opcodes
                                 if (('' + elem) === 'SEG_END') {
                                     lsl -= 1;

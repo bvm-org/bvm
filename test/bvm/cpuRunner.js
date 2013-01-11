@@ -60,11 +60,14 @@
                 } else {
                     assert(test === found, test);
                 }
-            } else if (types.isString(test)) {
+            } else if (types.isRawString(test)) {
                 if (typeof found === 'function') {
                     assert(test in ops && ops[test] === found, test);
+                } else if (nuArray.isArray(found)) {
+                    assert(found.allChars, test);
+                    assert(('' + test) === found.toRawString(), test);
                 } else {
-                    assert(types.isString(found));
+                    assert(types.isRawString(found), test);
                     assert(('' + test) === ('' + found), test);
                 }
             } else if (Array.isArray(test)) {
@@ -114,7 +117,7 @@
                     throw 'Non-understood type to compare in contents: ' + test;
                 }
             } else if (test === result.breakpoint) {
-                assert(types.isString(found) &&
+                assert(types.isRawString(found) &&
                        found.substr(0, breakpointBase.length) === breakpointBase);
             } else {
                 throw 'Non-understood type to compare in contents: ' + test;

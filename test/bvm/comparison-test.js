@@ -80,7 +80,7 @@
                     5, 5, 'EQ', 4, 5, 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
                     'CLEAR',
-                    'PUSH', 'a', 'PUSH', 'a', 'EQ', 'PUSH', 'a', 'PUSH', 'b', 'EQ',
+                    'PUSH', 'a', 'DUPLICATE', 'EQ', 'PUSH', 'a', 'PUSH', 'b', 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
                     'CLEAR',
                     'TRUE', 'TRUE', 'EQ', 'TRUE', 'FALSE', 'EQ',
