@@ -52,6 +52,9 @@
                                 a === types.undef) {
                                 vcpu.cs.push(a === b);
                                 return;
+                            } else if (types.isChar(a)) {
+                                vcpu.cs.push(a.ch === b.ch);
+                                return;
                             } else if (types.isLexicalAddress(a)) {
                                 vcpu.cs.push(types.isLexicalAddress(b) &&
                                              a.ls === b.ls && a.index === b.index);
