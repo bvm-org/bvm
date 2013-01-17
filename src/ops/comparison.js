@@ -13,17 +13,24 @@
         return function (vcpu) {
 
             var binaryCmpNumStr = function () {
-                var a, b;
+                var a, b, aType, bType;
                 if (vcpu.cs.length() > 1) {
                     b = vcpu.cs.pop();
                     a = vcpu.cs.pop();
-                    if (typeof a === 'number' && typeof b === 'number') {
-                        vcpu.cs.push(this.fun(a, b));
-                        return;
-                    } else if (nuArray.isArray(a) && a.allChars &&
-                               nuArray.isArray(b) && b.allChars) {
-                        vcpu.cs.push(this.fun(a.toRawString(), b.toRawString()));
-                        return;
+                    aType = typeof a;
+                    bType = typeof b;
+                    if (aType === bType) {
+                        if (aType === 'number' || aType === 'boolean' ||
+                            (a === types.mark  && b === types.mark) ||
+                            (a === types.undef && b === types.undef)) {
+                            vcpu.cs.push(this.fun(a, b));
+                            return;
+                        } else if (types.isChar(a) && types.isChar(b)) {
+                            vcpu.cs.push(this.fun(a.ch, b.ch));
+                            return;
+                        } else {
+                            nuError.invalidOperand(a, b);
+                        }
                     } else {
                         nuError.invalidOperand(a, b);
                     }
@@ -48,24 +55,26 @@
                         if (aType === bType) {
                             if (aType === 'number' ||
                                 aType === 'boolean' ||
-                                a === types.mark ||
-                                a === types.undef) {
+                                (a === types.mark && b === types.mark) ||
+                                (a === types.undef && b === types.undef)) {
                                 vcpu.cs.push(a === b);
                                 return;
-                            } else if (types.isChar(a)) {
+                            } else if (types.isChar(a) && types.isChar(b)) {
                                 vcpu.cs.push(a.ch === b.ch);
                                 return;
-                            } else if (types.isLexicalAddress(a)) {
-                                vcpu.cs.push(types.isLexicalAddress(b) &&
-                                             a.ls === b.ls && a.index === b.index);
+                            } else if (types.isLexicalAddress(a) && types.isLexicalAddress(b)) {
+                                vcpu.cs.push(a.ls === b.ls && a.index === b.index);
                                 return;
-                            } else if (nuArray.isArray(a) || nuDict.isDict(a) ||
-                                       nuSegment.isSegment(a) || nuStack.isStack(a) ||
-                                       typeof a === 'function') {
+                            } else if ((nuArray.isArray(a)      && nuArray.isArray(b)     ) ||
+                                       (nuDict.isDict(a)        && nuDict.isDict(b)       ) ||
+                                       (nuSegment.isSegment(a)  && nuSegment.isSegment(b) ) ||
+                                       (nuStack.isStack(a)      && nuSegment.isStack(b)   ) ||
+                                       (typeof a === 'function' && typeof b === 'function')) {
                                 vcpu.cs.push(a === b);
                                 return;
                             } else {
-                                nuError.internalError();
+                                vcpu.cs.push(false);
+                                return;
                             }
                         } else {
                             vcpu.cs.push(false);
