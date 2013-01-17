@@ -35,9 +35,9 @@
                     return this;
                 },
                 toJSON: function () {
-                    var lsl = 0,
-                        result = [],
+                    var result = [],
                         labelStack = [{known: {}, unknown: {}, offset: 0}],
+                        pushed = false,
                         worklist, elem, tmp;
                     if (this.parsed && ! this.json) {
                         worklist = this.parsed.statements.slice(0);
@@ -45,8 +45,7 @@
                             elem = worklist.shift();
                             if (types.isRawString(elem)) {
                                 // This covers general opcodes
-                                if (('' + elem) === 'SEG_END') {
-                                    lsl -= 1;
+                                if (('' + elem) === 'SEG_END' && ! pushed) {
                                     tmp = Object.keys(labelStack.shift().unknown);
                                     if (tmp.length !== 0) {
                                         throw "Labels referenced but not declared by end of scope: " +
@@ -54,43 +53,29 @@
                                     }
                                 }
                                 result.push(elem);
+                                pushed = false;
                             } else if (typeof elem === 'number') {
                                 result.push(elem);
+                                pushed = false;
                             } else if (typeof elem === 'object' && 'type' in elem) {
-                                // This covers explicitly "double" quoted strings
-                                if (elem.type === 'QuotedString') {
-                                    if (('' + elem.content) === 'SEG_END') {
-                                        lsl -= 1;
-                                        tmp = Object.keys(labelStack.shift().unknown);
-                                        if (tmp.length !== 0) {
-                                            throw "Labels referenced but not declared by end of scope: " +
-                                                JSON.stringify(tmp);
-                                        }
-                                    }
-                                    result.push(elem.content);
-                                } else if (elem.type === 'QuotedChar') {
+                                if (elem.type === 'QuotedChar') {
                                     result.push([elem.content]);
+                                    pushed = false;
                                 } else if (elem.type === 'LexicalAddress') {
-                                    if ('lsl' in elem) {
-                                        tmp = elem.lsl < 0 ? lsl + elem.lsl : elem.lsl;
-                                        if (tmp < 0) {
-                                            throw "Invalid lexical scope indicator: " + tmp;
-                                        }
-                                    } else {
-                                        tmp = lsl;
-                                    }
-                                    result.push([tmp, elem.index]);
+                                    result.push([elem.lsl, elem.index]);
+                                    pushed = false;
                                 } else if (elem.type === 'Section') {
-                                    if (elem.subtype === 'SEG') {
-                                        lsl += 1;
+                                    if (elem.subtype === 'SEG' && ! pushed) {
                                         labelStack.unshift({known: {}, unknown: {}, offset: result.length + 1});
                                     }
                                     result.push(elem.subtype + '_START');
                                     worklist.unshift(elem.subtype + '_END');
                                     worklist = elem.statements.slice(0).concat(worklist);
+                                    pushed = false;
                                 } else if (elem.type === 'PUSH') {
                                     result.push('PUSH');
                                     worklist.unshift(elem.operand);
+                                    pushed = true;
                                 } else if (elem.type === 'LabelReference') {
                                     if (elem.name in labelStack[0].known) {
                                         result.push(labelStack[0].known[elem.name]);
@@ -101,6 +86,7 @@
                                         labelStack[0].unknown[elem.name].push(result.length);
                                         result.push('awaiting label declaration: ' + elem.name);
                                     }
+                                    pushed = false;
                                 } else if (elem.type === 'LabelDeclaration') {
                                     tmp = result.length - labelStack[0].offset;
                                     if (elem.name in labelStack[0].known) {

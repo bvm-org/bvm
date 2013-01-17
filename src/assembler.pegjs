@@ -30,7 +30,13 @@ Statement
   / Opcode
 
 Push "push"
-  = "PUSH"i __ operand:PushOperand {
+  = "PUSH" __ operand:PushOperand {
+      return {
+        type: "PUSH",
+        operand: operand
+      };
+    }
+  / "\"PUSH\"" __ operand:PushOperand {
       return {
         type: "PUSH",
         operand: operand
@@ -44,7 +50,7 @@ PushOperand
     / SignedNumericLiteral
     / QuotedStringLiteral
     / QuotedCharLiteral
-    / "PUSH"i
+    / "PUSH"
 
 Section "section"
   = start:SectionStart __
@@ -60,7 +66,7 @@ Section "section"
     }
 
 SectionStart
-  = type:SectionPrefix "_START"i {
+  = type:SectionPrefix "_START" {
       type = type.toUpperCase(); return { type: type, text: type };
     }
   / "[" { return { type: "ARRAY", text: 0 }; }
@@ -68,7 +74,7 @@ SectionStart
   / "{" { return { type: "SEG", text: 2 }; }
 
 SectionEnd
-  = type:SectionPrefix "_END"i {
+  = type:SectionPrefix "_END" {
       type = type.toUpperCase(); return { type: type, text: type };
     }
   / "]" { return { type: "ARRAY", text: 0 }; }
@@ -76,7 +82,7 @@ SectionEnd
   / "}" { return { type: "SEG", text: 2 }; }
 
 SectionPrefix
-  = "SEG"i / "ARRAY"i / "DICT"i
+  = "SEG" / "ARRAY" / "DICT"
 
 LexicalAddress "lexical address"
   = "(" _ lsl:SignedInteger _ "," _ index:SignedInteger _ ")" {
@@ -138,10 +144,7 @@ ExponentIndicator
 
 QuotedStringLiteral "string"
   = parts:('"' QuotedStringCharacters? '"' ) {
-      return {
-        type: "QuotedString",
-        content: parts[1]
-      };
+      return parts[1];
     }
 
 QuotedStringCharacters
