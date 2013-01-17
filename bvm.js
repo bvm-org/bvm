@@ -15,6 +15,9 @@
                           var assembly = nuAssembler();
                           assembly.source = codeStr;
                           return nuCPU(nuSegment(assembly.parse().toJSON().json));
+                      },
+                      interpretJSON: function (json) {
+                          return nuCPU(nuSegment(json));
                       }
                      };
 

@@ -37,7 +37,7 @@
                                     op = op.toRawString();
                                 }
                                 this.op = op;
-                                if (op === 'SEG_END' || op === ops['SEG_END']) {
+                                if ((op === 'SEG_END' || op === ops['SEG_END']) && ! this.pushed) {
                                     this.deferred -= 1;
                                     if (this.deferred < 0) {
                                         nuError('TOO MANY SEG_ENDS');
@@ -45,6 +45,11 @@
                                 }
                                 if (this.deferred > 0) {
                                     this.cs.push(op);
+                                    if ((op === 'PUSH' || op === ops['PUSH']) && ! this.pushed) {
+                                        this.pushed = true;
+                                    } else if (this.pushed) {
+                                        delete this.pushed;
+                                    }
                                 } else {
                                     if (typeof op === 'function') {
                                         op();
@@ -58,6 +63,7 @@
                                 }
                                 if (op === 'SEG_START' || op === ops['SEG_START']) {
                                     this.deferred += 1;
+                                    delete this.pushed;
                                 }
                             }
                         }},

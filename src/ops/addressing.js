@@ -84,8 +84,14 @@
                     if (vcpu.cs.length() > 1) {
                         index = vcpu.cs.pop();
                         lsl = vcpu.cs.pop();
-                        if (typeof index === 'number' && index >= 0 &&
-                            typeof lsl === 'number' && lsl >= 0) {
+                        if (typeof index === 'number' && index === Math.round(index) &&
+                            ((typeof lsl === 'number' && lsl === Math.round(lsl)) ||
+                             lsl === types.undef)) {
+                            if (lsl === types.undef) {
+                                lsl = vcpu.cs.lsl;
+                            } else if (lsl < 0) {
+                                lsl = vcpu.cs.lsl + lsl;
+                            }
                             vcpu.cs.push(types.nuLexicalAddress(lsl, index).fix(vcpu));
                             return;
                         } else {
