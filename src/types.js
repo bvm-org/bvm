@@ -26,8 +26,8 @@
                 index: {value: 0},
             },
             fixedLexicalAddressTemplate = {
-                ls:    {value: undef},
-                fix:   {value: function () { return this; }}
+                ls:      {value: undef},
+                fix:     {value: function () { return this; }}
             },
             lexicalAddressBase,
 
@@ -53,11 +53,17 @@
                             index: this.index};
                 }},
                 fix: {value: function (vcpu) {
+                    var result;
                     fixedLexicalAddressTemplate.ls.value = vcpu.dereferenceScope(this.lsl);
-                    return Object.create(this, fixedLexicalAddressTemplate);
+                    result = Object.create(this, fixedLexicalAddressTemplate);
+                    if (result.index < 0) {
+                        Object.defineProperty(result, 'index',
+                                              {value: result.ls.length() + result.index});
+                    }
+                    return result;
                 }},
                 transitiveDereference: {value: function (vcpu) {
-                    var seen = {}, obj = this.fix();
+                    var seen = {}, obj = this.fix(vcpu);
                     seen[obj.lsl] = {};
                     seen[obj.lsl][obj.index] = true;
                     while (true) {

@@ -15,7 +15,8 @@
             vcpu.setDefaultOp(function (op) {
                 var found;
                 if (types.isLexicalAddress(op)) {
-                    found = op.fix(vcpu).ls.index(op.index);
+                    op = op.fix(vcpu);
+                    found = op.ls.index(op.index);
                 } else if (types.isRawString(op)) {
                     found = utils.searchDicts({key: op, dicts: vcpu.ds}).found;
                     found = found === undef ? types.undef : found;

@@ -79,14 +79,14 @@ SectionPrefix
   = "SEG"i / "ARRAY"i / "DICT"i
 
 LexicalAddress "lexical address"
-  = "(" _ lsl:SignedInteger _ "," _ index:UnsignedInteger _ ")" {
+  = "(" _ lsl:SignedInteger _ "," _ index:SignedInteger _ ")" {
       return {
         type: "LexicalAddress",
         lsl: lsl,
         index: index
       };
     }
-  / "(" _ index:UnsignedInteger _ ")" { // shorthand - implicitly current scope
+  / "(" _ index:SignedInteger _ ")" { // shorthand - implicitly current scope
       return {
         type: "LexicalAddress",
         index: index
