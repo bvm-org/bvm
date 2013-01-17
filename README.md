@@ -504,7 +504,9 @@ The BVM has built-in support for the following types:
 * Arrays. Arrays are dynamically sized and are a reference type:
   multiple values can point to the same array.
 
-* Strings.
+* Characters.
+
+* Strings. These are treated as arrays of characters.
 
 * Dictionaries, where the keys must be strings. This restriction may
   be relaxed in the future. Dictionaries are of dynamic size and are a
@@ -519,10 +521,11 @@ The BVM has built-in support for the following types:
   instruction stream, or they can be constructed dynamically. They
   represent an offset into a lexical context in scope at the time of
   the current function declaration. Once a lexical address enters the
-  operand stack, it is *fixed* which ensures that it is stable:
-  i.e. the lexical address itself can be passed to different functions
-  declared in different scopes and the lexical address will continue
-  to point at the same offset in the very same stack.
+  operand stack (in non-*deferred mode*), it is *fixed* which ensures
+  that it is stable: i.e. the lexical address itself can be passed to
+  different functions declared in different scopes and the lexical
+  address will continue to point at the same offset in the very same
+  stack.
 
 * Stacks. A stack is seldom witnessed as a value on the operand stack.
   It appears though when some form of call-with-continuation
@@ -733,10 +736,10 @@ covered later.
 A code segment can be created by using the `{` and `}` opcodes. Once
 again, these are assembly shorthands for `SEG_START` and
 `SEG_END`. Note that between a `SEG_START` and a `SEG_END`, *no
-evaluation takes place*: evaluation is said to be in *deferred mode*,
-to borrow terminology from PostScript. There are then several ways to
-invoke a segment on the top of the stack, the most obvious of which is
-the `EXEC` opcode.
+evaluation takes place*: evaluation is said to be in *deferred mode*
+(to borrow terminology from PostScript). There are then several ways
+to invoke a segment on the top of the stack, the most obvious of which
+is the `EXEC` opcode.
 
     bvm> { 3 5 ADD } COUNT RETURN
     [{"type": "segment",
@@ -1096,12 +1099,13 @@ Again, the following are equivalent:
     bvm> { PUSH goodbye 1 RETURN } 0 0 LEXICAL_ADDRESS LOAD EXEC
     ["goodbye"]
 
-Once a lexical address enters the operand stack, it is fixed to the
-lexical scope determined at that point. This means these addresses can
-be used as stable pointers and used to pass by reference. This is
-demonstrated in the following by passing a lexical address from one
-function to another and showing how it still loads the value
-determined relative to the scope in which it is created:
+Once a lexical address enters the operand stack in non-*deferred
+mode*, it is fixed to the lexical scope determined at that point. This
+means these addresses can be used as stable pointers and used to pass
+by reference. This is demonstrated in the following by passing a
+lexical address from one function to another and showing how it still
+loads the value determined relative to the scope in which it is
+created:
 
     bvm> { 17 PUSH (0) 1 RETURN } EXEC { 24 1 TAKE LOAD PUSH (0) LOAD 2 RETURN } EXEC
     [17, 24]
@@ -1858,9 +1862,13 @@ counter. This is the reason why the two possible outcomes are
 explicitly shown in this section. All other opcodes have no action
 when in *deferred mode*, other than to be pushed onto the operand
 stack (and in all other sections, this is not shown as a possible
-outcome). See the [section on code segments](#literal-code-segments)
-for more details. When the BVM is first started, the *deferred mode*
-counter is set to zero.
+outcome. Indeed it is not necessary for implementations to implement
+*deferred mode* at all: all that is necessary is to detect balanced
+pairs of `SEG_START` and `SEG_END` (taking care to detect and account
+for the fact that `PUSH` essentially *escapes* whatever follows it)
+and to construct a segment from what lies between). See the [section
+on code segments](#literal-code-segments) for more details. When the
+BVM is first started, the *deferred mode* counter is set to zero.
 
 * `SEG_START` *(equivalent to `{` in assembly)*  
   *Before*:  
