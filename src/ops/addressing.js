@@ -88,9 +88,7 @@
                             ((typeof lsl === 'number' && lsl === Math.round(lsl)) ||
                              lsl === types.undef)) {
                             if (lsl === types.undef) {
-                                lsl = vcpu.cs.lsl;
-                            } else if (lsl < 0) {
-                                lsl = vcpu.cs.lsl + lsl;
+                                lsl = undef;
                             }
                             vcpu.cs.push(types.nuLexicalAddress(lsl, index).fix(vcpu));
                             return;

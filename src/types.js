@@ -27,6 +27,8 @@
             },
             fixedLexicalAddressTemplate = {
                 ls:      {value: undef},
+                lsl:     {value: 0},
+                index:   {value: 0},
                 fix:     {value: function () { return this; }}
             },
             lexicalAddressBase,
@@ -53,14 +55,21 @@
                             index: this.index};
                 }},
                 fix: {value: function (vcpu) {
-                    var result;
-                    fixedLexicalAddressTemplate.ls.value = vcpu.dereferenceScope(this.lsl);
-                    result = Object.create(this, fixedLexicalAddressTemplate);
-                    if (result.index < 0) {
-                        Object.defineProperty(result, 'index',
-                                              {value: result.ls.length() + result.index});
+                    var lsl = this.lsl, index = this.index;
+                    if (typeof lsl === 'number') {
+                        if (lsl < 0) {
+                            lsl = vcpu.cs.lsl + lsl;
+                        }
+                    } else {
+                        lsl = vcpu.cs.lsl;
                     }
-                    return result;
+                    fixedLexicalAddressTemplate.ls.value = vcpu.dereferenceScope(lsl);
+                    fixedLexicalAddressTemplate.lsl.value = lsl;
+                    if (index < 0) {
+                        index = fixedLexicalAddressTemplate.ls.value.length() + index;
+                    }
+                    fixedLexicalAddressTemplate.index.value = index;
+                    return Object.create(this, fixedLexicalAddressTemplate);
                 }},
                 transitiveDereference: {value: function (vcpu) {
                     var seen = {}, obj = this.fix(vcpu);
