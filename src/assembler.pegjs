@@ -20,66 +20,58 @@ Statements
     }
 
 Statement
-  = Push
+  = LabelDeclaration
   / Section
-  / LexicalAddress
+  / Push
+  / StatementNonLabelDeclSectionPush
+
+StatementNonLabelDeclSectionPush
+  = LexicalAddress
   / SignedNumericLiteral
-  / QuotedStringLiteral
   / QuotedCharLiteral
-  / Label
+  / LabelReference
   / Opcode
 
 Push "push"
-  = "PUSH" __ operand:PushOperand {
-      return {
-        type: "PUSH",
-        operand: operand
-      };
-    }
-  / "\"PUSH\"" __ operand:PushOperand {
+  = PushOpcode __ operand:PushOperand {
       return {
         type: "PUSH",
         operand: operand
       };
     }
 
+PushOpcode
+  = "PUSH" / "\"PUSH\""
+
 PushOperand
-    = start:SectionStart { return start.type + "_START"; }
-    / end:SectionEnd { return end.type + "_END"; }
-    / Opcode
-    / SignedNumericLiteral
-    / QuotedStringLiteral
-    / QuotedCharLiteral
-    / "PUSH"
+    = LabelDeclarationPush
+    / start:SectionStart { return start + "_START"; }
+    / end:SectionEnd { return end + "_END"; }
+    / PushOpcode
+    / StatementNonLabelDeclSectionPush
 
 Section "section"
   = start:SectionStart __
     statements:Statements?
-    end:SectionEnd & {
-      return start.text === end.text;
-    } {
+    end:SectionEnd & { return start === end; } {
       return {
         type: "Section",
-        subtype: start.type,
+        subtype: start,
         statements: statements ? statements : []
       };
     }
 
 SectionStart
-  = type:SectionPrefix "_START" {
-      type = type.toUpperCase(); return { type: type, text: type };
-    }
-  / "[" { return { type: "ARRAY", text: 0 }; }
-  / "<" { return { type: "DICT", text: 1 }; }
-  / "{" { return { type: "SEG", text: 2 }; }
+  = type:SectionPrefix "_START" { return type; }
+  / "[" { return "ARRAY"; }
+  / "<" { return "DICT"; }
+  / "{" { return "SEG"; }
 
 SectionEnd
-  = type:SectionPrefix "_END" {
-      type = type.toUpperCase(); return { type: type, text: type };
-    }
-  / "]" { return { type: "ARRAY", text: 0 }; }
-  / ">" { return { type: "DICT", text: 1 }; }
-  / "}" { return { type: "SEG", text: 2 }; }
+  = type:SectionPrefix "_END" { return type; }
+  / "]" { return "ARRAY"; }
+  / ">" { return "DICT"; }
+  / "}" { return "SEG"; }
 
 SectionPrefix
   = "SEG" / "ARRAY" / "DICT"
@@ -182,27 +174,38 @@ SingleEscapeCharacter
 NonEscapeCharacter
   = !SingleEscapeCharacter char:Char { return char; }
 
-Label
-  = LabelDeclaration / LabelReference
-
 LabelDeclaration "label declaration"
-  = ">" name:Opcode "<" {
+  = ">" name:LabelName "<" __ statement:Statement {
     return {
       type: "LabelDeclaration",
-      name: name
+      name: name,
+      statement: statement
+    };
+  }
+
+LabelDeclarationPush "label declaration"
+  = ">" name:LabelName "<" __ statement:PushOperand {
+    return {
+      type: "LabelDeclaration",
+      name: name,
+      statement: statement
     };
   }
 
 LabelReference "label reference"
-  = "<" name:Opcode ">" {
+  = "<" name:LabelName ">" {
     return {
       type: "LabelReference",
       name: name
     };
   }
 
+LabelName "label name"
+ = Opcode / UnsignedInteger
+
 Opcode
-  = !SectionStart !SectionEnd !Push chars:OpcodeCharset { return chars; }
+  = !SectionStart !SectionEnd !PushOpcode chars:OpcodeCharset { return chars; }
+  / QuotedStringLiteral
 
 OpcodeCharset "opcode"
   = start:[A-Za-z] rest:[A-Za-z0-9_]* { return '' + start + rest.join(""); }

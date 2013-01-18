@@ -100,6 +100,8 @@
                                         });
                                         delete labelStack[0].unknown[elem.name];
                                     }
+                                    worklist.unshift(elem.statement);
+                                    // do not alter pushed
                                 } else {
                                     throw "Unrecognised program element: " + elem;
                                 }

@@ -544,15 +544,18 @@ The BVM has built-in support for the following types:
 ## File formats
 
 The object file format is a JSON array, with no encoding of opcodes at
-all: they exist as literal strings. This is chosen because of its
-widespread support in browsers and the ease of compression: standard
-compression techniques are expected to lead to file sizes as small
-efficient binary object file formats. The non-binary format is also in
-the spirit of the open web and should also lead to a very low curve to
-creating tool chains and debugging infrastructure. The only downside
-is that it is likely the entire object file will need to be downloaded
-before decompression and execution can begin. If in practise this
-becomes an issue, this can be revisited.
+all: they exist as literal strings. There is a light encoding of some
+features such as characters (as JSON cannot distinguish between
+strings of length 1 and characters), and lexical addresses. JSON is
+chosen because of its widespread support in browsers and the ease of
+compression: standard compression techniques are expected to lead to
+file sizes as small efficient binary object file formats. The
+non-binary format is also in the spirit of the open web and should
+also lead to a very low curve to creating tool chains and debugging
+infrastructure. The only downside is that it is likely the entire
+object file will need to be downloaded before decompression and
+execution can begin. If in practise this becomes an issue, this can be
+revisited.
 
 The assembly format is plain text, with whitespace-separated
 tokens. The assembly format permits comments. The parser currently
@@ -737,9 +740,13 @@ A code segment can be created by using the `{` and `}` opcodes. Once
 again, these are assembly shorthands for `SEG_START` and
 `SEG_END`. Note that between a `SEG_START` and a `SEG_END`, *no
 evaluation takes place*: evaluation is said to be in *deferred mode*
-(to borrow terminology from PostScript). There are then several ways
-to invoke a segment on the top of the stack, the most obvious of which
-is the `EXEC` opcode.
+(to borrow terminology from PostScript). This is in contrast to the
+behaviour between `[` and `]`, and `<` and `>` where evaluation does
+continue. When in *deferred mode*, opcodes are simply pushed onto the
+operand stack. When *deferred mode* is exited, the opcodes pushed to
+the operand stack are removed and formed into a code segment. There
+are then several ways to invoke a segment on the top of the stack, the
+most obvious of which is the `EXEC` opcode.
 
     bvm> { 3 5 ADD } COUNT RETURN
     [{"type": "segment",
@@ -1274,7 +1281,8 @@ And to demonstrate that indices are local to the current code segment:
 
 > It's important to remember (if slightly obvious when you think about
 > it) that these indices are of the *code segment* and have nothing to
-> do with the operand stack.
+> do with the operand stack. Also remember that a code segment
+> contains the raw opcodes of any nested code segments.
 
 The object file JSON always requires these indices to be numbers, but
 the assembly format supports labels which makes using opcodes such as
@@ -1325,7 +1333,8 @@ stack can otherwise contain any other elements further down.
 * `PUSH`  
   *Before*:  
   *After*: `a]`  
-  *where* `a` is the literal element in the code segment immediately following the `PUSH`.  
+  *where* `a` is the literal element in the code segment immediately
+   following the `PUSH`.  
   *Errors*: Will error if `PUSH` is the last opcode in a code segment.  
   > Explicitly pushes an item onto the stack.
 
@@ -1338,7 +1347,8 @@ stack can otherwise contain any other elements further down.
 * `EXCHANGE`  
   *Before*: `b, a]`  
   *After*: `a, b]`  
-  *Errors*: Will error if there are fewer than two items on the operand stack.  
+  *Errors*: Will error if there are fewer than two items on the
+   operand stack.  
   > Swaps the order of the top two items on the current operand stack.
 
 * `COUNT`  
@@ -1577,10 +1587,21 @@ functional: they are mutated in place.
   > Note that the assembly parser expects pairs of `[` and `]`, and
   > similarly `ARRAY_START` and `ARRAY_END`. Occasionally there is
   > reason to want a lone `ARRAY_END`, for example due to use of
-  > `ARRAY_EXPAND` and then wanting to repack the array. This is
-  > currently not accepted by the assembly parser and so this is one
-  > reason why you may wish to use the JSON object format which does
-  > not have these restrictions.
+  > `ARRAY_EXPAND` and then wanting to repack the array. You might
+  > expect to be able to write:  
+  >
+  >        MARK [ 1 2 3 ] ARRAY_EXPAND ] COUNT RETURN
+  >
+  > This is currently not accepted by the assembly parser and so this
+  > is one reason why you may wish to use the JSON object format which
+  > does not have these restrictions. There is however a work around:
+  > `PUSH` essentially escapes whatever follows it, so by using `PUSH`
+  > you can make this work:
+  >
+  >        MARK [ 1 2 3 ] ARRAY_EXPAND PUSH ] LOAD EXEC COUNT RETURN
+  >
+  > It's not very pretty, but it does work. Use the JSON object format
+  > to avoid this.
 
 * `ARRAY_EXPAND`  
   *Before*: `ary]`  
@@ -1710,9 +1731,9 @@ functional: they are mutated in place.
   > segment when it is invoked. Of course, you may not use any of
   > the shorthands (they only apply to literal lexical addresses,
   > not dynamic lexical addresses anyway).
-
-        bvm> 5 [ 17 1 0 PUSH LEXICAL_ADDRESS PUSH LOAD 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
-        [17]
+  >
+  >        bvm> 5 [ 17 1 0 PUSH LEXICAL_ADDRESS PUSH LOAD 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+  >        [17]
 
 
 ## Dictionaries
@@ -1755,10 +1776,21 @@ dictionaries are not functional: they are mutated in place.
   > Note that the assembly parser expects pairs of `<` and `>`, and
   > similarly `DICT_START` and `DICT_END`. Occasionally there is
   > reason to want a lone `DICT_END`, for example due to use of
-  > `DICT_EXPAND` and then wanting to repack the dictionary. This is
-  > currently not accepted by the assembly parser and so this is one
-  > reason why you may wish to use the JSON object format which does
-  > not have these restrictions.
+  > `DICT_EXPAND` and then wanting to repack the dictionary. You might
+  > expect to be able to write:  
+  >
+  >        MARK < PUSH "a" 1 PUSH "b" 2 > DICT_EXPAND > COUNT RETURN
+  >
+  > This is currently not accepted by the assembly parser and so this
+  > is one reason why you may wish to use the JSON object format which
+  > does not have these restrictions. There is however a work around:
+  > `PUSH` essentially escapes whatever follows it, so by using `PUSH`
+  > you can make this work:
+  >
+  >        MARK < PUSH "a" 1 PUSH "b" 2 > DICT_EXPAND PUSH > LOAD EXEC COUNT RETURN
+  >
+  > It's not very pretty, but it does work. Use the JSON object format
+  > to avoid this.
 
 * `DICT_NEW`
   *Before*:  
