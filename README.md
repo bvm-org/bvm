@@ -10,6 +10,8 @@
 	- [Supported Types](#supported-types)
 	- [File formats](#file-formats)
 	- [Execution Model](#execution-model)
+		- [Characters](#characters)
+		- [Strings](#strings)
 		- [Literal Arrays](#literal-arrays)
 		- [Literal Dictionaries](#literal-dictionaries)
 		- [Literal Code Segments](#literal-code-segments)
@@ -663,8 +665,8 @@ top of the new stack to which it's been moved.
 There is an **implicit default operator**. This is overloaded and will
 be explained part by part. When an opcode is encountered which is not
 a built-in opcode, this default operator is invoked. *If the opcode
-encountered is a number, the number will be pushed onto the operand
-stack.* Thus we can rewrite the above as:
+encountered is a number (or a character), the number will be pushed
+onto the operand stack.* Thus we can rewrite the above as:
 
     bvm> 13 3 5 ADD COUNT RETURN
     [13, 8]
@@ -685,6 +687,51 @@ spaces in it:
 
     bvm> 13 3 5 PUSH "ADD this" COUNT RETURN
     [13, 3, 5, "ADD this"]
+
+But it's not an error to use quotes where they're not necessary. Note
+that only double quotes are allowed for strings:
+
+    bvm> 13 3 5 "PUSH" "ADD this" "COUNT" "RETURN"
+    [13, 3, 5, "ADD this"]
+
+### Characters
+
+A character is indicated in assembly by surrounding the character with
+single quotes. As mentioned above, when encountered as an opcode, the
+**implicit default operator** will just push the character onto the
+operand stack. Note that because neither JavaScript or JSON can
+distinguish between a character and a string of length 1, display of
+characters in the current JavaScript implementation is a little
+verbose:
+
+    bvm> 'a' PUSH 'b' PUSH "c" COUNT RETURN
+    [{"type":"character","character":"a"}, {"type":"character","character":"b"}, "c"]
+
+Note the difference between pushing a string (of length 1) and pushing
+a character. Again, due to difficulties with JavaScript and JSON, in
+the JSON object format, a character must be encoded. The encoding is
+to make the character into a string, and place that string inside an
+array. Thus the above example is encoded as:
+
+    [ [ 'a' ], 'PUSH', [ 'b' ], 'PUSH', 'c', 'COUNT', 'RETURN' ]
+
+Obviously, additional confusion is caused by JavaScript not
+distinguishing between single and double quotes!
+
+### Strings
+
+A string is just an array of characters. In both the assembly and
+object formats, literal strings can occur freely. Once a string enters
+the operand stack, it becomes an array of characters. The current
+implementation will display an array as if it is a string if all the
+elements of the array are characters. You can of course thus use the
+entire array API to manipulate "strings".
+
+Note that because arrays are a reference type, when strings are used
+as the keys of dictionaries, the dictionary will take a copy of the
+string. This ensures that if you modify the string after using it as a
+key in a dictionary, you are not actually modifying the same string as
+being used by the dictionary.
 
 ### Literal Arrays
 
@@ -966,11 +1013,12 @@ opcodes unlike with user-defined code segments:
     bvm> PUSH ADD LOAD COUNT RETURN
     ["ADD!"]
 
-This reveals then the trade-off between allowing more than just strings
-as keys in dictionaries: if, for example numbers were allowed as keys,
-then due to the implicit default operator, all literal numbers in the
-source text would have to be explicitly `PUSH`ed onto the stack as by
-default they would be used as keys to index the dictionary stack.
+This reveals then the trade-off between allowing more than just
+strings as keys in dictionaries: if, for example numbers were allowed
+as keys, then due to the implicit default operator, all literal
+numbers in the source text would have to be explicitly `PUSH`ed onto
+the stack as by default they would be used as keys to index the
+dictionary stack.
 
 The rest of the dictionary stack API (including actually adding and
 removing dictionaries from this stack) will be covered later.
@@ -978,11 +1026,12 @@ removing dictionaries from this stack) will be covered later.
 ### Lexical Addresses
 
 The BVM allows code segments to explicitly index any lexical
-scope. The syntax for this is `(A, B)` where `A` is the *lexical scope
-level*, and `B` is the *stack index* within that level. The *lexical
-scope level* is 0 for the root scope, 1 for all children of the root,
-and so on. The *stack index* 0 refers to the first item at the
-*bottom* of the relevant stack.
+scope. The assembly syntax for this is `(A, B)` where `A` is the
+*lexical scope level*, and `B` is the *stack index* within that
+level. The *lexical scope level* is 0 for the root scope, 1 for all
+children of the root, and so on. The *stack index* 0 refers to the
+first item at the *bottom* of the relevant stack. The JSON object file
+format is `[A, B]`. Note the array must always have two elements.
 
 The **implicit default operator** also plays a role with lexical
 addresses: if an opcode is encountered which is a lexical address and
@@ -1016,8 +1065,9 @@ for example for recursive functions.
     bvm> 13 { 12 (1, 0) COUNT RETURN } (0, 1) (0, 0) COUNT RETURN
     [13, {"type": "segment", /* rest elided */ }, 12, 12, 13]
 
-There are two shorthands that the assembler permits with regards to
-lexical addresses. The first is to omit the *lexical scope level*
+There are three shorthands that are permitted with regards to lexical
+addresses but these shorthands differ slightly between the assembly
+and the object format. The first is to omit the *lexical scope level*
 entirely, thus the syntax is then just `(B)`. This implies the current
 lexical scope. The following are equivalent:
 
@@ -1026,13 +1076,16 @@ lexical scope. The following are equivalent:
     bvm> 13 { 17 (0) (0, 0) (1) COUNT RETURN } (1)
     [17, 17, 13, 17]
 
-The second is to use negative numbers as the *lexical scope level*. -1
-indicates your parent, -2 is your grandparent, and so on. In both
-cases, the assembler rewrites these to the first form, but it's an
-easy transformation to do. It's important to remember though that 0 is
-always the root lexical scope - if you want to indicate the current
-scope simply, omit the *lexical scope level* entirely. Thus the
-following are again equivalent:
+For the object format, the JSON array must specify `undefined` (or
+`null`) as the first value, so for example `(3)` would be encoded as
+`[undefined, 3]`.
+
+The second shorthand is to use negative numbers as the *lexical scope
+level*. -1 indicates your parent, -2 is your grandparent, and so
+on. It's important to remember though that 0 is always the root
+lexical scope - if you want to indicate the current scope simply, omit
+the *lexical scope level* entirely (thus using the first
+shorthand). Thus the following are again equivalent:
 
     bvm> 13 { 17 (1, 0) (0, 0) (1, 1) COUNT RETURN } (0, 1)
     [17, 17, 13, 17]
@@ -1040,6 +1093,30 @@ following are again equivalent:
     [17, 17, 13, 17]
     bvm> 13 { 17 (0) (-1, 0) (1) COUNT RETURN } (1)
     [17, 17, 13, 17]
+
+For the object format, the negative *lexical scope level* is permitted
+directly.
+
+The third shorthand is to use negative numbers as the *stack
+index*. Here, `-1` means the top of the stack, `-2` means the item
+below, and so forth. However, note that when a lexical address is used
+or pushed onto the current operand stack, not only is the stack
+resolved and fixed, but so is the index, so a negative *stack index*
+will be rewritten to a positive index. This makes it stable in case
+the stack changes length in the future. For example:
+
+    bvm> 5 13 { PUSH (0, -1) 1 RETURN } EXEC 6 (-2) LOAD 2 RETURN
+    [6, 13]
+
+The inner code segment returns a lexical address which has now been
+fixed to point at the 2nd item in the parent scope's stack. Thus even
+though we then push `6` to the stack, duplicating the lexical address
+(with the `(-2)`) and `LOAD`ing it still loads the `13`, not the
+`6`. I.e. the `-1` was rewritten to a `1` when the `(0, -1)` lexical
+address was pushed onto the operand stack.
+
+For the object format, again, the negative *stack index* is permitted
+directly.
 
 Lexical addresses, as you would expect, are referenced based on the
 scope of the declaration of the function, not the scope in which the
@@ -1053,17 +1130,17 @@ stack.
     bvm> 1 { 2 { 3 { (-1, 0) 1 RETURN } 1 RETURN } EXEC } EXEC EXEC
     [3]
 
-Just like with strings and the dictionary stack, lexical addresses can
-be explicitly `PUSH`ed onto the operand stack to avoid the implicit
-default operator. Once there, they can act as addresses for the `LOAD`
-and `STORE` opcodes: `LOAD` just takes an address off the operand
-stack and pushes back on the value found at that address, whilst
-`STORE` expects to find a value at the top of the stack, and an
-address next. When the addresses are strings, `LOAD` and `STORE`
-manipulate the dictionary stacks, but when the addresses found are
-lexical addresses they modify the relevant stacks. Again, note how
-lexical address when used both through `LOAD` and through the implicit
-default operator do *not* remove the referenced values.
+Just like with strings, lexical addresses can be explicitly `PUSH`ed
+onto the operand stack to avoid the implicit default operator. Once
+there, they can act as addresses for the `LOAD` and `STORE` opcodes:
+`LOAD` just takes an address off the operand stack and pushes back on
+the value found at that address, whilst `STORE` expects to find a
+value at the top of the stack, and an address next. When the addresses
+are strings, `LOAD` and `STORE` manipulate the dictionary stacks, but
+when the addresses found are lexical addresses they modify the
+relevant stacks. Again, note how lexical address when used both
+through `LOAD` and through the implicit default operator do *not*
+remove the referenced values.
 
     bvm> 17 PUSH hello 3 (0) PUSH (2) LOAD ADD COUNT RETURN
     [17, "hello", 3, 20]
@@ -1076,9 +1153,12 @@ yet have values in them!
 
 Lexical addresses need not be literals: they can be constructed
 dynamically by the `LEXICAL_ADDRESS` operator, which expects to find
-two numbers on the top of the stack: the top number should be the
-*stack index*, and the next number should be the *lexical scope
-level*. The following are equivalent:
+two arguments on the top of the stack: the top argument should be a
+number which is the *stack index* (as with the shorthands, negative
+values are allowed), and the next number should be the *lexical scope
+level*. Here, you may use the `UNDEF` opcode to push the `undef` value
+to the stack to indicate the current lexical scope. The following are
+equivalent:
 
     bvm> 1 { 2 { 3 { (-1, 0) 1 RETURN } 1 RETURN } EXEC } EXEC EXEC
     [3]
@@ -1089,9 +1169,8 @@ level*. The following are equivalent:
 
 However, note that if you are using the `LEXICAL_ADDRESS` opcode:
 
-1. You **must** provide both numeric operands
-2. Both operands must not be negative (thus neither shorthand forms are available)
-3. The lexical address constructed is then simply placed on the
+1. You **must** provide both operands
+2. The lexical address constructed is then simply placed on the
   operand stack: it does not at that point go through the implicit
   default operator as it's not being seen as an opcode. You can then
   use `LOAD` and `EXEC` to then perform the deferencing and invocation
@@ -1104,6 +1183,8 @@ Again, the following are equivalent:
     bvm> { PUSH goodbye 1 RETURN } (0)
     ["goodbye"]
     bvm> { PUSH goodbye 1 RETURN } 0 0 LEXICAL_ADDRESS LOAD EXEC
+    ["goodbye"]
+    bvm> { PUSH goodbye 1 RETURN } UNDEF -1 LEXICAL_ADDRESS LOAD EXEC
     ["goodbye"]
 
 Once a lexical address enters the operand stack in non-*deferred
@@ -1370,9 +1451,10 @@ stack can otherwise contain any other elements further down.
   *After*: `a, a]`  
   *Errors*: Will error if there are no items on the operand stack.  
   > Duplicates the item on the top of the current operand stack. If
-  > the item found is a reference type (i.e. an array, dictionary,
-  > code segment or stack) then it is the pointer to that item that is
-  > duplicated, not the item itself. This is the same as `1 COPY`.
+  > the item found is a reference type (i.e. an array (including
+  > strings), dictionary, code segment or stack) then it is the
+  > pointer to that item that is duplicated, not the item itself. This
+  > is the same as `1 COPY`.
 
 * `INDEX`  
   *Before*: <code>[a<sub>0</sub>, ..., a<sub>i</sub>, ..., a<sub>n-1</sub>, i]</code>  
@@ -1418,13 +1500,13 @@ stack can otherwise contain any other elements further down.
   *After*: `a, a]`  
   *Errors*: Will error if no items on the current operand stack.  
   > Clones the item on the top of the stack. If the item is a
-  > reference type (i.e. an array, dictionary, code segment or
-  > stack), the value itself is cloned, thus the subsequent two
-  > pointers will point at distinct values, containing the same
-  > values. This is in contrast to `DUPLICATE` which will result in
-  > two pointers pointing at the same value. If the value is not a
-  > reference type, then there is no difference between `CLONE` and
-  > `DUPLICATE`. Note that in the case of a reference value, the
+  > reference type (i.e. an array (including strings), dictionary,
+  > code segment or stack), the value itself is cloned, thus the
+  > subsequent two pointers will point at distinct values, containing
+  > the same values. This is in contrast to `DUPLICATE` which will
+  > result in two pointers pointing at the same value. If the value is
+  > not a reference type, then there is no difference between `CLONE`
+  > and `DUPLICATE`. Note that in the case of a reference value, the
   > cloning is shallow.
 
 * `UNDEF`  
@@ -1443,16 +1525,15 @@ stack can otherwise contain any other elements further down.
    *lexical scope level* is greater than the *lexical scope level*
    of the current function or is less than 0 or is not an integer;
    or if the *stack index* is not a non-negative index.  
-  > For general details, see the [section on lexical
-  > addresses](#lexical-addresses). A lexical address when seen as
-  > an opcode will be processed by the **implicit default
-  > operator**. If the value pointed to by the lexical address is a
-  > code segment then that segment will be invoked. Otherwise, the
-  > value pointed to by the lexical address will be pushed onto the
-  > current operand stack. Note that whilst the assembly format for
-  > lexical addresses is `(A, B)`, for the JSON object format,
-  > lexical addresses are `[A, B]`. None of the shorthand formats
-  > are permissible in the JSON object format.
+  > For further details, see the [section on lexical
+  > addresses](#lexical-addresses). A lexical address when seen as an
+  > opcode will be processed by the **implicit default operator**. If
+  > the value pointed to by the lexical address is a code segment then
+  > that segment will be invoked. Otherwise, the value pointed to by
+  > the lexical address will be pushed onto the current operand
+  > stack. Note that whilst the assembly format for lexical addresses
+  > is `(A, B)`, for the JSON object format, lexical addresses are
+  > `[A, B]`.
 
 * Any string that's not recognised as an opcode  
   *Before*:  
@@ -1470,14 +1551,16 @@ stack can otherwise contain any other elements further down.
 * `LEXICAL_ADDRESS`  
   *Before*: `a, b]`  
   *After*: `c]`  
-  *where* `a` and `b` are both non-negative integers and `a` is not
-   greater than the *lexical scope level* of the current code
-   segment, and `c` is the lexical address formed by `a` and `b` and
-   fixed to the operand stack indicated by `a`.  
+  *where* `a` is either the `undef` value or an interger, and `b` is
+   an integer, and if `a` is a non-negative integer then it is not
+   greater than the *lexical scope level* of the current code segment,
+   and `c` is the lexical address formed by `a` and `b` and fixed to
+   the operand stack indicated by `a`.  
   *Errors*: Will error if `a` or `b` do not meet the requirements
    set out above.  
   > Dynamically creates a new lexical address and pushes it onto the
-  > current operand stack.
+  > current operand stack. See the [section on lexical
+  > addresses](#lexical-addresses) for further details.
 
 * `LOAD`  
   *Before*: `a]`  
@@ -1494,8 +1577,8 @@ stack can otherwise contain any other elements further down.
   *Errors*: Will error if `a` is not a string and `a` is not a lexical
    address, or if there are no items on the current operand stack.  
   > Loads a value pointed to by some sort of reference - either a
-  > string keying into first the set of known opcodes and secondly the
-  > dictionary stack, or a lexical address. Unlike the **implicit
+  > string keying into firstly the set of known opcodes and secondly
+  > the dictionary stack, or a lexical address. Unlike the **implicit
   > default operator**, if the value found is a code segment, it is
   > not executed. Note that the priority of looking up via the set of
   > known opcodes first and then the dictionary stack matches exactly
@@ -1555,7 +1638,8 @@ stack can otherwise contain any other elements further down.
 Arrays in the BVM are mutable collections mapping non-negative integer
 indices to values (which are not constrained in any way). Only
 references to arrays may enter the operand stack, and arrays are not
-functional: they are mutated in place.
+functional: they are mutated in place. A string is an array of
+characters, and is mutable just like a normal array.
 
 * `ARRAY_START` *(equivalent to `[` in assembly)*  
   *Before*:  
@@ -1583,7 +1667,7 @@ functional: they are mutated in place.
   > any mix of values and types in an array. Note that due to the
   > significance of mark in this opcode, you cannot use a literal
   > array to create an array which contains mark as a value.
-
+  >
   > Note that the assembly parser expects pairs of `[` and `]`, and
   > similarly `ARRAY_START` and `ARRAY_END`. Occasionally there is
   > reason to want a lone `ARRAY_END`, for example due to use of
@@ -1705,21 +1789,21 @@ functional: they are mutated in place.
   > lexical address or code segment. This means that this opcode
   > allows opcodes that have no string representation to be used
   > directly, such as array and dictionary references.
-
+  >
   > It is important to very carefully consider what will happen to
   > lexical addresses within the array when using this opcode. Given
   > the array will have been constructed on the operand stack, all
   > lexical addresses that entered the operand stack will be fixed
   > relative to the *current* code segment, not the code segment to
   > be constructed. For example:
-
-        bvm> 5 [ 17 PUSH (0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
-        [5]
-        bvm> 5 [ 17 PUSH (0,0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
-        [5]
-        bvm> 5 [ 17 PUSH (1,0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
-        Error: Unhandled error in "PUSH": ERROR INVALID OPERAND
-
+  >
+  >        bvm> 5 [ 17 PUSH (0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+  >        [5]
+  >        bvm> 5 [ 17 PUSH (0,0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+  >        [5]
+  >        bvm> 5 [ 17 PUSH (1,0) 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
+  >        Error: Unhandled error in "PUSH": ERROR INVALID OPERAND
+  >
   > I.e., the *lexical scope level* of 1 does not exist until
   > `ARRAY_TO_SEG` is invoked, and that is too late for a literal
   > lexical address of `(1,0)`. This is why the first two examples
@@ -1728,9 +1812,7 @@ functional: they are mutated in place.
   > must the opcode `LEXICAL_ADDRESS` to dynamically construct
   > lexical addresses when the segment is finally invoked. This way,
   > the lexical addresses will be fixed relative to the new code
-  > segment when it is invoked. Of course, you may not use any of
-  > the shorthands (they only apply to literal lexical addresses,
-  > not dynamic lexical addresses anyway).
+  > segment when it is invoked.
   >
   >        bvm> 5 [ 17 1 0 PUSH LEXICAL_ADDRESS PUSH LOAD 1 PUSH RETURN ] ARRAY_TO_SEG EXEC
   >        [17]
@@ -1741,7 +1823,11 @@ functional: they are mutated in place.
 Dictionaries in the BVM are mutable collections mapping keys (which
 must be strings) to values (which are not constrained in any
 way). Only references to dictionaries may enter the operand stack, and
-dictionaries are not functional: they are mutated in place.
+dictionaries are not functional: they are mutated in place. Note that
+comparison of keys is done on a string basis rather than on an array
+basis, and also note that the dictionary will take and provide copies
+of keys so to ensure that you cannot share a string/character-array
+both on the operand stack and being used as a key by a dictionary.
 
 * `DICT_START` *(equivalent to `<` in assembly)*  
   *Before*:  
@@ -1772,7 +1858,7 @@ dictionaries are not functional: they are mutated in place.
   > significance of mark in this opcode, you cannot use a literal
   > dictionary to create a dictionary which contains mark as a value
   > (or key).
-
+  >
   > Note that the assembly parser expects pairs of `<` and `>`, and
   > similarly `DICT_START` and `DICT_END`. Occasionally there is
   > reason to want a lone `DICT_END`, for example due to use of
@@ -1878,8 +1964,8 @@ dictionaries are not functional: they are mutated in place.
   *Before*: `dict]`  
   *After*: `dict, ary]`  
   *where* `dict` is a reference to a dictionary, `ary` is a reference
-   to an array, and the contents of the array are strings which are
-   all the keys in `dict`.  
+   to an array, and the contents of the array are copies of the
+   strings which are all the keys in `dict`.  
   *Errors*: Will error if `dict` is not a dictionary reference or if
    there are no items on the current operand stack.  
   > Creates and returns a fresh array containing all the keys found
@@ -1941,9 +2027,9 @@ BVM is first started, the *deferred mode* counter is set to zero.
   > `ARRAY_TO_SEG`, and just like that opcode, the array is shared
   > with the code segment. Note that you may not use this on a
   > built-in opcode. Thus the following example is illegal:
-
-        bvm> PUSH ADD LOAD SEG_TO_ARRAY
-        Error: Unhandled error in "SEG_TO_ARRAY": ERROR INVALID OPERAND
+  >
+  >        bvm> PUSH ADD LOAD SEG_TO_ARRAY
+  >        Error: Unhandled error in "SEG_TO_ARRAY": ERROR INVALID OPERAND
 
 * `EXEC`  
   *Before*: `s]`  
@@ -1952,7 +2038,6 @@ BVM is first started, the *deferred mode* counter is set to zero.
   *Errors*: Will error if the item at the top of the current operand
    stack is not a code segment reference or a stack, or if there are
    no items on the current operand stack.  
-
   > Explicitly invokes the item at the top of the current operand
   > stack. In all non-erroring cases, control will return to the next
   > opcode after the current `EXEC` once the invoked item
@@ -1966,12 +2051,12 @@ BVM is first started, the *deferred mode* counter is set to zero.
   > from the same instruction. However the operand stack is maintained
   > and shared across each invocation, as the following example
   > demonstrates:
-
-        bvm> 5 { 1 TAKE DUPLICATE EXEC EXEC COUNT RETURN } CALLCC COUNT LOG POP
-        1
-        0
-        Error: Unhandled error in "POP": ERROR NOT ENOUGH OPERANDS
-
+  >
+  >        bvm> 5 { 1 TAKE DUPLICATE EXEC EXEC COUNT RETURN } CALLCC COUNT LOG POP
+  >        1
+  >        0
+  >        Error: Unhandled error in "POP": ERROR NOT ENOUGH OPERANDS
+  >
   > The first `EXEC` resumes the suspension after the `CALLCC` with
   > `5` on its operand stack. This causes `COUNT` to push `1`, which
   > is then removed and displayed by `LOG`. `POP` then removes the
@@ -1981,15 +2066,15 @@ BVM is first started, the *deferred mode* counter is set to zero.
   > maintained, this time there is no `5` on the stack. So the `COUNT`
   > pushes `0`, which is removed and displayed by `LOG`, and the the
   > `POP` errors as there is nothing on the operand stack to pop.
-
+  >
   > However, if we replace the `DUPLICATE` with a `CLONE` then we are
   > explicitly cloning the stack and its contents before invoking each
   > one. This makes the contents of the stacks distinct:
-
-        bvm> 5 { 1 TAKE CLONE EXEC EXEC COUNT RETURN } CALLCC COUNT LOG POP
-        1
-        1
-        []
+  >
+  >        bvm> 5 { 1 TAKE CLONE EXEC EXEC COUNT RETURN } CALLCC COUNT LOG POP
+  >        1
+  >        1
+  >        []
 
 * `CALLCC`  
   *Before*: `s]`  
@@ -2214,35 +2299,36 @@ a tail call, with all that that entails.
   > Tests the two items at the top of the current operand stack for
   > equality. Pushes `true` if the two items are found equal, and
   > `false` otherwise. For reference values (arrays, dictionaries,
-  > code segments and stacks), equality is pointer equality. This
-  > reinforces the difference between the `CLONE` and `DUPLICATE`
-  > opcodes for reference types. For simple types (numbers, booleans,
-  > strings, the singleton values undef and mark), it is the obvious
-  > definition of equality. For lexical addresses, the lexical scope
-  > in which the address was declared must be the same, and the index
-  > must be the same too. I.e. lexical addresses with the same
-  > *lexical scope level* and the same index, but declared in
-  > different lexical scopes are considered distinct. Note that this
-  > includes the youngest scope. Consider carefully the following
-  > examples:
-
-        // Youngest scope is fresh for each segment invocation.
-        bvm> { PUSH (0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
-        [{"type": "lexical address", "lsl": 1, "index": 0},
-         {"type": "lexical address", "lsl": 1, "index": 0},
-         false]
-
-        // Two addresses from same scope with same index are equal.
-        bvm> { PUSH (0) PUSH (0) 2 RETURN } (0) 2 COPY EQ 3 RETURN
-        [{"type": "lexical address", "lsl": 1, "index": 0},
-         {"type": "lexical address", "lsl": 1, "index": 0},
-         true]
-
-        // Two segment invocations, but both addresses reference common parent, so equal.
-        bvm> { PUSH (-1,0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
-        [{"type": "lexical address", "lsl": 0, "index": 0},
-         {"type": "lexical address", "lsl": 0, "index": 0},
-         true]
+  > code segments and stacks), equality is pointer equality. Note that
+  > this implies strings are compared for pointer equality. String
+  > equality is covered elsewhere. This reinforces the difference
+  > between the `CLONE` and `DUPLICATE` opcodes for reference
+  > types. For simple types (numbers, booleans, characters, the
+  > singleton values undef and mark), it is the semantic definition of
+  > equality. For lexical addresses, the lexical scope in which the
+  > address was declared must be the same, and the index must be the
+  > same too. I.e. lexical addresses with the same *lexical scope
+  > level* and the same index, but declared in different lexical
+  > scopes are considered distinct. Note that this includes the
+  > youngest scope. Consider carefully the following examples:
+  >
+  >        // Youngest scope is fresh for each segment invocation.
+  >        bvm> { PUSH (0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
+  >        [{"type": "lexical address", "lsl": 1, "index": 0},
+  >         {"type": "lexical address", "lsl": 1, "index": 0},
+  >         false]
+  >
+  >        // Two addresses from same scope with same index are equal.
+  >        bvm> { PUSH (0) PUSH (0) 2 RETURN } (0) 2 COPY EQ 3 RETURN
+  >        [{"type": "lexical address", "lsl": 1, "index": 0},
+  >         {"type": "lexical address", "lsl": 1, "index": 0},
+  >         true]
+  >
+  >        // Two segment invocations, but both addresses reference common parent, so equal.
+  >        bvm> { PUSH (-1,0) 1 RETURN } (0) (0) 2 COPY EQ 3 RETURN
+  >        [{"type": "lexical address", "lsl": 0, "index": 0},
+  >         {"type": "lexical address", "lsl": 0, "index": 0},
+  >         true]
 
 * `NEQ`  
   *Before*: `x, y]`  
@@ -2255,49 +2341,49 @@ a tail call, with all that that entails.
 * `LT`  
   *Before*: `x, y]`  
   *After*: `b]`  
-  *where* `x` and `y` are both numbers or both strings, and `b` is a
-   boolean.  
+  *where* `x` and `y` are both numbers or both characters, and `b` is
+   a boolean.  
   *Errors*: Will error if there are fewer than two items on the
    current operand stack, or if the items have different types, or if
-   either item is not a string or a number.  
+   either item is not a character or a number.  
   > Pushes `true` if `x` is *less than* `y` and `false` otherwise. `x`
-  > and `y` must both be numbers, or must both be strings.
+  > and `y` must both be numbers, or must both be characters.
 
 * `LTE`  
   *Before*: `x, y]`  
   *After*: `b]`  
-  *where* `x` and `y` are both numbers or both strings, and `b` is a
-   boolean.  
+  *where* `x` and `y` are both numbers or both characters, and `b` is
+   a boolean.  
   *Errors*: Will error if there are fewer than two items on the
    current operand stack, or if the items have different types, or if
-   either item is not a string or a number.  
+   either item is not a character or a number.  
   > Pushes `true` if `x` is *less than or equal to* `y` and `false`
   > otherwise. `x` and `y` must both be numbers, or must both be
-  > strings.
+  > characters.
 
 * `GT`  
   *Before*: `x, y]`  
   *After*: `b]`  
-  *where* `x` and `y` are both numbers or both strings, and `b` is a
-   boolean.  
+  *where* `x` and `y` are both numbers or both characters, and `b` is
+   a boolean.  
   *Errors*: Will error if there are fewer than two items on the
    current operand stack, or if the items have different types, or if
-   either item is not a string or a number.  
+   either item is not a character or a number.  
   > Pushes `true` if `x` is *greater than* `y` and `false`
   > otherwise. `x` and `y` must both be numbers, or must both be
-  > strings.
+  > characters.
 
 * `GTE`  
   *Before*: `x, y]`  
   *After*: `b]`  
-  *where* `x` and `y` are both numbers or both strings, and `b` is a
-   boolean.  
+  *where* `x` and `y` are both numbers or both characters, and `b` is
+   a boolean.  
   *Errors*: Will error if there are fewer than two items on the
    current operand stack, or if the items have different types, or if
-   either item is not a string or a number.  
+   either item is not a character or a number.  
   > Pushes `true` if `x` is *greater than or equal to* `y` and `false`
   > otherwise. `x` and `y` must both be numbers, or must both be
-  > strings.
+  > characters.
 
 ## Logic
 
