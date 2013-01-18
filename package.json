@@ -1,7 +1,7 @@
 {
     "name": "bvm",
     "author": "Matthew Sackman",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "description": "The BVM",
     "repository": {
         "type": "git",
