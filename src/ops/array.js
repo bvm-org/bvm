@@ -6,6 +6,7 @@
         var types = require('../types'),
             nuArray = require('../array'),
             nuSegment = require('../segment'),
+            nuStack = require('../stack'),
             nuError = require('../errors'),
             utils = require('../utils');
 
@@ -170,6 +171,22 @@
                         nuError.notEnoughOperands();
                     }
                 },
+                // ARRAY_MAP: function () {
+                //     var seg, ary, idx, len, val, stack;
+                //     if (vcpu.cs.length() > 1) {
+                //         seg = vcpu.cs.pop();
+                //         ary = vcpu.cs.pop();
+                //         if (nuArray.isArray(ary)) {
+                //             for (idx = 0, len = ary.length();
+                //                  idx < len; idx += 1) {
+                //                 val = ary.index(idx);
+                //                 stack
+                //             }
+                //         }
+                //     } else {
+                //         nuError.notEnoughOperands();
+                //     }
+                // },
                 ARRAY_TO_SEG: function () {
                     var ary;
                     if (vcpu.cs.length() > 0) {
