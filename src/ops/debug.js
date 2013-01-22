@@ -3,7 +3,9 @@
 
         'use strict';
 
-        var nuError = require('../errors');
+        var nuError = require('../errors'),
+            nuArray = require('../array'),
+            nodePackage = require('../../package');
 
         return function (vcpu) {
             return {
@@ -14,6 +16,11 @@
                     } else {
                         nuError.notEnoughOperands();
                     }
+                },
+
+                VERSION: function () {
+                    vcpu.cs.push(nuArray(nodePackage.version));
+                    return;
                 }
             };
         };

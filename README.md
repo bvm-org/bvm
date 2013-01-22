@@ -2607,6 +2607,15 @@ the JSON values `true` and `false`.
   > `console.log`, but can be overridden through the JavaScript API,
   > covered later.
 
+* `VERSION`  
+  *Before*:  
+  *After*: `s]`  
+  *where* `s` is a string containing the version of the BVM
+   implementation.  
+  *Errors*: None.  
+  > Pushes onto the current operand stack the version string of the
+  > BVM implementation. In the current JavaScript implementation this
+  > is taken directly from the *npm* `package.json` file.
 
 # JavaScript API
 
