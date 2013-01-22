@@ -1768,6 +1768,48 @@ characters, and is mutable just like a normal array.
   > value. After this opcode, `ARRAY_LENGTH` will always reveal the
   > length just set by the `ARRAY_TRUNCATE` opcode.
 
+* `ARRAY_PUSH`  
+  *Before*: `ary, v]`  
+  *After*: `ary]`  
+  *where* `ary` is an array and `v` is a value to add to the end of
+   the array.  
+  *Errors*: Will error if `ary` is not an array reference or if there
+   are fewer than 2 items on the current operand stack.  
+  > Adds the value onto the end of the array. The array is modified in
+  > place, and left on the top of the operand stack.
+
+* `ARRAY_POP`  
+  *Before*: `ary]`  
+  *After: `ary, v]`  
+  *where* `ary` is an array and `v` is the value found at the end of
+   the array.  
+  *Errors*: Will error if `ary` is not an array reference or if there
+   are fewer than 2 items on the current operand stack.  
+  > Removes the value at the end of the array from the array and
+  > places both the shortened array and the removed value onto the
+  > current operand stack. The array is modified in place.
+
+* `ARRAY_UNSHIFT`  
+  *Before*: `ary, v]`  
+  *After*: `ary]`  
+  *where* `ary` is an array and `v` is a value to add to the start of
+   the array.  
+  *Errors*: Will error if `ary` is not an array reference or if there
+   are fewer than 2 items on the current operand stack.  
+  > Adds the value onto the start of the array. The array is modified
+  > in place, and left on the top of the operand stack.
+
+* `ARRAY_SHIFT`  
+  *Before*: `ary]`  
+  *After: `ary, v]`  
+  *where* `ary` is an array and `v` is the value found at the start of
+   the array.  
+  *Errors*: Will error if `ary` is not an array reference or if there
+   are fewer than 2 items on the current operand stack.  
+  > Removes the value at the start of the array from the array and
+  > places both the shortened array and the removed value onto the
+  > current operand stack. The array is modified in place.
+
 * `ARRAY_TO_SEG`  
   *Before*: `ary]`  
   *After*: `seg]`  

@@ -27,6 +27,8 @@
                                   lastIndexOf: {value: undef, configurable: true},
                                   push: {value: undef, configurable: true},
                                   pop: {value: undef, configurable: true},
+                                  shift: {value: undef, configurable: true},
+                                  unshift: {value: undef, configurable: true},
                                   allChars: {value: false, configurable: true, writable: true}},
             arrayBase = Object.defineProperties(
                 {},
@@ -94,6 +96,8 @@
                         arrayResetTemplate.lastIndexOf.value = ary.lastIndexOf.bind(ary);
                         arrayResetTemplate.push.value = ary.push.bind(ary);
                         arrayResetTemplate.pop.value = ary.pop.bind(ary);
+                        arrayResetTemplate.shift.value = ary.shift.bind(ary);
+                        arrayResetTemplate.unshift.value = ary.unshift.bind(ary);
                         arrayResetTemplate.allChars.value = detectAllChars(ary);
                         Object.defineProperties(this, arrayResetTemplate);
                         return this;

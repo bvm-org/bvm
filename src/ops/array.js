@@ -108,6 +108,68 @@
                         nuError.notEnoughOperands();
                     }
                 },
+                ARRAY_PUSH: function () {
+                    var ary, val;
+                    if (vcpu.cs.length() > 1) {
+                        val = vcpu.cs.pop();
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            ary.push(val);
+                            vcpu.cs.push(ary);
+                            return;
+                        } else {
+                            nuError.invalidOperand(ary, val);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
+                ARRAY_POP: function () {
+                    var ary;
+                    if (vcpu.cs.length() > 0) {
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            vcpu.cs.push(ary);
+                            vcpu.cs.push(ary.pop());
+                            return;
+                        } else {
+                            nuError.invalidOperand(ary);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
+                ARRAY_UNSHIFT: function () {
+                    var ary, val;
+                    if (vcpu.cs.length() > 1) {
+                        val = vcpu.cs.pop();
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            ary.unshift(val);
+                            vcpu.cs.push(ary);
+                            return;
+                        } else {
+                            nuError.invalidOperand(ary, val);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
+                ARRAY_SHIFT: function () {
+                    var ary;
+                    if (vcpu.cs.length() > 0) {
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            vcpu.cs.push(ary);
+                            vcpu.cs.push(ary.shift());
+                            return;
+                        } else {
+                            nuError.invalidOperand(ary);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
                 ARRAY_TO_SEG: function () {
                     var ary;
                     if (vcpu.cs.length() > 0) {
