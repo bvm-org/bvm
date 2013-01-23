@@ -193,13 +193,11 @@
                                     }
                                 }.bind(this),
                                 function () {
-                                    if (idx < len) {
-                                        if (vcpu.cs.length() > 0) {
-                                            ary.store(idx, vcpu.cs.pop());
-                                        }
-                                        idx += 1;
-                                        vcpu.cs.ip.set(0);
+                                    if (vcpu.cs.length() > 0) {
+                                        ary.store(idx, vcpu.cs.pop());
                                     }
+                                    idx += 1;
+                                    vcpu.cs.ip.set(0);
                                 }
                             ]);
                             vcpu.cs.push(intermediateSeg);
@@ -236,13 +234,11 @@
                                     }
                                 }.bind(this),
                                 function () {
-                                    if (idx < len) {
-                                        if (vcpu.cs.length() > 0) {
-                                            acc = vcpu.cs.pop();
-                                        }
-                                        idx += 1;
-                                        vcpu.cs.ip.set(0);
+                                    if (vcpu.cs.length() > 0) {
+                                        acc = vcpu.cs.pop();
                                     }
+                                    idx += 1;
+                                    vcpu.cs.ip.set(0);
                                 }
                             ]);
                             vcpu.cs.push(intermediateSeg);
@@ -278,13 +274,11 @@
                                     }
                                 }.bind(this),
                                 function () {
-                                    if (idx > -1) {
-                                        if (vcpu.cs.length() > 0) {
-                                            acc = vcpu.cs.pop();
-                                        }
-                                        idx -= 1;
-                                        vcpu.cs.ip.set(0);
+                                    if (vcpu.cs.length() > 0) {
+                                        acc = vcpu.cs.pop();
                                     }
+                                    idx -= 1;
+                                    vcpu.cs.ip.set(0);
                                 }
                             ]);
                             vcpu.cs.push(intermediateSeg);
