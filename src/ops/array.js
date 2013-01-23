@@ -8,7 +8,8 @@
             nuSegment = require('../segment'),
             nuStack = require('../stack'),
             nuError = require('../errors'),
-            utils = require('../utils');
+            utils = require('../utils'),
+            nuOpcode = require('../opcode');
 
         return function (vcpu) {
             return {
@@ -27,158 +28,69 @@
                         return;
                     }
                 },
-                ARRAY_EXPAND: function () {
-                    var ary, idx, len;
-                    if (vcpu.cs.length() > 0) {
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            vcpu.cs.appendArray(ary.array);
-                            return;
-                        } else {
-                            nuError.invalidOperand(ary);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
+                ARRAY_EXPAND: nuOpcode(vcpu, [nuArray.isArray], function (ary) {
+                    vcpu.cs.appendArray(ary.array);
+                    return;
+                }),
                 ARRAY_NEW: function () {
                     vcpu.cs.push(nuArray());
                     return;
                 },
-                ARRAY_STORE: function () {
-                    var array, idx, value, lhs, rhs, i;
-                    if (vcpu.cs.length() > 2) {
-                        value = vcpu.cs.pop();
-                        idx = vcpu.cs.pop();
-                        array = vcpu.cs.pop();
-                        if (nuArray.isArray(array) && typeof idx === 'number' && idx >= 0) {
-                            array.store(idx, value);
-                            vcpu.cs.push(array);
-                            return;
-                        } else {
-                            nuError.invalidOperand(array, idx);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_LOAD: function () {
-                    var array, idx;
-                    if (vcpu.cs.length() > 1) {
-                        idx = vcpu.cs.pop();
-                        array = vcpu.cs.pop();
-                        if (nuArray.isArray(array) && typeof idx === 'number' && idx >= 0) {
-                            vcpu.cs.push(array);
-                            vcpu.cs.push(array.index(idx));
-                            return;
-                        } else {
-                            nuError.invalidOperand(array, idx);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_LENGTH: function () {
-                    var array;
-                    if (vcpu.cs.length() > 0) {
-                        array = vcpu.cs.pop();
-                        if (nuArray.isArray(array)) {
-                            vcpu.cs.push(array);
-                            vcpu.cs.push(array.length());
-                            return;
-                        } else {
-                            nuError.invalidOperand(array);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_TRUNCATE: function () {
-                    var len, array;
-                    if (vcpu.cs.length() > 1) {
-                        len = vcpu.cs.pop();
-                        array = vcpu.cs.pop();
-                        if (nuArray.isArray(array) && typeof len === 'number' && len >= 0) {
-                            array.length(len);
-                            vcpu.cs.push(array);
-                            return;
-                        } else {
-                            nuError.invalidOperand(array, len);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_PUSH: function () {
-                    var ary, val;
-                    if (vcpu.cs.length() > 1) {
-                        val = vcpu.cs.pop();
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            ary.push(val);
-                            vcpu.cs.push(ary);
-                            return;
-                        } else {
-                            nuError.invalidOperand(ary, val);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_POP: function () {
-                    var ary;
-                    if (vcpu.cs.length() > 0) {
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            vcpu.cs.push(ary);
-                            vcpu.cs.push(ary.pop());
-                            return;
-                        } else {
-                            nuError.invalidOperand(ary);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_UNSHIFT: function () {
-                    var ary, val;
-                    if (vcpu.cs.length() > 1) {
-                        val = vcpu.cs.pop();
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            ary.unshift(val);
-                            vcpu.cs.push(ary);
-                            return;
-                        } else {
-                            nuError.invalidOperand(ary, val);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_SHIFT: function () {
-                    var ary;
-                    if (vcpu.cs.length() > 0) {
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            vcpu.cs.push(ary);
-                            vcpu.cs.push(ary.shift());
-                            return;
-                        } else {
-                            nuError.invalidOperand(ary);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_MAP: function () {
-                    var seg, ary, idx, len, intermediateSeg;
-                    if (vcpu.cs.length() > 1) {
-                        seg = vcpu.cs.pop();
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            idx = 0;
-                            len = ary.length();
+                ARRAY_STORE: nuOpcode(
+                    vcpu,
+                    [nuArray.isArray, nuOpcode.tests.isNonNegativeInteger, nuOpcode.tests.any],
+                    function (ary, idx, val) {
+                        ary.store(idx, val);
+                        vcpu.cs.push(ary);
+                        return;
+                    }),
+                ARRAY_LOAD: nuOpcode(
+                    vcpu,
+                    [nuArray.isArray, nuOpcode.tests.isNonNegativeInteger],
+                    function (ary, idx) {
+                        vcpu.cs.push(ary);
+                        vcpu.cs.push(ary.index(idx));
+                        return;
+                    }),
+                ARRAY_LENGTH: nuOpcode(vcpu, [nuArray.isArray], function (ary) {
+                    vcpu.cs.push(ary);
+                    vcpu.cs.push(ary.length());
+                    return;
+                }),
+                ARRAY_TRUNCATE: nuOpcode(
+                    vcpu, [nuArray.isArray, nuOpcode.tests.isNonNegativeInteger],
+                    function (ary, trunc) {
+                        ary.length(trunc);
+                        vcpu.cs.push(ary);
+                        return;
+                    }),
+                ARRAY_PUSH: nuOpcode(vcpu, [nuArray.isArray, nuOpcode.tests.any],
+                                     function (ary, val) {
+                                         ary.push(val);
+                                         vcpu.cs.push(ary);
+                                         return;
+                                     }),
+                ARRAY_POP: nuOpcode(vcpu, [nuArray.isArray], function (ary) {
+                    vcpu.cs.push(ary);
+                    vcpu.cs.push(ary.pop());
+                    return;
+                }),
+                ARRAY_UNSHIFT: nuOpcode(vcpu, [nuArray.isArray, nuOpcode.tests.any],
+                                     function (ary, val) {
+                                         ary.push(val);
+                                         vcpu.cs.unshift(ary);
+                                         return;
+                                     }),
+                ARRAY_SHIFT: nuOpcode(vcpu, [nuArray.isArray], function (ary) {
+                    vcpu.cs.push(ary);
+                    vcpu.cs.push(ary.shift());
+                    return;
+                }),
+                ARRAY_MAP: nuOpcode(
+                    vcpu, [nuArray.isArray, nuOpcode.tests.isExecutable],
+                    function (ary, seg) {
+                        var idx = 0,
+                            len = ary.length(),
                             intermediateSeg = nuSegment([
                                 function () {
                                     vcpu.cs.clear();
@@ -200,24 +112,14 @@
                                     vcpu.cs.ip.set(0);
                                 }
                             ]);
-                            vcpu.cs.push(intermediateSeg);
-                            this.EXEC();
-                        } else {
-                            nuError.invalidOperand(ary, seg);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_FOLDL: function () {
-                    var acc, seg, ary, idx, len, intermediateSeg;
-                    if (vcpu.cs.length() > 2) {
-                        seg = vcpu.cs.pop();
-                        acc = vcpu.cs.pop();
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            idx = 0;
-                            len = ary.length();
+                        vcpu.cs.push(intermediateSeg);
+                        this.EXEC();
+                    }),
+                ARRAY_FOLDL: nuOpcode(
+                    vcpu, [nuArray.isArray, nuOpcode.tests.any, nuOpcode.tests.isExecutable],
+                    function (ary, acc, seg) {
+                        var idx = 0,
+                            len = ary.length(),
                             intermediateSeg = nuSegment([
                                 function () {
                                     vcpu.cs.clear();
@@ -241,23 +143,13 @@
                                     vcpu.cs.ip.set(0);
                                 }
                             ]);
-                            vcpu.cs.push(intermediateSeg);
-                            this.EXEC();
-                        } else {
-                            nuError.invalidOperand(ary, acc, seg);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_FOLDR: function () {
-                    var acc, seg, ary, idx, len, intermediateSeg;
-                    if (vcpu.cs.length() > 2) {
-                        seg = vcpu.cs.pop();
-                        acc = vcpu.cs.pop();
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            idx = ary.length() - 1;
+                        vcpu.cs.push(intermediateSeg);
+                        this.EXEC();
+                }),
+                ARRAY_FOLDR: nuOpcode(
+                    vcpu, [nuArray.isArray, nuOpcode.tests.any, nuOpcode.tests.isExecutable],
+                    function (ary, acc, seg) {
+                        var idx = ary.length() - 1,
                             intermediateSeg = nuSegment([
                                 function () {
                                     vcpu.cs.clear();
@@ -281,58 +173,33 @@
                                     vcpu.cs.ip.set(0);
                                 }
                             ]);
-                            vcpu.cs.push(intermediateSeg);
-                            this.EXEC();
-                        } else {
-                            nuError.invalidOperand(ary, acc, seg);
+                        vcpu.cs.push(intermediateSeg);
+                        this.EXEC();
+                    }),
+                ARRAY_EQ: nuOpcode(vcpu, [nuArray.isArray, nuArray.isArray], function (a, b) {
+                    var idx, len, eq;
+                    if (a === b) {
+                        vcpu.cs.push(true);
+                        return;
+                    } else if (a.length() === b.length()) {
+                        for (len = a.length(), idx = 0, eq = true;
+                             eq && idx < len; idx += 1) {
+                            vcpu.cs.push(a.index(idx));
+                            vcpu.cs.push(b.index(idx));
+                            this.EQ();
+                            eq = vcpu.cs.pop();
                         }
+                        vcpu.cs.push(eq);
+                        return;
                     } else {
-                        nuError.notEnoughOperands();
+                        vcpu.cs.push(false);
+                        return;
                     }
-                },
-                ARRAY_EQ: function () {
-                    var a, b, idx, len, eq;
-                    if (vcpu.cs.length() > 1) {
-                        a = vcpu.cs.pop();
-                        b = vcpu.cs.pop();
-                        if (nuArray.isArray(a) && nuArray.isArray(b)) {
-                            if (a === b) {
-                                vcpu.cs.push(true);
-                                return;
-                            } else if (a.length() === b.length()) {
-                                for (len = a.length(), idx = 0, eq = true;
-                                     idx < len && eq; idx += 1) {
-                                    vcpu.cs.push(a.index(idx));
-                                    vcpu.cs.push(b.index(idx));
-                                    this.EQ();
-                                    eq = vcpu.cs.pop();
-                                }
-                                vcpu.cs.push(eq);
-                                return;
-                            } else {
-                                vcpu.cs.push(false);
-                                return;
-                            }
-                        } else {
-                            nuError.invalidOperand(b, a);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                ARRAY_TO_SEG: function () {
-                    var ary;
-                    if (vcpu.cs.length() > 0) {
-                        ary = vcpu.cs.pop();
-                        if (nuArray.isArray(ary)) {
-                            vcpu.cs.push(nuSegment(ary, vcpu.cs));
-                        } else {
-                            nuError.invalidOperand(ary);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                }
+                }),
+                ARRAY_TO_SEG: nuOpcode(vcpu, [nuArray.isArray], function (ary) {
+                    vcpu.cs.push(nuSegment(ary, vcpu.cs));
+                    return;
+                })
             };
         };
 

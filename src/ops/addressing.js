@@ -9,6 +9,7 @@
             nuStack = require('../stack'),
             utils = require('../utils'),
             nuError = require('../errors'),
+            nuOpcode = require('../opcode'),
             undef;
 
         return function (vcpu) {
@@ -33,72 +34,51 @@
                 }
             });
             return {
-                LOAD: function () {
-                    var reference, found;
-                    if (vcpu.cs.length() > 0) {
-                        reference = vcpu.cs.pop();
-                        if (types.isLexicalAddress(reference)) {
-                            vcpu.cs.push(reference.ls.index(reference.index));
+                LOAD: nuOpcode(vcpu, 1, function (reference) {
+                    var found;
+                    if (types.isLexicalAddress(reference)) {
+                        vcpu.cs.push(reference.ls.index(reference.index));
+                        return;
+                    } else if (nuOpcode.tests.isString(reference)) {
+                        reference = reference.toRawString();
+                        if (reference in this) {
+                            vcpu.cs.push(this[reference]);
                             return;
-                        } else if (nuArray.isArray(reference) && reference.allChars) {
-                            reference = reference.toRawString();
-                            if (reference in this) {
-                                vcpu.cs.push(this[reference]);
+                        } else {
+                            found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
+                            if (found === undef) {
+                                vcpu.cs.push(types.undef);
                                 return;
                             } else {
-                                found = utils.searchDicts({key: reference, dicts: vcpu.ds}).found;
-                                if (found === undef) {
-                                    vcpu.cs.push(types.undef);
-                                    return;
-                                } else {
-                                    vcpu.cs.push(found);
-                                }
+                                vcpu.cs.push(found);
                             }
-                        } else {
-                            nuError.invalidOperand(reference);
                         }
                     } else {
-                        nuError.notEnoughOperands();
+                        nuError.invalidOperand(reference);
                     }
-                },
-                STORE: function () {
-                    var value, reference;
-                    if (vcpu.cs.length() > 1) {
-                        value = vcpu.cs.pop();
-                        reference = vcpu.cs.pop();
-                        if (types.isLexicalAddress(reference)) {
-                            reference.ls.store(reference.index, value);
-                            return;
-                        } else if (nuArray.isArray(reference) && reference.allChars) {
-                            vcpu.ds.index(vcpu.ds.length() - 1).store(reference.toRawString(), value);
-                            return;
-                        } else {
-                            nuError.invalidOperand(reference);
-                        }
+                }),
+                STORE: nuOpcode(vcpu, 2, function (reference, value) {
+                    if (types.isLexicalAddress(reference)) {
+                        reference.ls.store(reference.index, value);
+                        return;
+                    } else if (nuArray.isArray(reference) && reference.allChars) {
+                        vcpu.ds.index(vcpu.ds.length() - 1).store(reference.toRawString(), value);
+                        return;
                     } else {
-                        nuError.notEnoughOperands();
+                        nuError.invalidOperand(reference);
                     }
-                },
-                LEXICAL_ADDRESS: function () {
-                    var lsl, index;
-                    if (vcpu.cs.length() > 1) {
-                        index = vcpu.cs.pop();
-                        lsl = vcpu.cs.pop();
-                        if (typeof index === 'number' && index === Math.round(index) &&
-                            ((typeof lsl === 'number' && lsl === Math.round(lsl)) ||
-                             lsl === types.undef)) {
-                            if (lsl === types.undef) {
-                                lsl = undef;
-                            }
-                            vcpu.cs.push(types.nuLexicalAddress(lsl, index).fix(vcpu));
-                            return;
-                        } else {
-                            nuError.invalidOperand(lsl, index);
+                }),
+                LEXICAL_ADDRESS: nuOpcode(
+                    vcpu,
+                    [function (lsl) { return nuOpcode.tests.isInteger(lsl) || lsl === types.undef; },
+                     nuOpcode.tests.isInteger],
+                    function (lsl, index) {
+                        if (lsl === types.undef) {
+                            lsl = undef;
                         }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                }
+                        vcpu.cs.push(types.nuLexicalAddress(lsl, index).fix(vcpu));
+                        return;
+                })
             };
         };
 

@@ -41,28 +41,20 @@
                     vcpu.cs.push(vcpu.cs.length());
                     return;
                 },
-                COPY: function () {
-                    var len = vcpu.cs.length(), count, idx;
-                    if (len > 0) {
-                        count = vcpu.cs.pop();
-                        if (nuOpcode.tests.isInteger(count) && count >= 0) {
-                            len -= 1;
-                            if (len >= count) {
-                                for (idx = len - count; idx < len; idx += 1) {
-                                    vcpu.cs.push(vcpu.cs.index(idx));
-                                }
-                                return;
-                            } else {
-                                nuError.notEnoughOperands();
+                COPY: nuOpcode(
+                    vcpu, [nuOpcode.tests.isNonNegativeInteger],
+                    function (count, len) {
+                        var idx;
+                        if (len >= count) {
+                            for (idx = len - count; idx < len; idx += 1) {
+                                vcpu.cs.push(vcpu.cs.index(idx));
                             }
+                            return;
                         } else {
-                            nuError.invalidOperand(count);
+                            nuError.notEnoughOperands();
                         }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                INDEX: nuOpcode(vcpu, [nuOpcode.tests.isInteger], function (idx, len) {
+                    }),
+                INDEX: nuOpcode(vcpu, [nuOpcode.tests.isNonNegativeInteger], function (idx, len) {
                     if (len > idx) {
                         vcpu.cs.push(vcpu.cs.index(len - idx - 1));
                         return;
@@ -70,36 +62,24 @@
                         nuError.notEnoughOperands();
                     }
                 }),
-                ROLL: function () {
-                    var len = vcpu.cs.length(), shift, count, removed, split;
-                    if (len > 1) {
-                        shift = vcpu.cs.pop();
-                        if (nuOpcode.tests.isInteger(shift)) {
-                            count = vcpu.cs.pop();
-                            if (nuOpcode.tests.isInteger(count) && count >= 0) {
-                                len -= 2;
-                                if (len >= count) {
-                                    removed = vcpu.cs.clear(len - count);
-                                    if (shift > 0) {
-                                        shift = - (shift % count);
-                                    } else if (shift < 0) {
-                                        shift = Math.abs(shift) % count;
-                                    }
-                                    vcpu.cs.appendArray(removed.splice(shift).concat(removed));
-                                    return;
-                                } else {
-                                    nuError.notEnoughOperands();
-                                }
-                            } else {
-                                nuError.invalidOperand(count, shift);
+                ROLL: nuOpcode(
+                    vcpu,
+                    [nuOpcode.tests.isNonNegativeInteger, nuOpcode.tests.isInteger],
+                    function (count, shift, len) {
+                        var removed, split;
+                        if (len >= count) {
+                            removed = vcpu.cs.clear(len - count);
+                            if (shift > 0) {
+                                shift = - (shift % count);
+                            } else if (shift < 0) {
+                                shift = Math.abs(shift) % count;
                             }
+                            vcpu.cs.appendArray(removed.splice(shift).concat(removed));
+                            return;
                         } else {
-                            nuError.invalidOperand(shift);
+                            nuError.notEnoughOperands();
                         }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
+                    }),
                 CLONE: nuOpcode(vcpu, 1, function (e) {
                     var eT = typeof e;
                     vcpu.cs.push(e);

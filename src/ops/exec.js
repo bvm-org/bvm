@@ -8,6 +8,7 @@
             types = require('../types'),
             utils = require('../utils'),
             nuError = require('../errors'),
+            nuOpcode = require('../opcode'),
             undef;
 
         return function (vcpu) {
@@ -78,22 +79,16 @@
                         nuError.invalidOperand(segment);
                     }
                 },
-                TAKE: function () {
-                    var n, plen;
-                    if (vcpu.cs.length() > 0) {
-                        n = vcpu.cs.pop();
-                        if (typeof n === 'number' &&
-                            n >= 0 && vcpu.cs.ts !== undef &&
-                            (plen = vcpu.cs.ts.length()) >= n) {
-                            vcpu.cs.appendArray(vcpu.cs.ts.clear(plen - n));
-                            return;
-                        } else {
-                            nuError.invalidOperand(n);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
+                TAKE: nuOpcode(
+                    vcpu,
+                    [function (e) {
+                        return nuOpcode.tests.isNonNegativeInteger(e) &&
+                            vcpu.cs.ts !== undef && vcpu.cs.ts.length() >= e;
+                    }],
+                    function (count) {
+                        vcpu.cs.appendArray(vcpu.cs.ts.clear(- count));
+                        return;
+                    }),
                 TAKE_COUNT: function () {
                     if (vcpu.cs.ts === undef) {
                         vcpu.cs.push(0);

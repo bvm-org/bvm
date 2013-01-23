@@ -5,18 +5,15 @@
 
         var nuError = require('../errors'),
             nuArray = require('../array'),
-            nodePackage = require('../../package');
+            nodePackage = require('../../package'),
+            nuOpcode = require('../opcode');
 
         return function (vcpu) {
             return {
-                LOG: function () {
-                    if (vcpu.cs.length() > 0) {
-                        vcpu.log(JSON.stringify(vcpu.cs.pop()));
-                        return;
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
+                LOG: nuOpcode(vcpu, 1, function (e) {
+                    vcpu.log(JSON.stringify(e));
+                    return;
+                }),
 
                 VERSION: function () {
                     vcpu.cs.push(nuArray(nodePackage.version));

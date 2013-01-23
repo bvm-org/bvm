@@ -5,7 +5,8 @@
 
         var types = require('../types'),
             nuSegment = require('../segment'),
-            nuError = require('../errors');
+            nuError = require('../errors'),
+            nuOpcode = require('../opcode');
 
         return function (vcpu) {
             return {
@@ -25,19 +26,10 @@
                         return;
                     }
                 },
-                SEG_TO_ARRAY: function () {
-                    var seg;
-                    if (vcpu.cs.length() > 0) {
-                        seg = vcpu.cs.pop();
-                        if (nuSegment.isSegment(seg)) {
-                            vcpu.cs.push(seg.asArray());
-                        } else {
-                            nuError.invalidOperand(seg);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                }
+                SEG_TO_ARRAY: nuOpcode(vcpu, [nuSegment.isSegment], function (seg) {
+                    vcpu.cs.push(seg.asArray());
+                    return;
+                })
             };
         };
 

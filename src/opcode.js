@@ -6,10 +6,13 @@
         var undef,
             nuError = require('./errors'),
             nuArray = require('./array'),
+            nuSegment = require('./segment'),
+            nuStack = require('./stack'),
+            types = require('./types'),
             opcodeBase = Object.defineProperties(
                 {},
                 {
-                    invoke: {value: function () {
+                    invoke: {value: function (ops) {
                         var vcpu = this.vcpu,
                             len = vcpu.cs.length(),
                             arity = this.arity,
@@ -24,7 +27,7 @@
                             }
                             if (ok) {
                                 removed.push(len - arity);
-                                return this.body.apply(undef, removed);
+                                return this.body.apply(ops, removed);
                             } else {
                                 nuError.invalidOperand.apply(undef, removed);
                             }
@@ -53,7 +56,7 @@
             opcodeTemplate.vcpu.value = vcpu;
             opcodeTemplate.body.value = body;
             op = Object.create(opcodeBase, opcodeTemplate);
-            return op.invoke.bind(op);
+            return function () { return op.invoke(this); };
         };
 
         nuOpcode.tests = Object.defineProperties(
@@ -62,8 +65,18 @@
                 isInteger: {value: function (e) {
                     return typeof e === 'number' && e === Math.round(e);
                 }},
+                isNonNegativeInteger: {value: function (e) {
+                    return typeof e === 'number' && e === Math.round(e) && e >= 0;
+                }},
                 isString: {value: function (e) {
                     return nuArray.isArray(e) && e.allChars;
+                }},
+                isExecutable: {value: function (e) {
+                    return nuSegment.isSegment(e) || nuStack.isStack(e) ||
+                        types.isLexicalAddress(e) || typeof e === 'function';
+                }},
+                isBoolean: {value: function (e) {
+                    return typeof e === 'boolean';
                 }},
                 any: {value: function (e) {
                     return true;

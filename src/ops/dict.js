@@ -6,7 +6,8 @@
         var types = require('../types'),
             nuDict = require('../dict'),
             nuArray = require('../array'),
-            nuError = require('../errors');
+            nuError = require('../errors'),
+            nuOpcode = require('../opcode');
 
         return function (vcpu) {
             return {
@@ -43,103 +44,46 @@
                     vcpu.cs.push(nuDict());
                     return;
                 },
-                DICT_EXPAND: function () {
-                    var dict;
-                    if (vcpu.cs.length() > 0) {
-                        dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict)) {
-                            dict.keys().forEach(function (key) {
-                                vcpu.cs.push(nuArray(key));
-                                vcpu.cs.push(dict.load(key));
-                            });
-                            return;
-                        } else {
-                            nuError.invalidOperand(dict);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                DICT_STORE: function () {
-                    var dict, key, value;
-                    if (vcpu.cs.length() > 2) {
-                        value = vcpu.cs.pop();
-                        key = vcpu.cs.pop();
-                        dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
-                            dict.store(key.toRawString(), value);
-                            vcpu.cs.push(dict);
-                            return;
-                        } else {
-                            nuError.invalidOperand(dict, key);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                DICT_CONTAINS: function () {
-                    var dict, key;
-                    if (vcpu.cs.length() > 1) {
-                        key = vcpu.cs.pop();
-                        dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
-                            vcpu.cs.push(dict);
-                            vcpu.cs.push(dict.has(key.toRawString()));
-                            return;
-                        } else {
-                            nuError.invalidOperand(dict, key);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                DICT_REMOVE: function () {
-                    var dict, key;
-                    if (vcpu.cs.length() > 1) {
-                        key = vcpu.cs.pop();
-                        dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
-                            dict.remove(key.toRawString());
-                            vcpu.cs.push(dict);
-                            return;
-                        } else {
-                            nuError.invalidOperand(dict, key);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                DICT_LOAD: function () {
-                    var dict, key;
-                    if (vcpu.cs.length() > 1) {
-                        key = vcpu.cs.pop();
-                        dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict) && nuArray.isArray(key) && key.allChars) {
-                            vcpu.cs.push(dict);
-                            vcpu.cs.push(dict.load(key.toRawString()));
-                            return;
-                        } else {
-                            nuError.invalidOperand(dict, key);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                },
-                DICT_KEYS: function () {
-                    var dict, keys;
-                    if (vcpu.cs.length() > 0) {
-                        dict = vcpu.cs.pop();
-                        if (nuDict.isDict(dict)) {
-                            vcpu.cs.push(dict);
-                            vcpu.cs.push(nuArray(dict.keys().map(
-                                function (str) { return nuArray(str); })));
-                        } else {
-                            nuError.invalidOperand(dict);
-                        }
-                    } else {
-                        nuError.notEnoughOperands();
-                    }
-                }
+                DICT_EXPAND: nuOpcode(vcpu, [nuDict.isDict], function (dict) {
+                    dict.keys().forEach(function (key) {
+                        vcpu.cs.push(nuArray(key));
+                        vcpu.cs.push(dict.load(key));
+                    });
+                }),
+                DICT_STORE: nuOpcode(
+                    vcpu, [nuDict.isDict, nuOpcode.tests.isString, nuOpcode.tests.any],
+                    function (dict, key, value) {
+                        dict.store(key.toRawString(), value);
+                        vcpu.cs.push(dict);
+                        return;
+                    }),
+                DICT_CONTAINS: nuOpcode(
+                    vcpu, [nuDict.isDict, nuOpcode.tests.isString],
+                    function (dict, key) {
+                        vcpu.cs.push(dict);
+                        vcpu.cs.push(dict.has(key.toRawString()));
+                        return;
+                    }),
+                DICT_REMOVE: nuOpcode(
+                    vcpu, [nuDict.isDict, nuOpcode.tests.isString],
+                    function (dict, key) {
+                        dict.remove(key.toRawString());
+                        vcpu.cs.push(dict);
+                        return;
+                    }),
+                DICT_LOAD: nuOpcode(
+                    vcpu, [nuDict.isDict, nuOpcode.tests.isString],
+                    function (dict, key) {
+                        vcpu.cs.push(dict);
+                        vcpu.cs.push(dict.load(key.toRawString()));
+                        return;
+                    }),
+                DICT_KEYS: nuOpcode(vcpu, [nuDict.isDict], function (dict) {
+                    vcpu.cs.push(dict);
+                    vcpu.cs.push(nuArray(dict.keys().map(
+                        function (str) { return nuArray(str); })));
+                    return;
+                })
             };
         };
 
