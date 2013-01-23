@@ -290,6 +290,36 @@
                         nuError.notEnoughOperands();
                     }
                 },
+                ARRAY_EQ: function () {
+                    var a, b, idx, len, eq;
+                    if (vcpu.cs.length() > 1) {
+                        a = vcpu.cs.pop();
+                        b = vcpu.cs.pop();
+                        if (nuArray.isArray(a) && nuArray.isArray(b)) {
+                            if (a === b) {
+                                vcpu.cs.push(true);
+                                return;
+                            } else if (a.length() === b.length()) {
+                                for (len = a.length(), idx = 0, eq = true;
+                                     idx < len && eq; idx += 1) {
+                                    vcpu.cs.push(a.index(idx));
+                                    vcpu.cs.push(b.index(idx));
+                                    this.EQ();
+                                    eq = vcpu.cs.pop();
+                                }
+                                vcpu.cs.push(eq);
+                                return;
+                            } else {
+                                vcpu.cs.push(false);
+                                return;
+                            }
+                        } else {
+                            nuError.invalidOperand(b, a);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
                 ARRAY_TO_SEG: function () {
                     var ary;
                     if (vcpu.cs.length() > 0) {
