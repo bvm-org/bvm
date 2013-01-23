@@ -30,10 +30,12 @@
                 DUPLICATE: nuOpcode(vcpu, 1, function (e) {
                     vcpu.cs.push(e);
                     vcpu.cs.push(e);
+                    return;
                 }),
                 EXCHANGE: nuOpcode(vcpu, 2, function (a, b) {
                     vcpu.cs.push(b);
                     vcpu.cs.push(a);
+                    return;
                 }),
                 COUNT: function () {
                     vcpu.cs.push(vcpu.cs.length());

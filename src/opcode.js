@@ -5,6 +5,7 @@
 
         var undef,
             nuError = require('./errors'),
+            nuArray = require('./array'),
             opcodeBase = Object.defineProperties(
                 {},
                 {
@@ -60,6 +61,12 @@
             {
                 isInteger: {value: function (e) {
                     return typeof e === 'number' && e === Math.round(e);
+                }},
+                isString: {value: function (e) {
+                    return nuArray.isArray(e) && e.allChars;
+                }},
+                any: {value: function (e) {
+                    return true;
                 }}
             });
 
