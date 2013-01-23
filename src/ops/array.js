@@ -171,22 +171,46 @@
                         nuError.notEnoughOperands();
                     }
                 },
-                // ARRAY_MAP: function () {
-                //     var seg, ary, idx, len, val, stack;
-                //     if (vcpu.cs.length() > 1) {
-                //         seg = vcpu.cs.pop();
-                //         ary = vcpu.cs.pop();
-                //         if (nuArray.isArray(ary)) {
-                //             for (idx = 0, len = ary.length();
-                //                  idx < len; idx += 1) {
-                //                 val = ary.index(idx);
-                //                 stack
-                //             }
-                //         }
-                //     } else {
-                //         nuError.notEnoughOperands();
-                //     }
-                // },
+                ARRAY_MAP: function () {
+                    var seg, ary, idx, len, intermediateSeg;
+                    if (vcpu.cs.length() > 1) {
+                        seg = vcpu.cs.pop();
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            idx = 0;
+                            len = ary.length();
+                            intermediateSeg = nuSegment([
+                                function () {
+                                    if (idx < len) {
+                                        vcpu.cs.clear();
+                                        vcpu.cs.push(ary.index(idx));
+                                        vcpu.cs.push(seg);
+                                        this.EXEC();
+                                    } else {
+                                        vcpu.cs.push(ary);
+                                        vcpu.cs.push(1);
+                                        this.RETURN();
+                                    }
+                                }.bind(this),
+                                function () {
+                                    if (idx < len) {
+                                        if (vcpu.cs.length() > 0) {
+                                            ary.store(idx, vcpu.cs.pop());
+                                        }
+                                        idx += 1;
+                                        vcpu.cs.ip.set(0);
+                                    }
+                                }
+                            ]);
+                            vcpu.cs.push(intermediateSeg);
+                            this.EXEC();
+                        } else {
+                            nuError.invalidOperand(ary, seg);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
                 ARRAY_TO_SEG: function () {
                     var ary;
                     if (vcpu.cs.length() > 0) {
