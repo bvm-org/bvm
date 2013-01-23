@@ -181,8 +181,8 @@
                             len = ary.length();
                             intermediateSeg = nuSegment([
                                 function () {
+                                    vcpu.cs.clear();
                                     if (idx < len) {
-                                        vcpu.cs.clear();
                                         vcpu.cs.push(ary.index(idx));
                                         vcpu.cs.push(seg);
                                         this.EXEC();
@@ -206,6 +206,91 @@
                             this.EXEC();
                         } else {
                             nuError.invalidOperand(ary, seg);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
+                ARRAY_FOLDL: function () {
+                    var acc, seg, ary, idx, len, intermediateSeg;
+                    if (vcpu.cs.length() > 2) {
+                        seg = vcpu.cs.pop();
+                        acc = vcpu.cs.pop();
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            idx = 0;
+                            len = ary.length();
+                            intermediateSeg = nuSegment([
+                                function () {
+                                    vcpu.cs.clear();
+                                    if (idx < len) {
+                                        vcpu.cs.push(acc);
+                                        vcpu.cs.push(ary.index(idx));
+                                        vcpu.cs.push(seg);
+                                        this.EXEC();
+                                    } else {
+                                        vcpu.cs.push(ary);
+                                        vcpu.cs.push(acc);
+                                        vcpu.cs.push(2);
+                                        this.RETURN();
+                                    }
+                                }.bind(this),
+                                function () {
+                                    if (idx < len) {
+                                        if (vcpu.cs.length() > 0) {
+                                            acc = vcpu.cs.pop();
+                                        }
+                                        idx += 1;
+                                        vcpu.cs.ip.set(0);
+                                    }
+                                }
+                            ]);
+                            vcpu.cs.push(intermediateSeg);
+                            this.EXEC();
+                        } else {
+                            nuError.invalidOperand(ary, acc, seg);
+                        }
+                    } else {
+                        nuError.notEnoughOperands();
+                    }
+                },
+                ARRAY_FOLDR: function () {
+                    var acc, seg, ary, idx, len, intermediateSeg;
+                    if (vcpu.cs.length() > 2) {
+                        seg = vcpu.cs.pop();
+                        acc = vcpu.cs.pop();
+                        ary = vcpu.cs.pop();
+                        if (nuArray.isArray(ary)) {
+                            idx = ary.length() - 1;
+                            intermediateSeg = nuSegment([
+                                function () {
+                                    vcpu.cs.clear();
+                                    if (idx > -1) {
+                                        vcpu.cs.push(acc);
+                                        vcpu.cs.push(ary.index(idx));
+                                        vcpu.cs.push(seg);
+                                        this.EXEC();
+                                    } else {
+                                        vcpu.cs.push(ary);
+                                        vcpu.cs.push(acc);
+                                        vcpu.cs.push(2);
+                                        this.RETURN();
+                                    }
+                                }.bind(this),
+                                function () {
+                                    if (idx > -1) {
+                                        if (vcpu.cs.length() > 0) {
+                                            acc = vcpu.cs.pop();
+                                        }
+                                        idx -= 1;
+                                        vcpu.cs.ip.set(0);
+                                    }
+                                }
+                            ]);
+                            vcpu.cs.push(intermediateSeg);
+                            this.EXEC();
+                        } else {
+                            nuError.invalidOperand(ary, acc, seg);
                         }
                     } else {
                         nuError.notEnoughOperands();
