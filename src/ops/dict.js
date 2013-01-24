@@ -80,10 +80,53 @@
                     }),
                 DICT_KEYS: nuOpcode(vcpu, [nuDict.isDict], function (dict) {
                     vcpu.cs.push(dict);
-                    vcpu.cs.push(nuArray(dict.keys().map(
-                        function (str) { return nuArray(str); })));
+                    vcpu.cs.push(nuArray(dict.keys().map(nuArray)));
                     return;
-                })
+                }),
+                DICT_MAP: nuOpcode.iterator(
+                    vcpu, [nuDict.isDict, nuOpcode.tests.isExecutable],
+                    function (dict, seg) {
+                        var keys = dict.keys(), key;
+                        return [
+                            function () {
+                                vcpu.cs.clear();
+                                if (keys.length === 0) {
+                                    vcpu.cs.push(dict, 1);
+                                    this.RETURN();
+                                } else {
+                                    key = keys.shift();
+                                    vcpu.cs.push(nuArray(key), dict.load(key), seg);
+                                    this.EXEC();
+                                }
+                            },
+                            function () {
+                                if (vcpu.cs.length() > 0) {
+                                    dict.store(key, vcpu.cs.pop());
+                                }
+                            }];
+                    }),
+                DICT_FOLD: nuOpcode.iterator(
+                    vcpu, [nuDict.isDict, nuOpcode.tests.any, nuOpcode.tests.isExecutable],
+                    function (dict, acc, seg) {
+                        var keys = dict.keys(), key;
+                        return [
+                            function () {
+                                vcpu.cs.clear();
+                                if (keys.length === 0) {
+                                    vcpu.cs.push(dict, acc, 2);
+                                    this.RETURN();
+                                } else {
+                                    key = keys.shift();
+                                    vcpu.cs.push(acc, nuArray(key), dict.load(key), seg);
+                                    this.EXEC();
+                                }
+                            },
+                            function () {
+                                if (vcpu.cs.length() > 0) {
+                                    acc = vcpu.cs.pop();
+                                }
+                            }];
+                    })
             };
         };
 
