@@ -87,8 +87,7 @@
             return nuOpcode(vcpu, tests, function () {
                 var genCon = init.apply(this, arguments),
                     generator = genCon[0].bind(this),
-                    consumer = genCon[1].bind(this),
-                    genArgs = [this.EXEC, this.RETURN];
+                    consumer = genCon[1].bind(this);
                 vcpu.cs.push(nuSegment([
                     generator,
                     function () {
