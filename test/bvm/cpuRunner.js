@@ -113,6 +113,11 @@
                     if ('lsl' in test) {
                         assert(test.lsl === found.lsl);
                     }
+                } else if (test.type === 'character') {
+                    assert(types.isChar(found));
+                    if ('contents' in test) {
+                        assert(test.contents === found.ch);
+                    }
                 } else {
                     throw 'Non-understood type to compare in contents: ' + test;
                 }

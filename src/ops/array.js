@@ -77,8 +77,8 @@
                 }),
                 ARRAY_UNSHIFT: nuOpcode(vcpu, [nuArray.isArray, nuOpcode.tests.any],
                                      function (ary, val) {
-                                         ary.push(val);
-                                         vcpu.cs.unshift(ary);
+                                         ary.unshift(val);
+                                         vcpu.cs.push(ary);
                                          return;
                                      }),
                 ARRAY_SHIFT: nuOpcode(vcpu, [nuArray.isArray], function (ary) {

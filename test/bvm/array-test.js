@@ -101,6 +101,51 @@
                                              [0]]})),
                             ]).run();
                 done();
+            },
+
+            'push, pop, shift, unshift': function (done) {
+                var cpu = runner();
+                cpu.setCode(['PUSH', 'def',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [
+                                     [{type: 'character', contents: 'd'},
+                                      {type: 'character', contents: 'e'},
+                                      {type: 'character', contents: 'f'}
+                                     ]
+                                 ]})),
+                             ['c'], 'ARRAY_UNSHIFT',
+                             ['g'], 'ARRAY_PUSH',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [
+                                     [{type: 'character', contents: 'c'},
+                                      {type: 'character', contents: 'd'},
+                                      {type: 'character', contents: 'e'},
+                                      {type: 'character', contents: 'f'},
+                                      {type: 'character', contents: 'g'}
+                                     ]
+                                 ]})),
+                             'ARRAY_POP',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [
+                                     [{type: 'character', contents: 'c'},
+                                      {type: 'character', contents: 'd'},
+                                      {type: 'character', contents: 'e'},
+                                      {type: 'character', contents: 'f'},
+                                     ],
+                                     {type: 'character', contents: 'g'}
+                                 ]})),
+                             'POP',
+                             'ARRAY_SHIFT',
+                             cpu.addBreakPoint(runner.baseStackConfigDiff(
+                                 {contents: [
+                                     [{type: 'character', contents: 'd'},
+                                      {type: 'character', contents: 'e'},
+                                      {type: 'character', contents: 'f'},
+                                     ],
+                                     {type: 'character', contents: 'c'}
+                                 ]}))
+                            ]).run();
+                done();
             }
         });
     });
