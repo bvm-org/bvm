@@ -86,95 +86,71 @@
                     vcpu.cs.push(ary.shift());
                     return;
                 }),
-                ARRAY_MAP: nuOpcode(
+                ARRAY_MAP: nuOpcode.iterator(
                     vcpu, [nuArray.isArray, nuOpcode.tests.isExecutable],
                     function (ary, seg) {
-                        var idx = 0,
-                            len = ary.length(),
-                            intermediateSeg = nuSegment([
-                                function () {
-                                    vcpu.cs.clear();
-                                    if (idx < len) {
-                                        vcpu.cs.push(ary.index(idx));
-                                        vcpu.cs.push(seg);
-                                        this.EXEC();
-                                    } else {
-                                        vcpu.cs.push(ary);
-                                        vcpu.cs.push(1);
-                                        this.RETURN();
-                                    }
-                                }.bind(this),
-                                function () {
-                                    if (vcpu.cs.length() > 0) {
-                                        ary.store(idx, vcpu.cs.pop());
-                                    }
-                                    idx += 1;
-                                    vcpu.cs.ip.set(0);
+                        var idx = 0, len = ary.length();
+                        return [
+                            function () {
+                                vcpu.cs.clear();
+                                if (idx < len) {
+                                    vcpu.cs.push(ary.index(idx), seg);
+                                    this.EXEC();
+                                } else {
+                                    vcpu.cs.push(ary, 1);
+                                    this.RETURN();
                                 }
-                            ]);
-                        vcpu.cs.push(intermediateSeg);
-                        this.EXEC();
+                            },
+                            function () {
+                                if (vcpu.cs.length() > 0) {
+                                    ary.store(idx, vcpu.cs.pop());
+                                }
+                                idx += 1;
+                            }];
                     }),
-                ARRAY_FOLDL: nuOpcode(
+                ARRAY_FOLDL: nuOpcode.iterator(
                     vcpu, [nuArray.isArray, nuOpcode.tests.any, nuOpcode.tests.isExecutable],
                     function (ary, acc, seg) {
-                        var idx = 0,
-                            len = ary.length(),
-                            intermediateSeg = nuSegment([
-                                function () {
-                                    vcpu.cs.clear();
-                                    if (idx < len) {
-                                        vcpu.cs.push(acc);
-                                        vcpu.cs.push(ary.index(idx));
-                                        vcpu.cs.push(seg);
-                                        this.EXEC();
-                                    } else {
-                                        vcpu.cs.push(ary);
-                                        vcpu.cs.push(acc);
-                                        vcpu.cs.push(2);
-                                        this.RETURN();
-                                    }
-                                }.bind(this),
-                                function () {
-                                    if (vcpu.cs.length() > 0) {
-                                        acc = vcpu.cs.pop();
-                                    }
-                                    idx += 1;
-                                    vcpu.cs.ip.set(0);
+                        var idx = 0, len = ary.length();
+                        return [
+                            function () {
+                                vcpu.cs.clear();
+                                if (idx < len) {
+                                    vcpu.cs.push(acc, ary.index(idx), seg);
+                                    this.EXEC();
+                                } else {
+                                    vcpu.cs.push(ary, acc, 2);
+                                    this.RETURN();
                                 }
-                            ]);
-                        vcpu.cs.push(intermediateSeg);
-                        this.EXEC();
-                }),
-                ARRAY_FOLDR: nuOpcode(
+                            },
+                            function () {
+                                if (vcpu.cs.length() > 0) {
+                                    acc = vcpu.cs.pop();
+                                }
+                                idx += 1;
+                            }];
+                    }),
+                ARRAY_FOLDR: nuOpcode.iterator(
                     vcpu, [nuArray.isArray, nuOpcode.tests.any, nuOpcode.tests.isExecutable],
                     function (ary, acc, seg) {
-                        var idx = ary.length() - 1,
-                            intermediateSeg = nuSegment([
-                                function () {
-                                    vcpu.cs.clear();
-                                    if (idx > -1) {
-                                        vcpu.cs.push(acc);
-                                        vcpu.cs.push(ary.index(idx));
-                                        vcpu.cs.push(seg);
-                                        this.EXEC();
-                                    } else {
-                                        vcpu.cs.push(ary);
-                                        vcpu.cs.push(acc);
-                                        vcpu.cs.push(2);
-                                        this.RETURN();
-                                    }
-                                }.bind(this),
-                                function () {
-                                    if (vcpu.cs.length() > 0) {
-                                        acc = vcpu.cs.pop();
-                                    }
-                                    idx -= 1;
-                                    vcpu.cs.ip.set(0);
+                        var idx = ary.length() - 1;
+                        return [
+                            function () {
+                                vcpu.cs.clear();
+                                if (idx > -1) {
+                                    vcpu.cs.push(acc, ary.index(idx), seg);
+                                    this.EXEC();
+                                } else {
+                                    vcpu.cs.push(ary, acc, 2);
+                                    this.RETURN();
                                 }
-                            ]);
-                        vcpu.cs.push(intermediateSeg);
-                        this.EXEC();
+                            },
+                            function () {
+                                if (vcpu.cs.length() > 0) {
+                                    acc = vcpu.cs.pop();
+                                }
+                                idx -= 1;
+                            }];
                     }),
                 ARRAY_EQ: nuOpcode(vcpu, [nuArray.isArray, nuArray.isArray], function (a, b) {
                     var idx, len, eq;

@@ -83,6 +83,22 @@
                 }}
             });
 
+        nuOpcode.iterator = function (vcpu, tests, init) {
+            return nuOpcode(vcpu, tests, function () {
+                var genCon = init.apply(this, arguments),
+                    generator = genCon[0].bind(this),
+                    consumer = genCon[1].bind(this),
+                    genArgs = [this.EXEC, this.RETURN];
+                vcpu.cs.push(nuSegment([
+                    generator,
+                    function () {
+                        consumer();
+                        vcpu.cs.ip.set(0);
+                    }
+                ]));
+                this.EXEC();
+            });
+        };
 
         return nuOpcode;
 

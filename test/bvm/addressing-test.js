@@ -24,7 +24,7 @@
                              'POP', 'PUSH', 'hello', 'STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: ['hello']})),
-                             0, 2, 'LEXICAL_ADDRESS', 'EXCHANGE', 'STORE',
+                             'UNDEF', 2, 'LEXICAL_ADDRESS', 'EXCHANGE', 'STORE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff(
                                  {contents: [types.undef, types.undef, 'hello']})),
                              'CLEAR', 'PUSH', [0, 0], [0, 0],
