@@ -1810,6 +1810,74 @@ characters, and is mutable just like a normal array.
   > places both the shortened array and the removed value onto the
   > current operand stack. The array is modified in place.
 
+* `ARRAY_MAP`  
+  *Before*: `ary, s]`  
+  *After*: `ary]`  
+  *where*: `ary` is an array and `s` is something executable: a
+   segment or a stack.  
+  *Errors*: Will error if `ary` is not an array reference or if `s` is
+   not executable, or if there are fewer than two items on the current
+   operand stack.  
+  > Maps `s` over the elements of `ary`. For each element of the
+  > array, the current value is replaced with the result of applying
+  > the current value to `s`. That is, for each element of the array,
+  > `s` is invoked and finds the current value on the take stack. If
+  > `s` returns any values, the top most value it returns is used to
+  > replace the current value. For example:
+  >
+  >        bvm> [ 7 8 9 ] { 1 TAKE INC 1 RETURN } ARRAY_MAP COUNT RETURN
+  >        [[8, 9, 10]]
+
+* `ARRAY_FOLDL`  
+  *Before*: `ary, acc, s]`  
+  *After*: `ary, acc]`  
+  *where*: `ary` is an array, `acc` is any value, and `s` is something
+   executable: a segment or a stack.  
+  *Errors*: Will error if `ary` is not an array reference or if `s` is
+   not executable, or if there are fewer than three items on the
+   current operand stack.  
+  > Folds `s` over the elements of `ary`, starting from the left of
+  > `ary`. For each element of the array, the current value and the
+  > current accumulator (`acc`) are applied to `s`. If `s` returns a
+  > value, that value replaces the value held in `acc`. After all the
+  > elements of the array have been iterated through, the current
+  > value of `acc` is returned, with the array to the current operand
+  > stack. Note that `s` is invoked with the current array element
+  > uppermost, and the accumulator beneath, on the take stack. The
+  > first invocation of `s` is with the array element at index 0. For
+  > example:
+  >
+  >        bvm> [ 7 8 9 ] 0 { 2 TAKE (-1) LOG INC ADD 1 RETURN } ARRAY_FOLDL COUNT RETURN
+  >        7
+  >        8
+  >        9
+  >        [[7, 8, 9], 27]
+
+* `ARRAY_FOLDR`  
+  *Before*: `ary, acc, s]`  
+  *After*: `ary, acc]`  
+  *where*: `ary` is an array, `acc` is any value, and `s` is something
+   executable: a segment or a stack.  
+  *Errors*: Will error if `ary` is not an array reference or if `s` is
+   not executable, or if there are fewer than three items on the
+   current operand stack.  
+  > Folds `s` over the elements of `ary`, starting from the right of
+  > `ary`. For each element of the array, the current value and the
+  > current accumulator (`acc`) are applied to `s`. If `s` returns a
+  > value, that value replaces the value held in `acc`. After all the
+  > elements of the array have been iterated through, the current
+  > value of `acc` is returned, with the array to the current operand
+  > stack. Note that `s` is invoked with the current array element
+  > uppermost, and the accumulator beneath, on the take stack. The
+  > first invocation of `s` is with the array element at the higest index of `ary`. For
+  > example:
+  >
+  >        bvm> [ 7 8 9 ] 0 { 2 TAKE (-1) LOG INC ADD 1 RETURN } ARRAY_FOLDR COUNT RETURN
+  >        9
+  >        8
+  >        7
+  >        [[7, 8, 9], 27]
+
 * `ARRAY_TO_SEG`  
   *Before*: `ary]`  
   *After*: `seg]`  
@@ -2013,6 +2081,53 @@ both on the operand stack and being used as a key by a dictionary.
   > Creates and returns a fresh array containing all the keys found
   > within the dictionary. The dictionary reference is left on the
   > stack.
+
+* `DICT_MAP`  
+  *Before*: `dict, s]`  
+  *After*: `dict]`  
+  *where*: `dict` is a dictionary and `s` is something executable: a
+   segment or a stack.  
+  *Errors*: Will error if `dict` is not a dictionary reference or if
+   `s` is not executable, or if there are fewer than two items on the
+   current operand stack.  
+  > Maps `s` over the key-value pairs of `dict`. For each key-value
+  > pair in the dictionary, the current value is replaced with the
+  > result of applying the key and current value to `s`. That is, for
+  > each element of the dictionary, `s` is invoked and finds the
+  > current value uppermost on the take stack, with the key beneath
+  > it. If `s` returns any values, the top most value it returns is
+  > used to replace the current value. For example:
+  >
+  >        bvm> < PUSH a 7 PUSH b 8 PUSH c 9 > { 2 TAKE EXCHANGE LOG INC 1 RETURN } DICT_MAP COUNT RETURN
+  >        a
+  >        b
+  >        c
+  >        [{"a": 8, "b": 9, "c": 10}]
+
+* `DICT_FOLD`  
+  *Before*: `dict, acc, s]`  
+  *After*: `dict, acc]`  
+  *where*: `dict` is a dictionary, `acc` is any value, and `s` is
+   something executable: a segment or a stack.  
+  *Errors*: Will error if `dict` is not a dictionary reference or if
+   `s` is not executable, or if there are fewer than three items on
+   the current operand stack.  
+  > Folds `s` over the key-value pairs of `dict`. For each key-value
+  > pair in the dictionary, the key, the current value, and the
+  > current accumulator (`acc`) are applied to `s`. If `s` returns a
+  > value, that value replaces the value held in `acc`. After all the
+  > key-value pairs of the dictionary have been iterated through, the
+  > current value of `acc` is returned, with the dictionary to the
+  > current operand stack. Note that `s` is invoked with the current
+  > key-value pair value uppermost, current key beneath it, and the
+  > accumulator beneath that, on the take stack.  For example:
+  >
+  >        bvm> < PUSH a 7 PUSH b 8 PUSH c 9 > 0 { 3 TAKE EXCHANGE LOG INC ADD 1 RETURN } DICT_FOLD COUNT RETURN
+  >        a
+  >        b
+  >        c
+  >        [{"a": 7, "b": 8, "c": 9}, 27]
+
 
 ## Code Segments
 
