@@ -126,7 +126,35 @@
                                     acc = vcpu.cs.pop();
                                 }
                             }];
-                    })
+                    }),
+                DICT_EQ: nuOpcode(vcpu, [nuDict.isDict, nuDict.isDict], function (a, b) {
+                    var keysA, keysB, key, eq;
+                    if (a === b) {
+                        vcpu.cs.push(true);
+                        return;
+                    } else {
+                        keysA = a.keys().sort();
+                        keysB = b.keys().sort();
+                        if (keysA.length === keysB.length) {
+                            eq = true;
+                            while (eq && keysA.length > 0) {
+                                key = keysA.pop();
+                                eq = key === keysB.pop();
+                                if (eq) {
+                                    vcpu.cs.push(a.load(key));
+                                    vcpu.cs.push(b.load(key));
+                                    this.EQ();
+                                    eq = vcpu.cs.pop();
+                                }
+                            }
+                            vcpu.cs.push(eq);
+                            return;
+                        } else {
+                            vcpu.cs.push(false);
+                            return;
+                        }
+                    }
+                })
             };
         };
 

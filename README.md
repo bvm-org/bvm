@@ -1883,6 +1883,18 @@ characters, and is mutable just like a normal array.
   >        7
   >        [[7, 8, 9], 27]
 
+* `ARRAY_EQ`  
+  *Before*: `a, b]`  
+  *After*: `c]`  
+  *where*: `a` and `b` are arrays. `c` is a boolean.  
+  *Errors*: Will error if either `a` or `b` are not arrays, or if
+   there are fewer than two items on the current operand stack.  
+  > Shallow structural equality of arrays. Checks that the arrays have
+  > the same length, and if they do, performs `EQ` on corresponding
+  > elements from the arrays. Will return true if and only if both
+  > arrays have the "same" (as defined by `EQ`) elements in the same
+  > order. False otherwise.
+
 * `ARRAY_TO_SEG`  
   *Before*: `ary]`  
   *After*: `seg]`  
@@ -2132,6 +2144,18 @@ both on the operand stack and being used as a key by a dictionary.
   >        b
   >        c
   >        [{"a": 7, "b": 8, "c": 9}, 27]
+
+* `DICT_EQ`  
+  *Before*: `a, b]`  
+  *After*: `c]`  
+  *where*: `a` and `b` are dictionaries. `c` is a boolean.  
+  *Errors*: Will error if either `a` or `b` are not dictionaries, or
+   if there are fewer than two items on the current operand stack.  
+  > Shallow structural equality of dictionaries. Checks that the
+  > dictionaries have the same keys, and if they do, performs `EQ` on
+  > corresponding values from the dictionaries. Will return true if
+  > and only if both dictionaries have the "same" (as defined by `EQ`)
+  > value for each key. False otherwise.
 
 
 ## Code Segments
