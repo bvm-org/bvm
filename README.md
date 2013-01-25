@@ -5,7 +5,7 @@
 	- [The Java Virtual Machine](#the-java-virtual-machine)
 	- [PostScript](#postscript)
 	- [Burroughs Large Systems](#burroughs-large-systems)
-- [Installation and Read-Eval-Print-Loop (REPL)](#installation-and-read-eval-print-loop-repl)
+- [BVM Installation and Read-Eval-Print-Loop (REPL)](#bvm-installation-and-read-eval-print-loop-repl)
 - [The Architecture of the BVM](#the-architecture-of-the-bvm)
 	- [Supported Types](#supported-types)
 	- [File formats](#file-formats)
@@ -85,7 +85,7 @@ address linking to preexisting JavaScript libraries.
 The current example implementation is written in JavaScript and is
 available to run both in web-browsers and under NodeJS. This
 implementation is currently a little over 5k lines-of-code, including
-comments and whitespace, and minimises to just 60kB (including
+comments and whitespace, and minimises to just 66kB (including
 assembly parser). Whilst lines-of-code is by no means a convincing
 metric, hopefully it suggests that the design is not particularly
 complex, and that implementations of the BVM in other languages should
@@ -458,7 +458,7 @@ top two values of the stack which were two registers within the CPU
 itself.
 
 
-# Installation and Read-Eval-Print-Loop (REPL)
+# BVM Installation and Read-Eval-Print-Loop (REPL)
 
 The JavaScript implementation comes with a REPL that works both in
 web-browsers and in NodeJS.
@@ -551,8 +551,8 @@ features such as characters (as JSON cannot distinguish between
 strings of length 1 and characters), and lexical addresses. JSON is
 chosen because of its widespread support in browsers and the ease of
 compression: standard compression techniques are expected to lead to
-file sizes as small efficient binary object file formats. The
-non-binary format is also in the spirit of the open web and should
+file sizes as small as efficient binary object file formats. The
+non-binary format is also in the spirit of the "open web" and should
 also lead to a very low curve to creating tool chains and debugging
 infrastructure. The only downside is that it is likely the entire
 object file will need to be downloaded before decompression and
@@ -689,7 +689,7 @@ spaces in it:
     [13, 3, 5, "ADD this"]
 
 But it's not an error to use quotes where they're not necessary. Note
-that only double quotes are allowed for strings:
+that only "double quotes" are allowed for strings:
 
     bvm> 13 3 5 "PUSH" "ADD this" "COUNT" "RETURN"
     [13, 3, 5, "ADD this"]
@@ -728,16 +728,17 @@ elements of the array are characters. You can of course thus use the
 entire array API to manipulate "strings".
 
 Note that because arrays are a reference type, when strings are used
-as the keys of dictionaries, the dictionary will take a copy of the
-string. This ensures that if you modify the string after using it as a
-key in a dictionary, you are not actually modifying the same string as
-being used by the dictionary.
+as the keys of dictionaries (more on this later), the dictionary will
+take a copy of the string. This ensures that if you modify the string
+after using it as a key in a dictionary, you are not actually
+modifying the same string as being used by the dictionary.
 
 ### Literal Arrays
 
 A literal array can be created by using the `[` and `]` opcodes. Note
-that these are an assembly shorthand for `ARRAY_START` and `ARRAY_END`
-opcodes. The `ARRAY_START` opcode simply places a marker on the
+that these are an *assembly shorthand* for `ARRAY_START` and
+`ARRAY_END` opcodes. The shorthands are not valid in the object file
+format. The `ARRAY_START` opcode simply places a marker on the
 stack. Execution then continues as normal (further opcodes are
 directly evaluated as normal) until the `ARRAY_END` opcode is
 encountered. This searches back down through the stack until it finds
@@ -761,9 +762,10 @@ The full array API including dynamic array creation is covered later.
 ### Literal Dictionaries
 
 A literal dictionary can be created by using the `<` and `>`
-opcodes. As with arrays, these are assembly shorthands for the opcodes
-`DICT_START` and `DICT_END`. As with arrays, the `START` simply places
-a marker onto the stack, execution continues as normal until the
+opcodes. As with arrays, these are *assembly shorthands* for the
+opcodes `DICT_START` and `DICT_END`, and the shorthands are not valid
+in the object file format. As with arrays, the `START` simply places a
+marker onto the stack, execution continues as normal until the
 `DICT_END` opcode is encountered.
 
 When `DICT_END` is encountered, it is required that there are an even
@@ -783,17 +785,20 @@ covered later.
 
 ### Literal Code Segments
 
-A code segment can be created by using the `{` and `}` opcodes. Once
-again, these are assembly shorthands for `SEG_START` and
-`SEG_END`. Note that between a `SEG_START` and a `SEG_END`, *no
-evaluation takes place*: evaluation is said to be in *deferred mode*
-(to borrow terminology from PostScript). This is in contrast to the
-behaviour between `[` and `]`, and `<` and `>` where evaluation does
-continue. When in *deferred mode*, opcodes are simply pushed onto the
-operand stack. When *deferred mode* is exited, the opcodes pushed to
-the operand stack are removed and formed into a code segment. There
-are then several ways to invoke a segment on the top of the stack, the
-most obvious of which is the `EXEC` opcode.
+A *code segment* can be created by using the `{` and `}` opcodes. Once
+again, these are assembly shorthands for `SEG_START` and `SEG_END`,
+and the shorthands are not valid in the object file format. Note that
+between a `SEG_START` and a `SEG_END`, *no evaluation takes place*:
+evaluation is said to be in *deferred mode* (to borrow terminology
+from PostScript). This is in contrast to the behaviour between `[` and
+`]`, and `<` and `>` where evaluation does continue. When in *deferred
+mode*, opcodes are simply pushed onto the operand stack (conceptually
+at least. There's actually no need for implementations to behave this
+way). When *deferred mode* is exited (by finding a corresponding
+`SEG_END`), the opcodes pushed to the operand stack are removed and
+formed into a *code segment*. There are then several ways to invoke a
+segment on the top of the stack, the most obvious of which is the
+`EXEC` opcode.
 
     bvm> { 3 5 ADD } COUNT RETURN
     [{"type": "segment",
@@ -830,13 +835,13 @@ back to the caller.
     [17, 8]
 
 The BVM can automatically detect tail calls. If, at the point of
-invocation of a code segment it is found that there are no further
-instructions in the current code segment, then a tail call is
+invocation of a code segment it is found that there are *no further
+instructions in the current code segment*, then a tail call is
 performed. This then means that you can delegate to a callee which
 values are returned to your own caller (the following example makes
 sense if you consider that the REPL itself is the caller to the
-outer-most code, and thus that code is delegating via a tail-call to
-the declared code segment which and how many values are returned to
+outer-most code, and thus that code is delegating (via a tail-call to
+the declared code segment) which and how many values are returned to
 the REPL):
 
     bvm> { 17 3 5 ADD COUNT RETURN } EXEC

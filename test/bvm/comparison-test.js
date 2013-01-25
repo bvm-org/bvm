@@ -43,32 +43,40 @@
                 done();
             },
 
-            'strings: lt, lte, gt, gte': function (done) {
+            'characters: lt, lte, gt, gte': function (done) {
                 var cpu = runner();
-                cpu.setCode(['PUSH', 'aaab', 'PUSH', 'aba', 'MARK',
+                cpu.setCode([['a'], ['b'], 'MARK',
                              [0,0], [0,1], 'LT',
                              [0,1], [0,1], 'LT',
                              [0,1], [0,0], 'LT',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [
-                                 'aaab', 'aba', types.mark, true, false, false
+                                 {type: 'character', contents: 'a'},
+                                 {type: 'character', contents: 'b'},
+                                 types.mark, true, false, false
                              ]})), 'CLEAR_TO_MARK', 'MARK',
                              [0,0], [0,1], 'LTE',
                              [0,1], [0,1], 'LTE',
                              [0,1], [0,0], 'LTE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [
-                                 'aaab', 'aba', types.mark, true, true, false
+                                 {type: 'character', contents: 'a'},
+                                 {type: 'character', contents: 'b'},
+                                 types.mark, true, true, false
                              ]})), 'CLEAR_TO_MARK', 'MARK',
                              [0,0], [0,1], 'GT',
                              [0,1], [0,1], 'GT',
                              [0,1], [0,0], 'GT',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [
-                                 'aaab', 'aba', types.mark, false, false, true
+                                 {type: 'character', contents: 'a'},
+                                 {type: 'character', contents: 'b'},
+                                 types.mark, false, false, true
                              ]})), 'CLEAR_TO_MARK', 'MARK',
                              [0,0], [0,1], 'GTE',
                              [0,1], [0,1], 'GTE',
                              [0,1], [0,0], 'GTE',
                              cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [
-                                 'aaab', 'aba', types.mark, false, true, true
+                                 {type: 'character', contents: 'a'},
+                                 {type: 'character', contents: 'b'},
+                                 types.mark, false, true, true
                              ]}))
                             ]).run();
                 done();
@@ -80,24 +88,30 @@
                     5, 5, 'EQ', 4, 5, 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
                     'CLEAR',
+                    ['a'], ['a'], 'EQ', ['a'], ['b'], 'EQ',
+                    cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
+                    'CLEAR',
                     'PUSH', 'a', 'DUPLICATE', 'EQ', 'PUSH', 'a', 'PUSH', 'b', 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
                     'CLEAR',
                     'TRUE', 'TRUE', 'EQ', 'TRUE', 'FALSE', 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
                     'CLEAR',
-                    'MARK', 'MARK', 'EQ',
-                    'UNDEF', 'UNDEF', 'EQ',
+                    'MARK', 'MARK', 'EQ', 'UNDEF', 'UNDEF', 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, true]})),
                     'CLEAR',
                     'PUSH', [0,1], 0, 1, 'LEXICAL_ADDRESS', 'EQ',
-                    'SEG_START', 'PUSH', [1,0], 1, 'RETURN', 'SEG_END', 'DUPLICATE',
+                    'SEG_START', 'PUSH', [undefined, 0], 1, 'RETURN', 'SEG_END', 'DUPLICATE',
                     'EXEC', 'EXCHANGE', 'EXEC', 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
                     'CLEAR',
                     'ARRAY_START', 5, 3, 'PUSH', 'a', 'ARRAY_END', 'DUPLICATE', 'DUPLICATE',
                     'EQ', 'EXCHANGE', 'CLONE', 'EQ',
                     cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, false]})),
+                    'CLEAR',
+                    'ARRAY_START', 5, 3, 'PUSH', 'a', 'ARRAY_END', 'DUPLICATE', 'DUPLICATE',
+                    'ARRAY_EQ', 'EXCHANGE', 'CLONE', 'ARRAY_EQ',
+                    cpu.addBreakPoint(runner.baseStackConfigDiff({contents: [true, true]})),
                     'CLEAR',
                     'SEG_START', 'PUSH', [1,0], 1, 'RETURN', 'SEG_END', 'DUPLICATE', 'DUPLICATE',
                     'EQ', 'EXCHANGE', 'CLONE', 'EQ',
