@@ -27,7 +27,7 @@
                         // are preserved across multiple invocations.
                         segment = segment.clone(true);
                         // It is vitally important we do this dps
-                        // assigment *after* the clone as it's
+                        // assignment *after* the clone as it's
                         // possible vcpu.cs === segment. Thus
                         // doing the clone first avoids a loop.
                         segment.dps = dps;

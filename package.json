@@ -1,11 +1,11 @@
 {
     "name": "bvm",
     "author": "Matthew Sackman",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "description": "The BVM",
     "repository": {
         "type": "git",
-        "url": "git://github.com/five-eleven/bvm.git"
+        "url": "git://github.com/bvm-org/bvm.git"
     },
     "main": "bvm",
     "browserify": "bvm.js",
