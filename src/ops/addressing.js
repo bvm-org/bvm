@@ -29,7 +29,7 @@
                     return;
                 }
                 vcpu.cs.push(found);
-                if (utils.isExecutable(found)) {
+                if (nuOpcode.tests.isExecutable(found)) {
                     this.EXEC();
                 }
             });

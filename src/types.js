@@ -39,8 +39,7 @@
                 ch: {value: undef}
             },
 
-            toString = Object.prototype.toString,
-            nuError = require('./errors');
+            toString = Object.prototype.toString;
 
         Object.defineProperty(types, 'mark', {value: Object.create(plain, {name: {value: 'mark'}})});
         Object.defineProperty(types, 'undef', {value: Object.create(plain, {name: {value: 'undef'}})});
@@ -71,7 +70,7 @@
                     fixedLexicalAddressTemplate.index.value = index;
                     return Object.create(this, fixedLexicalAddressTemplate);
                 }},
-                transitiveDereference: {value: function (vcpu) {
+                transitiveDereference: {value: function (vcpu, onCycle) {
                     var seen = {}, obj = this.fix(vcpu);
                     seen[obj.lsl] = {};
                     seen[obj.lsl][obj.index] = true;
@@ -79,7 +78,7 @@
                         obj = obj.ls.index(obj.index);
                         if (types.isLexicalAddress(obj)) {
                             if (seen[obj.lsl] && seen[obj.lsl][obj.index]) {
-                                nuError('CYCLICAL LEXICAL ADDRESSES', this);
+                                return onCycle(this);
                             } else {
                                 (seen[obj.lsl] ? seen[obj.lsl] : seen[obj.lsl] = {})[obj.index] = true;
                             }

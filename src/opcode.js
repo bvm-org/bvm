@@ -22,7 +22,7 @@
                             ok = true;
                             if (this.tests !== undef) {
                                 for (idx = 0; ok && idx < arity; idx += 1) {
-                                    ok = this.tests[idx](removed[idx]);
+                                    ok = this.tests[idx](removed[idx], vcpu);
                                 }
                             }
                             if (ok) {
@@ -42,6 +42,7 @@
                 tests: {value: undef},
                 body:  {value: undef}
             },
+            cycleDetector = function () { return cycleDetector; },
             nuOpcode;
 
         nuOpcode = function (vcpu, tests, body) {
@@ -71,9 +72,15 @@
                 isString: {value: function (e) {
                     return nuArray.isArray(e) && e.allChars;
                 }},
-                isExecutable: {value: function (e) {
+                isExecutable: {value: function (e, vcpu) {
+                    if (types.isLexicalAddress(e)) {
+                        e = e.transitiveDereference(vcpu, cycleDetector);
+                        if (e === cycleDetector) {
+                            return false;
+                        }
+                    }
                     return nuSegment.isSegment(e) || nuStack.isStack(e) ||
-                        types.isLexicalAddress(e) || typeof e === 'function';
+                        typeof e === 'function';
                 }},
                 isBoolean: {value: function (e) {
                     return typeof e === 'boolean';

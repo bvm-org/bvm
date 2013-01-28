@@ -8,18 +8,24 @@
             nuStack = require('./stack'),
             nuError = require('./errors'),
             nuArray = require('./array'),
+            cycleError = function (address) {
+                nuError(address, 'ERROR CYCLICAL LEXICAL ADDRESSES');
+                return cycleError;
+            },
             undef;
 
         return Object.defineProperties(
             {},
             {
+                callPrepareError: {value: cycleError},
+
                 prepareForCall: {value: function (vcpu) {
                     var segment;
                     if (vcpu.cs.length() > 0) {
                         segment = vcpu.cs.pop();
 
                         if (types.isLexicalAddress(segment)) {
-                            segment = segment.transitiveDereference(vcpu);
+                            segment = segment.transitiveDereference(vcpu, cycleError);
                         }
 
                         return segment;
@@ -30,12 +36,6 @@
 
                 detectTailCall: {value: function (vcpu) {
                     return vcpu.cs.ip.isExhausted() ? vcpu.cs.dps : vcpu.cs;
-                }},
-
-                isExecutable: {value: function (thing) {
-                    return nuSegment.isSegment(thing) ||
-                        nuStack.isStack(thing) ||
-                        typeof thing === 'function';
                 }},
 
                 searchDicts: {value: function (obj) {

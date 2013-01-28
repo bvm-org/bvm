@@ -34,6 +34,8 @@
                         segment.ts = vcpu.cs.asArray();
                         vcpu.enterStack(segment);
                         return;
+                    } else if (segment === utils.callPrepareError) {
+                        return;
                     } else if (typeof segment === 'function') {
                         vcpu.dispatch(segment);
                         return;
@@ -74,6 +76,8 @@
                         segment = segment.clone(true);
                         segment.ts = vcpu.cs.asArray();
                         vcpu.enterStack(segment);
+                        return;
+                    } else if (segment === utils.callPrepareError) {
                         return;
                     } else {
                         nuError.invalidOperand(segment);
