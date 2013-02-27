@@ -4,10 +4,11 @@
         'use strict';
 
         var fs = require('fs'),
-            path = require('path');
+            path = require('path'),
+            opsDir = path.join(__dirname, 'ops');
 
         return function (vcpu, ops) {
-            var opsDir = path.join(__dirname, 'ops'), opsObj, fun;
+            var opsObj, fun;
             fs.readdirSync(opsDir).forEach(function (opFile) {
                 if (path.extname(opFile) in require.extensions) {
                     opsObj = require(path.join(opsDir, opFile))(vcpu);

@@ -9,6 +9,7 @@
             nuSegment = require('./segment'),
             nuError = require('./errors'),
             adornOps = require('./adornOps'),
+            loadPrelude = require('./prelude'),
             undef,
             adornRegistersAndHelpers = function (ops) {
                 return Object.defineProperties(
@@ -125,6 +126,11 @@
                 {},
                 {
                     boot: {value: function () {
+                        loadPrelude(vcpu);
+                        // We blow away anything left on the stack
+                        // here and have no take stack for the new
+                        // segment either. Thus all prelude can do is
+                        // populate dict stack.
                         vcpu.enterSegment(segment);
                         return vcpu.run();
                     }},

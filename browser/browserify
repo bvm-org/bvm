@@ -8,9 +8,15 @@ var browserify = require('browserify'),
     bundle = path.join(__dirname, './bundle.js'),
     adornOps = path.join(__dirname, '../src/adornOps.js'),
     browserAdornOps = path.join(__dirname, '../src/browserAdornOps.js'),
+    loadPrelude = path.join(__dirname, '../src/prelude.js'),
+    browserLoadPrelude = path.join(__dirname, '../src/browserPrelude.js'),
     index = path.join(__dirname, '../bvm.js'),
     opsDir = path.join(__dirname, '../src/ops'),
+    preludeDir = path.join(__dirname, '../prelude'),
+    assembler = require('../src/assembler'),
     body;
+
+// 1. Adorn Ops
 
 body = "(function (define) {\n"+
 "    define(function () {\n"+
@@ -47,8 +53,51 @@ body += "            ].forEach(function (fun) {\n"+
 
 fs.writeFileSync(browserAdornOps, body, 'utf8');
 
+// 2. Load Prelude
+
+body = "(function (define) {\n"+
+"    define(function () {\n"+
+"\n"+
+"        'use strict';\n"+
+"\n"+
+"        var nuSegment = require('./segment');\n"+
+"\n"+
+"        return function (vcpu) {\n" +
+"            [\n";
+
+fs.readdirSync(preludeDir).sort().forEach(function (preludeFile) {
+    var ext = path.extname(preludeFile);
+    if (ext === '.json') {
+        body += fs.readFileSync(path.join(preludeDir, preludeFile), 'utf8');
+        body += ",\n";
+    } else if (ext === '.bvm') {
+        body += '' + JSON.stringify(assembler(path.join(preludeDir, preludeFile)).read().parse().toJSON().json);
+        body += ",\n";
+    }
+});
+
+body += "            ].map(function (json) {\n"+
+"                return nuSegment(json);\n"+
+"            }).forEach(function (segment) {\n"+
+"                vcpu.enterSegment(segment);\n"+
+"                vcpu.run();\n"+
+"            });\n"+
+"        };\n"+
+"    });\n"+
+"}(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));";
+
+fs.writeFileSync(browserLoadPrelude, body, 'utf8');
+
+// 3. Rest
+
 b.register('path', function (path) {
-    return path === adornOps ? browserAdornOps : path;
+    if (path === adornOps) {
+        return browserAdornOps;
+    } else if (path === loadPrelude) {
+        return browserLoadPrelude;
+    } else {
+        return path;
+    }
 });
 
 b.register('post', function(code) {

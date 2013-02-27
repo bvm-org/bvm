@@ -3,4 +3,5 @@
 npm-debug.log
 src/assembler-parser.js
 src/browserAdornOps.js
+src/browserPrelude.js
 browser/bundle.js

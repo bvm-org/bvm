@@ -1,0 +1,19 @@
+/* Functions for namespace manipulation " ' */
+
+{
+
+        PUSH WITH
+        {
+                <
+                        PUSH WITHOUT
+                        {
+                                DICT_STACK_POP
+                                DICT_STACK_POP
+                        }
+                > DICT_STACK_PUSH
+                1 TAKE // (1) is the name of the namespace we want to use
+                LOAD
+                DICT_STACK_PUSH
+        } STORE
+
+} EXEC
