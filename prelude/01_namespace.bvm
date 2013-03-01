@@ -1,16 +1,25 @@
-/* Functions for namespace manipulation " ' */
+/* Functions for namespace manipulation */
 
 {
 
         PUSH WITH
+        // "WITH" requires one arg, which is the name of the namespace
+        // to bring into scope.
         {
                 <
                         PUSH WITHOUT
+                        // "WITHOUT" restores the dict stack to the previous state
                         {
+                                >here<
+                                <here>  // (0) is loop target
+                                (-1, 0) // (1) is now the dict containing this seg
                                 DICT_STACK_POP
-                                DICT_STACK_POP
+                                        // (2) is newly removed dict from top of DS
+                                NEQ     // (1) is now boolean
+                                JUMP_IF // go around again if they differ
                         }
-                > DICT_STACK_PUSH
+                >
+                DUPLICATE DICT_STACK_PUSH // dup so to leave copy for WITHOUT
                 1 TAKE // (1) is the name of the namespace we want to use
                 LOAD
                 DICT_STACK_PUSH

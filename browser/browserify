@@ -49,7 +49,7 @@ body += "            ].forEach(function (fun) {\n"+
 "            });\n"+
 "        };\n"+
 "    });\n"+
-"}(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));";
+"}(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));\n";
 
 fs.writeFileSync(browserAdornOps, body, 'utf8');
 
@@ -84,7 +84,7 @@ body += "            ].map(function (json) {\n"+
 "            });\n"+
 "        };\n"+
 "    });\n"+
-"}(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));";
+"}(typeof define === 'function' ? define : function (factory) { module.exports = factory(); }));\n";
 
 fs.writeFileSync(browserLoadPrelude, body, 'utf8');
 
