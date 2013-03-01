@@ -135,8 +135,14 @@
                         return vcpu.run();
                     }},
 
-                    resume: {value: function () {
+                    resume: {value: function (seg) {
+                        var oldCS;
                         if (vcpu.cs !== undef) {
+                            if (seg) {
+                                oldCS = vcpu.cs.array;
+                                vcpu.enterSegment(seg);
+                                vcpu.cs.appendArray(oldCS);
+                            }
                             return vcpu.run();
                         }
                     }},

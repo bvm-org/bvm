@@ -23,13 +23,26 @@
 
         // Doing requires in here because of the change in the context
         // - ensures we get pointer equality checks right.
-        bvmRepl.interpret = function (codeStr) {
+        bvmRepl.interpret = function (codeStrO) {
             var nuAssembler = require('./assembler'),
                 nuSegment = require('./segment'),
                 nuCPU = require('./cpu'),
+                assembly, cpu;
+
+            bvmRepl.interpret = function (codeStr) {
                 assembly = nuAssembler();
-            assembly.source = codeStr;
-            return nuCPU(nuSegment(assembly.parse().toJSON().json)).boot();
+                assembly.source = codeStr;
+                assembly.parse().toJSON();
+
+                if (cpu) {
+                    return cpu.resume(nuSegment(assembly.json));
+                } else {
+                    cpu = nuCPU(nuSegment(assembly.json));
+                    return cpu.boot();
+                }
+            };
+
+            return bvmRepl.interpret(codeStrO);
         };
 
         return bvmRepl;
